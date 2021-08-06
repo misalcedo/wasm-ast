@@ -11,7 +11,6 @@ pub struct Name {
 
 impl Name {
     /// Returns a byte slice of this `Name`’s contents.
-    /// The inverse of this method is from_utf8.
     pub fn as_bytes(&self) -> &[u8] {
         self.value.as_bytes()
     }

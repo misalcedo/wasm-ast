@@ -33,21 +33,21 @@ pub fn criterion_benchmark(c: &mut Criterion) {
 fn new_singular_module() -> Module {
     let mut module = Module::new();
     let function_type = FunctionType::new(
-        ResultType::new(vec![ValueType::Number(NumberType::I64)]),
-        ResultType::new(vec![ValueType::Number(NumberType::F64)]),
+        ResultType::from(vec![ValueType::Number(NumberType::I64)]),
+        ResultType::from(vec![ValueType::Number(NumberType::F64)]),
     );
     module.add_type(function_type);
 
     let function = Function::new(
         0,
-        ResultType::new(vec![ValueType::Number(NumberType::I32)]),
+        ResultType::from(vec![ValueType::Number(NumberType::I32)]),
         Expression::new(vec![Instruction::Numeric(NumericInstruction::F64Constant(
             0.0,
         ))]),
     );
     module.add_function(function);
 
-    let start_function_type = FunctionType::new(ResultType::new(vec![]), ResultType::new(vec![]));
+    let start_function_type = FunctionType::new(ResultType::from(vec![]), ResultType::from(vec![]));
     module.add_type(start_function_type);
 
     let import = Import::new(

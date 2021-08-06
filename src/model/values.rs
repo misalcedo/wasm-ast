@@ -10,20 +10,35 @@ pub struct Name {
 }
 
 impl Name {
-    pub fn new(name: String) -> Self {
-        Name { value: name }
-    }
-
+    /// Returns a byte slice of this `Name`’s contents.
+    /// The inverse of this method is from_utf8.
     pub fn as_bytes(&self) -> &[u8] {
         self.value.as_bytes()
     }
 
+    /// Returns the length of this `Name`, in bytes, not chars or graphemes.
+    /// In other words, it may not be what a human considers the length of the name.
     pub fn len(&self) -> usize {
         self.value.len()
     }
 
+    /// Returns true if this `Name` has a length of zero, false otherwise.
     pub fn is_empty(&self) -> bool {
         self.value.is_empty()
+    }
+}
+
+impl From<&str> for Name {
+    fn from(name: &str) -> Self {
+        Name {
+            value: name.to_string(),
+        }
+    }
+}
+
+impl From<String> for Name {
+    fn from(name: String) -> Self {
+        Name { value: name }
     }
 }
 
@@ -32,9 +47,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn new_name() {
+    fn name_from_str() {
         let content = "Hello, World!";
-        let name = Name::new(content.to_string());
+        let name = Name::from(content);
+
+        assert_eq!(name.len(), content.len());
+        assert_eq!(name.is_empty(), content.is_empty());
+        assert_eq!(name.as_bytes(), content.as_bytes());
+    }
+
+    #[test]
+    fn name_from_string() {
+        let content = "Hello, World!";
+        let name = Name::from(content.to_string());
 
         assert_eq!(name.len(), content.len());
         assert_eq!(name.is_empty(), content.is_empty());

@@ -12,7 +12,7 @@ wasm = "0.0.1"
 Then, add this to your crate:
 
 ```rust
-use wasm::{Module, ModuleBuilder};
+use wasm::model::Module;
 
 fn main() {
     // ...
@@ -24,7 +24,7 @@ fn main() {
 Create an empty WASM module:
 
 ```rust
-use wasm::Module;
+use wasm::model::Module;
 
 fn main() {
     let builder = Module.builder();

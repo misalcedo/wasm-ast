@@ -543,14 +543,14 @@ mod tests {
     fn module() {
         let mut module = Module::new();
         let function_type = FunctionType::new(
-            ResultType::new(vec![ValueType::Number(NumberType::I64)]),
-            ResultType::new(vec![ValueType::Number(NumberType::F64)]),
+            ResultType::from(vec![IntegerType::I64.into()]),
+            ResultType::from(vec![FloatType::F64.into()]),
         );
         module.add_type(function_type.clone());
 
         let function = Function::new(
             0,
-            ResultType::new(vec![ValueType::Number(NumberType::I32)]),
+            ResultType::from(vec![IntegerType::I32.into()]),
             Expression::new(vec![Instruction::Control(ControlInstruction::Nop)]),
         );
         module.add_function(function.clone());
@@ -568,27 +568,24 @@ mod tests {
         let table = Table::new(TableType::new(Limit::new(0, None), ReferenceType::Function));
         module.add_table(table);
 
-        let memory = Memory::new(MemoryType::new(Limit::new(0, None)));
+        let memory = Memory::new(MemoryType::from(Limit::new(0, None)));
         module.add_memory(memory);
 
         let import = Import::new(
-            Name::new("test".to_string()),
-            Name::new("foobar".to_string()),
+            "test".into(),
+            "foobar".into(),
             ImportDescription::Function(0),
         );
         module.add_import(import.clone());
 
-        let export = Export::new(
-            Name::new("foobar".to_string()),
-            ExportDescription::Function(0),
-        );
+        let export = Export::new("foobar".into(), ExportDescription::Function(0));
         module.add_export(export.clone());
 
         let start = Start::new(0);
         module.set_start(Some(start));
 
         let global = Global::new(
-            GlobalType::new(false, ValueType::Number(NumberType::I64)),
+            GlobalType::immutable(IntegerType::I64.into()),
             Expression::new(vec![Instruction::Numeric(NumericInstruction::I64Constant(
                 0,
             ))]),
@@ -610,7 +607,7 @@ mod tests {
     #[test]
     fn new_function() {
         let kind = 1;
-        let locals = ResultType::new(vec![ValueType::Number(NumberType::I64)]);
+        let locals = ResultType::from(vec![IntegerType::I64.into()]);
         let body = Expression::new(Vec::new());
         let function = Function::new(kind, locals.clone(), body.clone());
 
@@ -652,7 +649,7 @@ mod tests {
 
     #[test]
     fn new_memory() {
-        let kind = MemoryType::new(Limit::new(0, None));
+        let kind = MemoryType::from(Limit::new(0, None));
         let memory = Memory::new(kind);
 
         assert_eq!(memory.kind(), &kind);
@@ -660,9 +657,9 @@ mod tests {
 
     #[test]
     fn new_import() {
-        let module = Name::new("test".to_string());
-        let name = Name::new("foobar".to_string());
-        let kind = MemoryType::new(Limit::new(0, None));
+        let module = Name::from("test");
+        let name = Name::from("foobar");
+        let kind = MemoryType::from(Limit::new(0, None));
         let description = ImportDescription::Memory(kind);
         let import = Import::new(module.clone(), name.clone(), description);
 
@@ -673,7 +670,7 @@ mod tests {
 
     #[test]
     fn new_export() {
-        let name = Name::new("foobar".to_string());
+        let name = Name::from("foobar");
         let description = ExportDescription::Function(42);
         let export = Export::new(name.clone(), description);
 
@@ -691,7 +688,7 @@ mod tests {
 
     #[test]
     fn new_global() {
-        let kind = GlobalType::new(true, ValueType::Number(NumberType::I64));
+        let kind = GlobalType::mutable(IntegerType::I64.into());
         let expression = Expression::new(Vec::new());
         let global = Global::new(kind, expression.clone());
 

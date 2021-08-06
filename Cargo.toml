@@ -1,0 +1,23 @@
+[package]
+name = "wasm"
+description = "A WebAssembly syntax model useful for generate, reading, and emitting WebAssembly code."
+version = "0.0.1"
+authors = ["Miguel D. Salcedo <miguel@salcedo.cc>"]
+edition = "2018"
+license = "Apache-2.0"
+homepage = "https://github.com/misalcedo/wasm"
+repository = "https://github.com/misalcedo/wasm"
+documentation = "https://docs.rs/wasm"
+
+[profile.release]
+lto = true
+
+[dev-dependencies]
+criterion = "0.3"
+
+[[bench]]
+name = "emit_module"
+harness = false
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }

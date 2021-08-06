@@ -313,7 +313,6 @@ impl MemoryArgument {
 
 /// Modifier to numeric operations (e.g.,  load, store, extend, etc.) to treat an integer as
 /// smaller than its type suggest.
-// TODO: get rid of this.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub enum StorageSize {
     I32_8,

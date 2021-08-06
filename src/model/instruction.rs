@@ -78,7 +78,9 @@ pub enum NumericInstruction {
     LessThanOrEqualToFloat(FloatType),
     GreaterThanOrEqualToInteger(IntegerType, SignExtension),
     GreaterThanOrEqualToFloat(FloatType),
-    ExtendSigned(StorageSize),
+    ExtendSigned8(IntegerType),
+    ExtendSigned16(IntegerType),
+    ExtendSigned32,
     Wrap,
     ExtendWithSignExtension(SignExtension),
     ConvertAndTruncate(IntegerType, FloatType, SignExtension), // trunc
@@ -189,10 +191,14 @@ pub enum MemoryInstruction {
     Store(NumberType, MemoryArgument),
     /// Integer load that specifies a storage size that is smaller than
     /// the bit width of the respective value type.
-    LoadPartial(StorageSize, SignExtension, MemoryArgument),
+    Load8(IntegerType, SignExtension, MemoryArgument),
+    Load16(IntegerType, SignExtension, MemoryArgument),
+    Load32(SignExtension, MemoryArgument),
     /// Integer store that specifies a storage size that is smaller than
     /// the bit width of the respective value type.
-    StorePartial(StorageSize, MemoryArgument),
+    Store8(IntegerType, MemoryArgument),
+    Store16(IntegerType, MemoryArgument),
+    Store32(MemoryArgument),
     /// The 𝗆𝖾𝗆𝗈𝗋𝗒.𝗌𝗂𝗓𝖾 instruction returns the current size of a memory.
     /// Operates in units of page size.
     MemorySize,
@@ -309,17 +315,6 @@ impl MemoryArgument {
     pub fn align(&self) -> usize {
         self.align
     }
-}
-
-/// Modifier to numeric operations (e.g.,  load, store, extend, etc.) to treat an integer as
-/// smaller than its type suggest.
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
-pub enum StorageSize {
-    I32_8,
-    I64_8,
-    I32_16,
-    I64_16,
-    I64_32,
 }
 
 /// Some integer instructions come in two flavors, where a signedness annotation sx distinguishes

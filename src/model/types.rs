@@ -5,19 +5,27 @@
 /// See https://webassembly.github.io/spec/core/syntax/types.html#number-types
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum NumberType {
-    Integer(IntegerType),
-    Float(FloatType),
+    I32,
+    I64,
+    F32,
+    F64,
 }
 
 impl From<IntegerType> for NumberType {
     fn from(kind: IntegerType) -> Self {
-        NumberType::Integer(kind)
+        match kind {
+            IntegerType::I32 => NumberType::I32,
+            IntegerType::I64 => NumberType::I64,
+        }
     }
 }
 
 impl From<FloatType> for NumberType {
     fn from(kind: FloatType) -> Self {
-        NumberType::Float(kind)
+        match kind {
+            FloatType::F32 => NumberType::F32,
+            FloatType::F64 => NumberType::F64,
+        }
     }
 }
 
@@ -59,8 +67,12 @@ pub enum ReferenceType {
 /// See https://webassembly.github.io/spec/core/syntax/types.html#value-types
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum ValueType {
-    Number(NumberType),
-    Reference(ReferenceType),
+    I32,
+    I64,
+    F32,
+    F64,
+    Function,
+    External,
 }
 
 impl<T> From<T> for ValueType
@@ -68,13 +80,22 @@ where
     T: Into<NumberType>,
 {
     fn from(kind: T) -> Self {
-        ValueType::Number(kind.into())
+        let number_kind: NumberType = kind.into();
+        match number_kind {
+            NumberType::I32 => ValueType::I32,
+            NumberType::I64 => ValueType::I64,
+            NumberType::F32 => ValueType::F32,
+            NumberType::F64 => ValueType::F64,
+        }
     }
 }
 
 impl From<ReferenceType> for ValueType {
     fn from(kind: ReferenceType) -> Self {
-        ValueType::Reference(kind)
+        match kind {
+            ReferenceType::Function => ValueType::Function,
+            ReferenceType::External => ValueType::External,
+        }
     }
 }
 
@@ -278,60 +299,24 @@ mod tests {
 
     #[test]
     fn number_types() {
-        assert_eq!(
-            NumberType::Integer(IntegerType::I32),
-            IntegerType::I32.into()
-        );
-        assert_eq!(
-            NumberType::Integer(IntegerType::I64),
-            IntegerType::I64.into()
-        );
-        assert_eq!(NumberType::Float(FloatType::F32), FloatType::F32.into());
-        assert_eq!(NumberType::Float(FloatType::F64), FloatType::F64.into());
+        assert_eq!(NumberType::I32, IntegerType::I32.into());
+        assert_eq!(NumberType::I64, IntegerType::I64.into());
+        assert_eq!(NumberType::F32, FloatType::F32.into());
+        assert_eq!(NumberType::F64, FloatType::F64.into());
     }
 
     #[test]
     fn value_types() {
-        assert_eq!(
-            ValueType::Number(NumberType::Integer(IntegerType::I32)),
-            IntegerType::I32.into()
-        );
-        assert_eq!(
-            ValueType::Number(NumberType::Integer(IntegerType::I32)),
-            NumberType::Integer(IntegerType::I32).into()
-        );
-        assert_eq!(
-            ValueType::Number(NumberType::Integer(IntegerType::I64)),
-            IntegerType::I64.into()
-        );
-        assert_eq!(
-            ValueType::Number(NumberType::Integer(IntegerType::I64)),
-            NumberType::Integer(IntegerType::I64).into()
-        );
-        assert_eq!(
-            ValueType::Number(NumberType::Float(FloatType::F32)),
-            FloatType::F32.into()
-        );
-        assert_eq!(
-            ValueType::Number(NumberType::Float(FloatType::F32)),
-            NumberType::Float(FloatType::F32).into()
-        );
-        assert_eq!(
-            ValueType::Number(NumberType::Float(FloatType::F64)),
-            FloatType::F64.into()
-        );
-        assert_eq!(
-            ValueType::Number(NumberType::Float(FloatType::F64)),
-            NumberType::Float(FloatType::F64).into()
-        );
-        assert_eq!(
-            ValueType::Reference(ReferenceType::Function),
-            ReferenceType::Function.into()
-        );
-        assert_eq!(
-            ValueType::Reference(ReferenceType::External),
-            ReferenceType::External.into()
-        );
+        assert_eq!(ValueType::I32, IntegerType::I32.into());
+        assert_eq!(ValueType::I32, NumberType::I32.into());
+        assert_eq!(ValueType::I64, IntegerType::I64.into());
+        assert_eq!(ValueType::I64, NumberType::I64.into());
+        assert_eq!(ValueType::F32, FloatType::F32.into());
+        assert_eq!(ValueType::F32, NumberType::F32.into());
+        assert_eq!(ValueType::F64, FloatType::F64.into());
+        assert_eq!(ValueType::F64, NumberType::F64.into());
+        assert_eq!(ValueType::Function, ReferenceType::Function.into());
+        assert_eq!(ValueType::External, ReferenceType::External.into());
     }
 
     #[test]
@@ -358,12 +343,12 @@ mod tests {
         assert_eq!(
             result_type.kinds(),
             &[
-                ValueType::Number(NumberType::Integer(IntegerType::I32)),
-                ValueType::Number(NumberType::Integer(IntegerType::I64)),
-                ValueType::Number(NumberType::Float(FloatType::F32)),
-                ValueType::Number(NumberType::Float(FloatType::F64)),
-                ValueType::Reference(ReferenceType::Function),
-                ValueType::Reference(ReferenceType::External),
+                ValueType::I32,
+                ValueType::I64,
+                ValueType::F32,
+                ValueType::F64,
+                ValueType::Function,
+                ValueType::External,
             ]
         );
     }

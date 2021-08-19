@@ -1,7 +1,7 @@
 mod builder;
 mod instruction;
 mod module;
-mod types;
+pub mod types;
 pub mod values;
 
 pub use instruction::*;

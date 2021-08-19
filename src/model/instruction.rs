@@ -2,7 +2,6 @@ use crate::model::{
     DataIndex, ElementIndex, FloatType, FunctionIndex, GlobalIndex, IntegerType, LabelIndex,
     LocalIndex, NumberType, ReferenceType, TableIndex, TypeIndex, ValueType,
 };
-use std::mem::size_of;
 
 /// WebAssembly code consists of sequences of instructions.
 /// Its computational model is based on a stack machine in that instructions manipulate values on
@@ -377,6 +376,68 @@ impl From<TableInstruction> for Instruction {
 /// the memory’s current size.
 ///
 /// See https://webassembly.github.io/spec/core/syntax/instructions.html#memory-instructions
+///
+/// # Examples
+/// ```rust
+/// use wasm_ast::{MemoryInstruction, Instruction, NumberType, MemoryArgument, IntegerType, SignExtension};
+///
+/// assert_eq!(
+///     Instruction::Memory(MemoryInstruction::Load(NumberType::I32, MemoryArgument::default())),
+///     MemoryInstruction::Load(NumberType::I32, MemoryArgument::default()).into()
+/// );
+/// assert_eq!(
+///     Instruction::Memory(MemoryInstruction::Load8(IntegerType::I32, SignExtension::Signed, MemoryArgument::default())),
+///     MemoryInstruction::Load8(IntegerType::I32, SignExtension::Signed, MemoryArgument::default()).into()
+/// );
+/// assert_eq!(
+///     Instruction::Memory(MemoryInstruction::Load16(IntegerType::I64, SignExtension::Unsigned, MemoryArgument::default())),
+///     MemoryInstruction::Load16(IntegerType::I64, SignExtension::Unsigned, MemoryArgument::default()).into()
+/// );
+/// assert_eq!(
+///     Instruction::Memory(MemoryInstruction::Load32(SignExtension::Signed, MemoryArgument::default())),
+///     MemoryInstruction::Load32(SignExtension::Signed, MemoryArgument::default()).into()
+/// );
+/// assert_eq!(
+///     Instruction::Memory(MemoryInstruction::Store(NumberType::F64, MemoryArgument::default_offset(8))),
+///     MemoryInstruction::Store(NumberType::F64, MemoryArgument::new(0, Some(8))).into()
+/// );
+/// assert_eq!(
+///     Instruction::Memory(MemoryInstruction::Store8(IntegerType::I32, MemoryArgument::default())),
+///     MemoryInstruction::Store8(IntegerType::I32, MemoryArgument::default()).into()
+/// );
+/// assert_eq!(
+///     Instruction::Memory(MemoryInstruction::Store16(IntegerType::I64, MemoryArgument::default())),
+///     MemoryInstruction::Store16(IntegerType::I64, MemoryArgument::default()).into()
+/// );
+/// assert_eq!(
+///     Instruction::Memory(MemoryInstruction::Store32(MemoryArgument::default())),
+///     MemoryInstruction::Store32(MemoryArgument::default()).into()
+/// );
+/// assert_eq!(
+///     Instruction::Memory(MemoryInstruction::Size),
+///     MemoryInstruction::Size.into()
+/// );
+/// assert_eq!(
+///     Instruction::Memory(MemoryInstruction::Grow),
+///     MemoryInstruction::Grow.into()
+/// );
+/// assert_eq!(
+///     Instruction::Memory(MemoryInstruction::Fill),
+///     MemoryInstruction::Fill.into()
+/// );
+/// assert_eq!(
+///     Instruction::Memory(MemoryInstruction::Copy),
+///     MemoryInstruction::Copy.into()
+/// );
+/// assert_eq!(
+///     Instruction::Memory(MemoryInstruction::Init(1)),
+///     MemoryInstruction::Init(1).into()
+/// );
+/// assert_eq!(
+///     Instruction::Memory(MemoryInstruction::DataDrop(0)),
+///     MemoryInstruction::DataDrop(0).into()
+/// );
+/// ```
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum MemoryInstruction {
     /// Load a number type from memory.
@@ -395,17 +456,17 @@ pub enum MemoryInstruction {
     Store32(MemoryArgument),
     /// The 𝗆𝖾𝗆𝗈𝗋𝗒.𝗌𝗂𝗓𝖾 instruction returns the current size of a memory.
     /// Operates in units of page size.
-    MemorySize,
+    Size,
     /// The 𝗆𝖾𝗆𝗈𝗋𝗒.𝗀𝗋𝗈𝗐 instruction grows memory by a given delta and returns the previous size,
     /// or −1 if enough memory cannot be allocated.
-    MemoryGrow,
+    Grow,
     /// The 𝗆𝖾𝗆𝗈𝗋𝗒.𝖿𝗂𝗅𝗅 instruction sets all values in a region to a given byte.
-    MemoryFill,
+    Fill,
     /// The 𝗆𝖾𝗆𝗈𝗋𝗒.𝖼𝗈𝗉𝗒 instruction copies data from a source memory region to
     /// a possibly overlapping destination region.
-    MemoryCopy,
+    Copy,
     /// The 𝗆𝖾𝗆𝗈𝗋𝗒.𝗂𝗇𝗂𝗍 instruction copies data from a passive data segment into a memory.
-    MemoryInit(DataIndex),
+    Init(DataIndex),
     /// he 𝖽𝖺𝗍𝖺.𝖽𝗋𝗈𝗉 instruction prevents further use of a passive data segment.
     /// This instruction is intended to be used as an optimization hint.
     /// After a data segment is dropped its data can no longer be retrieved,
@@ -570,71 +631,74 @@ pub enum BlockType {
 /// ```rust
 /// use wasm_ast::MemoryArgument;
 ///
-/// let argument = MemoryArgument::new(42, 3);
+/// let argument = MemoryArgument::new(42, Some(4));
 ///
 /// assert_eq!(argument.offset(), 42);
-/// assert_eq!(argument.align(), 3);
+/// assert_eq!(argument.align(), Some(4));
 /// ```
 ///
 /// ## With Offset Only
 /// ```rust
 /// use wasm_ast::MemoryArgument;
 ///
-/// let argument = MemoryArgument::offset_default::<u8>(42);
+/// let argument = MemoryArgument::default_align(42);
 ///
 /// assert_eq!(argument.offset(), 42);
-/// assert_eq!(argument.align(), 1);
+/// assert_eq!(argument.align(), None);
 /// ```
 ///
 /// ## With Alignment Only
 /// ```rust
 /// use wasm_ast::MemoryArgument;
 ///
-/// let argument = MemoryArgument::aligned(4);
+/// let argument = MemoryArgument::default_offset(4);
 ///
 /// assert_eq!(argument.offset(), 0);
-/// assert_eq!(argument.align(), 4);
+/// assert_eq!(argument.align(), Some(4));
 /// ```
 ///
 /// ## Default
 /// ```rust
 /// use wasm_ast::MemoryArgument;
 ///
-/// let argument = MemoryArgument::default::<u16>();
+/// let argument = MemoryArgument::default();
 ///
 /// assert_eq!(argument.offset(), 0);
-/// assert_eq!(argument.align(), 2);
+/// assert_eq!(argument.align(), None);
 /// ```
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct MemoryArgument {
     offset: u32,
-    align: u32,
+    align: Option<u32>,
 }
 
 impl MemoryArgument {
     /// Creates a new memory argument with the given offset and alignment.
-    pub fn new(offset: u32, align: u32) -> Self {
+    pub fn new(offset: u32, align: Option<u32>) -> Self {
         MemoryArgument { offset, align }
     }
 
-    /// Creates a new memory argument with the given alignment and an offset of 0.
-    pub fn aligned(align: u32) -> Self {
-        MemoryArgument { offset: 0, align }
-    }
-
     /// Creates a new memory argument with the default alignment and an offset of 0.
-    pub fn default<T>() -> Self {
+    pub fn default() -> Self {
         MemoryArgument {
             offset: 0,
-            align: size_of::<T>() as u32,
+            align: None,
         }
     }
 
     /// Creates a new memory argument with the default alignment and the given offset.
-    pub fn offset_default<T>(offset: u32) -> Self {
+    pub fn default_align(offset: u32) -> Self {
         MemoryArgument {
             offset,
-            align: size_of::<T>() as u32,
+            align: None,
+        }
+    }
+
+    /// Creates a new memory argument with the default offset and the given alignment.
+    pub fn default_offset(align: u32) -> Self {
+        MemoryArgument {
+            offset: 0,
+            align: Some(align),
         }
     }
 
@@ -644,7 +708,9 @@ impl MemoryArgument {
     }
 
     /// The memory alignment of the instruction expressed as the exponent of a power of 2.
-    pub fn align(&self) -> u32 {
+    /// The default alignment cannot be computed without a number type.
+    /// Instead, returns None when the default alignment is set.
+    pub fn align(&self) -> Option<u32> {
         self.align
     }
 }

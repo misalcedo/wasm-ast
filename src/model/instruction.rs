@@ -165,7 +165,7 @@ impl From<f64> for Instruction {
 ///
 /// # Examples
 /// ```rust
-/// use wasm_ast::{ReferenceInstruction, Instruction, ReferenceType, FunctionIndex};
+/// use wasm_ast::{ReferenceInstruction, Instruction, ReferenceType};
 ///
 /// assert_eq!(
 ///     Instruction::Reference(ReferenceInstruction::Null(ReferenceType::External)),
@@ -295,7 +295,7 @@ impl From<VariableInstruction> for Instruction {
 ///
 /// # Examples
 /// ```rust
-/// use wasm_ast::{TableInstruction, Instruction, TableIndex, ElementIndex};
+/// use wasm_ast::{TableInstruction, Instruction};
 ///
 /// assert_eq!(
 ///     Instruction::Table(TableInstruction::Get(1)),
@@ -450,6 +450,60 @@ impl From<MemoryInstruction> for Instruction {
 /// represent the values consumed by the restarted block.
 ///
 /// See https://webassembly.github.io/spec/core/syntax/instructions.html#control-instructions
+///
+/// # Examples
+/// ## Simple
+/// ```rust
+/// use wasm_ast::{ControlInstruction, Instruction};
+///
+/// assert_eq!(Instruction::Control(ControlInstruction::Nop), ControlInstruction::Nop.into());
+/// assert_eq!(Instruction::Control(ControlInstruction::Unreachable), ControlInstruction::Unreachable.into());
+/// assert_eq!(Instruction::Control(ControlInstruction::Branch(0)), ControlInstruction::Branch(0).into());
+/// assert_eq!(Instruction::Control(ControlInstruction::BranchIf(1)), ControlInstruction::BranchIf(1).into());
+/// assert_eq!(Instruction::Control(ControlInstruction::BranchTable(vec![0], 1)), ControlInstruction::BranchTable(vec![0], 1).into());
+/// assert_eq!(Instruction::Control(ControlInstruction::Return), ControlInstruction::Return.into());
+/// assert_eq!(Instruction::Control(ControlInstruction::Call(1)), ControlInstruction::Call(1).into());
+/// assert_eq!(Instruction::Control(ControlInstruction::CallIndirect(0, 1)), ControlInstruction::CallIndirect(0, 1).into());
+/// ```
+///
+/// ## Block
+/// ```rust
+/// use wasm_ast::{ControlInstruction, Instruction, Expression, BlockType, ValueType};
+///
+/// let expression = Expression::new(vec![ControlInstruction::Nop.into(), 0i32.into()]);
+///
+/// assert_eq!(
+///     Instruction::Control(ControlInstruction::Block(BlockType::ValueType(ValueType::I32), expression.clone())),
+///     ControlInstruction::Block(BlockType::ValueType(ValueType::I32), expression.clone()).into()
+/// );
+/// ```
+///
+/// ## Loop
+/// ```rust
+/// use wasm_ast::{ControlInstruction, Instruction, BlockType, Expression};
+/// let expression = Expression::new(vec![ControlInstruction::Nop.into(), 0i32.into()]);
+///
+/// assert_eq!(
+///     Instruction::Control(ControlInstruction::Loop(BlockType::Index(0), expression.clone())),
+///     ControlInstruction::Loop(BlockType::Index(0), expression.clone()).into()
+/// );
+/// ```
+///
+/// ## If
+/// ```rust
+/// use wasm_ast::{ControlInstruction, Instruction, Expression, BlockType};
+/// let expression = Expression::new(vec![ControlInstruction::Nop.into()]);
+///
+/// assert_eq!(
+///     Instruction::Control(ControlInstruction::If(BlockType::None, expression.clone(), None)),
+///     ControlInstruction::If(BlockType::None, expression.clone(), None).into()
+/// );
+///
+/// assert_eq!(
+///     Instruction::Control(ControlInstruction::If(BlockType::None, expression.clone(), Some(expression.clone()))),
+///     ControlInstruction::If(BlockType::None, expression.clone(), Some(expression.clone())).into()
+/// );
+/// ```
 #[derive(Clone, Debug, PartialEq)]
 pub enum ControlInstruction {
     /// The 𝗇𝗈𝗉 instruction does nothing.

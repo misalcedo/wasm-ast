@@ -2,7 +2,6 @@ use crate::model::{
     DataIndex, ElementIndex, FloatType, FunctionIndex, GlobalIndex, IntegerType, LabelIndex,
     LocalIndex, NumberType, ReferenceType, TableIndex, TypeIndex, ValueType,
 };
-use std::mem::size_of;
 
 /// WebAssembly code consists of sequences of instructions.
 /// Its computational model is based on a stack machine in that instructions manipulate values on
@@ -437,15 +436,5 @@ mod tests {
 
         assert_eq!(expression.instructions(), &[instruction]);
         assert!(!expression.is_empty());
-    }
-
-    #[test]
-    fn new_memory_argument() {
-        let align = 0;
-        let offset = 42;
-        let argument = MemoryArgument::new(align, offset);
-
-        assert_eq!(argument.align(), align);
-        assert_eq!(argument.offset(), offset);
     }
 }

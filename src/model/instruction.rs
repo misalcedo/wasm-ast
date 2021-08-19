@@ -389,18 +389,6 @@ impl MemoryArgument {
     }
 }
 
-impl<T> From<T> for MemoryArgument
-where
-    T: Into<NumberType>,
-{
-    fn from(kind: T) -> Self {
-        MemoryArgument {
-            offset: 0,
-            align: kind.into().bytes() as u32,
-        }
-    }
-}
-
 /// Some integer instructions come in two flavors, where a signedness annotation sx distinguishes
 /// whether the operands are to be interpreted as unsigned or signed integers.
 /// For the other integer instructions, the use of two’s complement for the signed interpretation

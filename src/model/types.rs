@@ -1,11 +1,9 @@
-use serde::{Deserialize, Serialize};
-
 /// Number types classify numeric values.
 /// Number types are transparent, meaning that their bit patterns can be observed.
 /// Values of number type can be stored in memories.
 ///
 /// See https://webassembly.github.io/spec/core/syntax/types.html#number-types
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum NumberType {
     Integer(IntegerType),
     Float(FloatType),
@@ -25,7 +23,7 @@ impl From<FloatType> for NumberType {
 
 /// The types 𝗂𝟥𝟤 and 𝗂𝟨𝟦 classify 32 and 64 bit integers, respectively.
 /// Integers are not inherently signed or unsigned, their interpretation is determined by individual operations.
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum IntegerType {
     I32,
     I64,
@@ -34,7 +32,7 @@ pub enum IntegerType {
 /// The types 𝖿𝟥𝟤 and 𝖿𝟨𝟦 classify 32 and 64 bit floating-point data, respectively.
 /// They correspond to the respective binary floating-point representations,
 /// also known as single and double precision, as defined by the IEEE 754-2019 standard (Section 3.3).
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum FloatType {
     F32,
     F64,
@@ -49,7 +47,7 @@ pub enum FloatType {
 /// Values of reference type can be stored in tables.
 ///
 /// See https://webassembly.github.io/spec/core/syntax/types.html#reference-types
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum ReferenceType {
     Function,
     External,
@@ -59,7 +57,7 @@ pub enum ReferenceType {
 /// They are either number types or reference types.
 ///
 /// See https://webassembly.github.io/spec/core/syntax/types.html#value-types
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum ValueType {
     Number(NumberType),
     Reference(ReferenceType),
@@ -84,7 +82,7 @@ impl From<ReferenceType> for ValueType {
 /// which is a sequence of values, written with brackets.
 ///
 /// See https://webassembly.github.io/spec/core/syntax/types.html#result-types
-#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ResultType {
     kinds: Vec<ValueType>,
 }
@@ -122,7 +120,7 @@ impl From<Vec<ValueType>> for ResultType {
 /// They are also used to classify the inputs and outputs of instructions
 ///
 /// See https://webassembly.github.io/spec/core/syntax/types.html#function-types
-#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct FunctionType {
     parameters: ResultType,
     results: ResultType,
@@ -151,7 +149,7 @@ impl FunctionType {
 /// Limits classify the size range of resizeable storage associated with memory types and table types.
 ///
 /// See https://webassembly.github.io/spec/core/syntax/types.html#limits
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct Limit {
     min: u32,
     max: Option<u32>,
@@ -185,7 +183,7 @@ impl From<u32> for Limit {
 /// The limits are given in units of page size.
 ///
 /// See https://webassembly.github.io/spec/core/syntax/types.html#memory-types
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct MemoryType {
     limits: Limit,
 }
@@ -208,7 +206,7 @@ impl From<Limit> for MemoryType {
 /// The limits are given in numbers of entries.
 ///
 /// See https://webassembly.github.io/spec/core/syntax/types.html#table-types
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct TableType {
     limits: Limit,
     kind: ReferenceType,
@@ -234,7 +232,7 @@ impl TableType {
 /// Global types classify global variables, which hold a value and can either be mutable or immutable.
 ///
 /// See https://webassembly.github.io/spec/core/syntax/types.html#global-types
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct GlobalType {
     mutability: Mutability,
     kind: ValueType,
@@ -268,7 +266,7 @@ impl GlobalType {
 }
 
 /// The mutability of a global variable.
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum Mutability {
     Mutable,
     Immutable,

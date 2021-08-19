@@ -1,3 +1,4 @@
+mod builder;
 mod instruction;
 mod module;
 mod types;

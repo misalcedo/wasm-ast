@@ -1,0 +1,26 @@
+name: Linters
+
+on:
+  pull_request: {}
+  push:
+    branches: [ main ]
+
+jobs:
+  rustfmt:
+    name: Formatter
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - name: Cache Cargo
+        uses: Swatinem/rust-cache@v1.3.0
+      - uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: ---all -- --check
+      - uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: --all --all-features -- -D warnings

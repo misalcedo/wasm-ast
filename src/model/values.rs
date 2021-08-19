@@ -1,7 +1,21 @@
 /// Names are sequences of characters, which are scalar values as defined by Unicode (Section 2.4).
 /// Due to the limitations of the binary format,
 /// the length of a name is bounded by the length of its UTF-8 encoding.
+///
 /// See https://webassembly.github.io/spec/core/syntax/values.html#names
+///
+/// # Examples
+/// ```rust
+/// use wasm_ast::model::values::Name;
+///
+/// let text = "test";
+/// let name = Name::from(text);
+///
+/// assert_eq!(name, Name::from(text.to_string()));
+/// assert_eq!(name.as_bytes(), text.as_bytes());
+/// assert_eq!(name.len(), text.len());
+/// assert_eq!(name.is_empty(), false);
+/// ```
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Name {
     value: String,

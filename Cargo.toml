@@ -1,13 +1,13 @@
 [package]
-name = "wasm"
+name = "wasm-ast"
 description = "A WebAssembly syntax model useful for generate, reading, and emitting WebAssembly code."
 version = "0.0.1"
 authors = ["Miguel D. Salcedo <miguel@salcedo.cc>"]
 edition = "2018"
 license = "Apache-2.0"
-homepage = "https://github.com/misalcedo/wasm"
-repository = "https://github.com/misalcedo/wasm"
-documentation = "https://docs.rs/wasm"
+homepage = "https://github.com/misalcedo/wasm-ast"
+repository = "https://github.com/misalcedo/wasm-ast"
+documentation = "https://docs.rs/wasm-ast"
 
 [profile.release]
 lto = true

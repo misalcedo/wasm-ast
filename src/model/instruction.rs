@@ -37,6 +37,23 @@ pub enum Instruction {
 /// for the signed interpretation means that they behave the same regardless of signedness.
 ///
 /// See https://webassembly.github.io/spec/core/syntax/instructions.html#numeric-instructions
+///
+/// # Examples
+/// ## Constant
+/// ```rust
+/// ```
+///
+/// ## Integer
+/// ```rust
+/// ```
+///
+/// ## Float
+/// ```rust
+/// ```
+///
+/// ## Convert
+/// ```rust
+/// ```
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum NumericInstruction {
     I32Constant(u32),

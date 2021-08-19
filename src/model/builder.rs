@@ -52,7 +52,5 @@ mod tests {
     use super::*;
 
     #[test]
-    fn empty() {
-        M
-    }
+    fn empty() {}
 }

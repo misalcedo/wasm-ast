@@ -1,4 +1,3 @@
-use crate::model::builder::ModuleBuilder;
 use crate::model::types::*;
 use crate::model::{Expression, Name};
 use std::mem::discriminant;

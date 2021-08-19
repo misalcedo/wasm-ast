@@ -2,6 +2,7 @@ use crate::model::{
     DataIndex, ElementIndex, FloatType, FunctionIndex, GlobalIndex, IntegerType, LabelIndex,
     LocalIndex, NumberType, ReferenceType, TableIndex, TypeIndex, ValueType,
 };
+use std::mem::size_of;
 
 /// WebAssembly code consists of sequences of instructions.
 /// Its computational model is based on a stack machine in that instructions manipulate values on
@@ -296,23 +297,107 @@ pub enum BlockType {
     ValueType(ValueType),
 }
 
+/// Argument to load and store instructions that contains an address offset and
+/// the expected alignment (expressed as the exponent of a power of 2).
+///
+/// The static address offset is added to the dynamic address operand,
+/// yielding a 33 bit effective address that is the zero-based index at which the memory is accessed.
+///
+/// See https://webassembly.github.io/spec/core/syntax/instructions.html#memory-instructions
+///
+/// # Examples
+/// ## With Offset & Alignment
+/// ```rust
+/// use wasm_ast::MemoryArgument;
+///
+/// let argument = MemoryArgument::new(42, 3);
+///
+/// assert_eq!(argument.offset(), 42);
+/// assert_eq!(argument.align(), 3);
+/// ```
+///
+/// ## With Offset Only
+/// ```rust
+/// use wasm_ast::MemoryArgument;
+///
+/// let argument = MemoryArgument::offset_default::<u8>(42);
+///
+/// assert_eq!(argument.offset(), 42);
+/// assert_eq!(argument.align(), 1);
+/// ```
+///
+/// ## With Alignment Only
+/// ```rust
+/// use wasm_ast::MemoryArgument;
+///
+/// let argument = MemoryArgument::aligned(4);
+///
+/// assert_eq!(argument.offset(), 0);
+/// assert_eq!(argument.align(), 4);
+/// ```
+///
+/// ## Default
+/// ```rust
+/// use wasm_ast::MemoryArgument;
+///
+/// let argument = MemoryArgument::default::<u16>();
+///
+/// assert_eq!(argument.offset(), 0);
+/// assert_eq!(argument.align(), 2);
+/// ```
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct MemoryArgument {
-    align: usize,
-    offset: usize,
+    offset: u32,
+    align: u32,
 }
 
 impl MemoryArgument {
-    pub fn new(align: usize, offset: usize) -> Self {
-        MemoryArgument { align, offset }
+    /// Creates a new memory argument with the given offset and alignment.
+    pub fn new(offset: u32, align: u32) -> Self {
+        MemoryArgument { offset, align }
     }
 
-    pub fn offset(&self) -> usize {
+    /// Creates a new memory argument with the given alignment and an offset of 0.
+    pub fn aligned(align: u32) -> Self {
+        MemoryArgument { offset: 0, align }
+    }
+
+    /// Creates a new memory argument with the default alignment and an offset of 0.
+    pub fn default<T>() -> Self {
+        MemoryArgument {
+            offset: 0,
+            align: size_of::<T>() as u32,
+        }
+    }
+
+    /// Creates a new memory argument with the default alignment and the given offset.
+    pub fn offset_default<T>(offset: u32) -> Self {
+        MemoryArgument {
+            offset,
+            align: size_of::<T>() as u32,
+        }
+    }
+
+    /// The static address offset of the memory instruction.
+    pub fn offset(&self) -> u32 {
         self.offset
     }
 
-    pub fn align(&self) -> usize {
+    /// The memory alignment of the instruction expressed as the exponent of a power of 2.
+    pub fn align(&self) -> u32 {
         self.align
+    }
+}
+
+impl<T> From<T> for MemoryArgument
+where
+    T: Into<NumberType>,
+{
+    fn from(kind: T) -> Self {
+        MemoryArgument {
+            offset: 0,
+            align: kind.into().bytes() as u32,
+        }
     }
 }
 

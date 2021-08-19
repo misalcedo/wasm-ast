@@ -46,11 +46,3 @@ impl ModuleBuilder {
         Module::new()
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn empty() {}
-}

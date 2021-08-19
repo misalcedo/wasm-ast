@@ -1,3 +1,5 @@
+use std::mem::size_of;
+
 /// Number types classify numeric values.
 /// Number types are transparent, meaning that their bit patterns can be observed.
 /// Values of number type can be stored in memories.
@@ -134,8 +136,7 @@ where
     T: Into<NumberType>,
 {
     fn from(kind: T) -> Self {
-        let number_kind: NumberType = kind.into();
-        match number_kind {
+        match kind.into() {
             NumberType::I32 => ValueType::I32,
             NumberType::I64 => ValueType::I64,
             NumberType::F32 => ValueType::F32,

@@ -6,18 +6,21 @@
 
 A Rust-native WebAssembly syntax model useful for generate, reading, and emitting WebAssembly code.
 
+## Design
+WASM-AST is designed with minimal validation. The goal is to closely model the WASM syntax specification in order to allow valid and invalid abstract syntax trees.
+
 ## Usage
-To use `wasm`, first add this to your `Cargo.toml`:
+To use `wasm-ast`, first add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-wasm = "0.0.1"
+wasm-ast = "0.0.1"
 ```
 
 Then, add this to your crate:
 
 ```rust
-use wasm::model::Module;
+use wasm_ast::model::Module;
 
 fn main() {
     // ...
@@ -29,7 +32,7 @@ fn main() {
 Create an empty WASM module:
 
 ```rust
-use wasm::model::Module;
+use wasm_ast::model::Module;
 
 fn main() {
     let builder = Module.builder();

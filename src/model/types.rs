@@ -182,6 +182,14 @@ impl Limit {
         Limit { min, max }
     }
 
+    /// Creates a new limit with a required minimum and maximum.
+    pub fn bounded(min: u32, max: u32) -> Self {
+        Limit {
+            min,
+            max: Some(max),
+        }
+    }
+
     /// The minimum value of the limit.
     pub fn min(&self) -> u32 {
         self.min
@@ -268,7 +276,7 @@ impl GlobalType {
         }
     }
 
-    /// Creates a new `GlobalType` for an immutable (i.e. contant) global variable.
+    /// Creates a new `GlobalType` for an immutable (i.e. constant) global variable.
     pub fn immutable(kind: ValueType) -> Self {
         GlobalType {
             mutability: Mutability::Immutable,

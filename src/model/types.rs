@@ -3,6 +3,16 @@
 /// Values of number type can be stored in memories.
 ///
 /// See https://webassembly.github.io/spec/core/syntax/types.html#number-types
+///
+/// # Examples
+/// ```rust
+/// use wasm_ast::{ValueType, NumberType};
+///
+/// assert_eq!(ValueType::I32, NumberType::I32.into());
+/// assert_eq!(ValueType::I64, NumberType::I64.into());
+/// assert_eq!(ValueType::F32, NumberType::F32.into());
+/// assert_eq!(ValueType::F64, NumberType::F64.into());
+/// ```
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum NumberType {
     I32,
@@ -31,6 +41,16 @@ impl From<FloatType> for NumberType {
 
 /// The types 𝗂𝟥𝟤 and 𝗂𝟨𝟦 classify 32 and 64 bit integers, respectively.
 /// Integers are not inherently signed or unsigned, their interpretation is determined by individual operations.
+///
+/// # Examples
+/// ```rust
+/// use wasm_ast::{ValueType, NumberType, IntegerType};
+///
+/// assert_eq!(ValueType::I32, IntegerType::I32.into());
+/// assert_eq!(NumberType::I32, IntegerType::I32.into());
+/// assert_eq!(ValueType::I64, IntegerType::I64.into());
+/// assert_eq!(NumberType::I64, IntegerType::I64.into());
+/// ```
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum IntegerType {
     I32,
@@ -40,6 +60,16 @@ pub enum IntegerType {
 /// The types 𝖿𝟥𝟤 and 𝖿𝟨𝟦 classify 32 and 64 bit floating-point data, respectively.
 /// They correspond to the respective binary floating-point representations,
 /// also known as single and double precision, as defined by the IEEE 754-2019 standard (Section 3.3).
+///
+/// # Examples
+/// ```rust
+/// use wasm_ast::{ValueType, NumberType, FloatType};
+///
+/// assert_eq!(ValueType::F32, FloatType::F32.into());
+/// assert_eq!(NumberType::F32, FloatType::F32.into());
+/// assert_eq!(ValueType::F64, FloatType::F64.into());
+/// assert_eq!(NumberType::F64, FloatType::F64.into());
+/// ```
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum FloatType {
     F32,
@@ -55,6 +85,14 @@ pub enum FloatType {
 /// Values of reference type can be stored in tables.
 ///
 /// See https://webassembly.github.io/spec/core/syntax/types.html#reference-types
+///
+/// # Examples
+/// ```rust
+/// use wasm_ast::{ValueType, ReferenceType};
+///
+/// assert_eq!(ValueType::Function, ReferenceType::Function.into());
+/// assert_eq!(ValueType::External, ReferenceType::External.into());
+/// ```
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum ReferenceType {
     Function,
@@ -65,6 +103,22 @@ pub enum ReferenceType {
 /// They are either number types or reference types.
 ///
 /// See https://webassembly.github.io/spec/core/syntax/types.html#value-types
+///
+/// # Examples
+/// ```rust
+/// use wasm_ast::{ValueType, ReferenceType, IntegerType, FloatType, NumberType};
+///
+/// assert_eq!(ValueType::I32, IntegerType::I32.into());
+/// assert_eq!(ValueType::I32, NumberType::I32.into());
+/// assert_eq!(ValueType::I64, IntegerType::I64.into());
+/// assert_eq!(ValueType::I64, NumberType::I64.into());
+/// assert_eq!(ValueType::F32, FloatType::F32.into());
+/// assert_eq!(ValueType::F32, NumberType::F32.into());
+/// assert_eq!(ValueType::F64, FloatType::F64.into());
+/// assert_eq!(ValueType::F64, NumberType::F64.into());
+/// assert_eq!(ValueType::Function, ReferenceType::Function.into());
+/// assert_eq!(ValueType::External, ReferenceType::External.into());
+/// ```
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum ValueType {
     I32,
@@ -103,15 +157,72 @@ impl From<ReferenceType> for ValueType {
 /// which is a sequence of values, written with brackets.
 ///
 /// See https://webassembly.github.io/spec/core/syntax/types.html#result-types
+///
+/// # Examples
+///
+/// ## Empty
+/// ```rust
+/// use wasm_ast::ResultType;
+///
+/// let result_type = ResultType::empty();
+///
+/// assert_eq!(result_type.len(), 0);
+/// assert!(result_type.is_empty());
+/// assert_eq!(result_type.kinds(), &[]);
+/// ```
+///
+/// ## Non-Empty
+/// ```rust
+/// use wasm_ast::{ResultType, IntegerType, FloatType, ReferenceType, ValueType};
+///
+/// let result_type = ResultType::new(vec![
+///     IntegerType::I32.into(),
+///     IntegerType::I64.into(),
+///     FloatType::F32.into(),
+///     FloatType::F64.into(),
+///     ReferenceType::Function.into(),
+///     ReferenceType::External.into(),
+/// ]);
+///
+/// assert_eq!(result_type.len(), 6);
+/// assert!(!result_type.is_empty());
+/// assert_eq!(
+///     result_type.kinds(),
+///     &[
+///         ValueType::I32,
+///         ValueType::I64,
+///         ValueType::F32,
+///         ValueType::F64,
+///         ValueType::Function,
+///         ValueType::External,
+///     ]
+/// );
+/// assert_eq!(
+///     result_type,
+///     vec![
+///         ValueType::I32,
+///         ValueType::I64,
+///         ValueType::F32,
+///         ValueType::F64,
+///         ValueType::Function,
+///         ValueType::External,
+///     ].into()
+/// );
+/// ```
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ResultType {
     kinds: Vec<ValueType>,
 }
 
 impl ResultType {
-    /// Creates a new emtpy `ResultType`.
-    pub fn new() -> Self {
-        ResultType { kinds: Vec::new() }
+    /// Creates a new `ResultType` with the given value types.
+    pub fn new(kinds: Vec<ValueType>) -> Self {
+        ResultType { kinds }
+    }
+
+    /// Creates a new empty `ResultType`.
+    pub fn empty() -> Self {
+        ResultType { kinds: vec![] }
     }
 
     /// A reference to a slice of the `ValueType`s.
@@ -141,6 +252,48 @@ impl From<Vec<ValueType>> for ResultType {
 /// They are also used to classify the inputs and outputs of instructions
 ///
 /// See https://webassembly.github.io/spec/core/syntax/types.html#function-types
+///
+/// # Examples
+///
+/// ## Input & Output
+/// ```rust
+/// use wasm_ast::{FunctionType, ResultType};
+///
+/// let function_type = FunctionType::new(ResultType::empty(), ResultType::empty());
+///
+/// assert!(function_type.parameters().is_empty());
+/// assert!(function_type.results().is_empty());
+/// ```
+///
+/// ## Input Only
+/// ```rust
+/// use wasm_ast::{FunctionType, ResultType, ValueType};
+///
+/// let function_type = FunctionType::side_effect(ResultType::from(vec![ValueType::I32]));
+///
+/// assert_eq!(function_type.parameters().kinds(), &[ValueType::I32]);
+/// assert!(function_type.results().is_empty());
+/// ```
+///
+/// ## Output Only
+/// ```rust
+/// use wasm_ast::{FunctionType, ResultType, ValueType};
+///
+/// let function_type = FunctionType::nullary(ResultType::from(vec![ValueType::I32]));
+///
+/// assert!(function_type.parameters().is_empty());
+/// assert_eq!(function_type.results().kinds(), &[ValueType::I32]);
+/// ```
+///
+/// ## No Input or Output
+/// ```rust
+/// use wasm_ast::{FunctionType, ResultType, ValueType};
+///
+/// let function_type = FunctionType::runnable();
+///
+/// assert!(function_type.parameters().is_empty());
+/// assert!(function_type.results().is_empty());
+/// ```
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct FunctionType {
     parameters: ResultType,
@@ -153,6 +306,30 @@ impl FunctionType {
         FunctionType {
             parameters,
             results,
+        }
+    }
+
+    /// Creates a new function signature with the given parameter types and no result types.
+    pub fn side_effect(parameters: ResultType) -> Self {
+        FunctionType {
+            parameters,
+            results: ResultType::empty(),
+        }
+    }
+
+    /// Creates a new function signature with the given result types and no parameter types.
+    pub fn nullary(results: ResultType) -> Self {
+        FunctionType {
+            parameters: ResultType::empty(),
+            results,
+        }
+    }
+
+    /// Creates a new function signature with the no parameter or result types.
+    pub fn runnable() -> Self {
+        FunctionType {
+            parameters: ResultType::empty(),
+            results: ResultType::empty(),
         }
     }
 
@@ -170,6 +347,34 @@ impl FunctionType {
 /// Limits classify the size range of resizeable storage associated with memory types and table types.
 ///
 /// See https://webassembly.github.io/spec/core/syntax/types.html#limits
+///
+/// # Examples
+///
+/// ## New
+/// ```rust
+/// use wasm_ast::Limit;
+///
+/// let max = Some(2);
+/// let min = 0;
+/// let limit = Limit::new(min, max);
+///
+/// assert_eq!(limit.min(), min);
+/// assert_eq!(limit.max(), max);
+/// ```
+///
+/// ## Unbounded
+/// ```rust
+/// use wasm_ast::Limit;
+///
+/// assert_eq!(Limit::unbounded(2), Limit::new(2, None));
+/// ```
+///
+/// /// ## Unbounded
+/// ```rust
+/// use wasm_ast::Limit;
+///
+/// assert_eq!(Limit::bounded(2, 5), Limit::new(2, Some(5)));
+/// ```
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct Limit {
     min: u32,
@@ -180,6 +385,11 @@ impl Limit {
     /// Creates a new limit with a required minimum and optional maximum.
     pub fn new(min: u32, max: Option<u32>) -> Self {
         Limit { min, max }
+    }
+
+    /// Creates a new limit with a required minimum and no maximum.
+    pub fn unbounded(min: u32) -> Self {
+        Limit { min, max: None }
     }
 
     /// Creates a new limit with a required minimum and maximum.
@@ -201,23 +411,33 @@ impl Limit {
     }
 }
 
-impl From<u32> for Limit {
-    fn from(min: u32) -> Self {
-        Limit { min, max: None }
-    }
-}
-
 /// Memory types classify linear memories and their size range.
 /// The limits constrain the minimum and optionally the maximum size of a memory.
 /// The limits are given in units of page size.
 ///
 /// See https://webassembly.github.io/spec/core/syntax/types.html#memory-types
+///
+/// # Examples
+/// ```rust
+/// use wasm_ast::{Limit, MemoryType};
+///
+/// let limit = Limit::unbounded(0);
+/// let memory_type = MemoryType::new(limit.clone());
+///
+/// assert_eq!(memory_type.limits(), &limit);
+/// assert_eq!(memory_type, limit.into());
+/// ```
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct MemoryType {
     limits: Limit,
 }
 
 impl MemoryType {
+    /// Creates a new memory type from the given limits.
+    pub fn new(limit: Limit) -> Self {
+        MemoryType { limits: limit }
+    }
+
     /// The limits of the number of pages for this `MemoryType`.
     pub fn limits(&self) -> &Limit {
         &self.limits
@@ -235,6 +455,17 @@ impl From<Limit> for MemoryType {
 /// The limits are given in numbers of entries.
 ///
 /// See https://webassembly.github.io/spec/core/syntax/types.html#table-types
+///
+/// # Examples
+/// ```rust
+/// use wasm_ast::{Limit, TableType, ReferenceType};
+///
+/// let limit = Limit::unbounded(0);
+/// let table_type = TableType::new(limit.clone(), ReferenceType::External);
+///
+/// assert_eq!(table_type.limits(), &limit);
+/// assert_eq!(table_type.kind(), ReferenceType::External);
+/// ```
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct TableType {
     limits: Limit,
@@ -253,14 +484,37 @@ impl TableType {
     }
 
     /// The reference type of the elements of this `TableType`.
-    pub fn kind(&self) -> &ReferenceType {
-        &self.kind
+    pub fn kind(&self) -> ReferenceType {
+        self.kind
     }
 }
 
 /// Global types classify global variables, which hold a value and can either be mutable or immutable.
 ///
 /// See https://webassembly.github.io/spec/core/syntax/types.html#global-types
+///
+/// # Examples
+/// ## Mutable
+/// ```rust
+/// use wasm_ast::{ValueType, GlobalType, Mutability};
+///
+/// let mutable = GlobalType::mutable(ValueType::I64);
+///
+/// assert_eq!(mutable.mutability(), Mutability::Mutable);
+/// assert_eq!(mutable.kind(), ValueType::I64);
+/// assert_eq!(mutable, GlobalType::new(Mutability::Mutable, ValueType::I64));
+/// ```
+///
+/// ## Immutable
+/// ```rust
+/// use wasm_ast::{ValueType, GlobalType, Mutability};
+///
+/// let immutable = GlobalType::immutable(ValueType::F64);
+///
+/// assert_eq!(immutable.mutability(), Mutability::Immutable);
+/// assert_eq!(immutable.kind(), ValueType::F64);
+/// assert_eq!(immutable, GlobalType::new(Mutability::Immutable, ValueType::F64));
+/// ```
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct GlobalType {
     mutability: Mutability,
@@ -268,6 +522,11 @@ pub struct GlobalType {
 }
 
 impl GlobalType {
+    /// Creates a new `GlobalType` for a global variable with the given mutability and value type.
+    pub fn new(mutability: Mutability, kind: ValueType) -> Self {
+        GlobalType { mutability, kind }
+    }
+
     /// Creates a new `GlobalType` for a mutable global variable.
     pub fn mutable(kind: ValueType) -> Self {
         GlobalType {
@@ -285,10 +544,11 @@ impl GlobalType {
     }
 
     /// The `ValueType` of the global variable defined by this `GlobalType`.
-    pub fn kind(&self) -> &ValueType {
-        &self.kind
+    pub fn kind(&self) -> ValueType {
+        self.kind
     }
 
+    /// The mutability (i.e. variable versus constant) of the global variable type.
     pub fn mutability(&self) -> Mutability {
         self.mutability
     }
@@ -299,108 +559,4 @@ impl GlobalType {
 pub enum Mutability {
     Mutable,
     Immutable,
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn number_types() {
-        assert_eq!(NumberType::I32, IntegerType::I32.into());
-        assert_eq!(NumberType::I64, IntegerType::I64.into());
-        assert_eq!(NumberType::F32, FloatType::F32.into());
-        assert_eq!(NumberType::F64, FloatType::F64.into());
-    }
-
-    #[test]
-    fn value_types() {
-        assert_eq!(ValueType::I32, IntegerType::I32.into());
-        assert_eq!(ValueType::I32, NumberType::I32.into());
-        assert_eq!(ValueType::I64, IntegerType::I64.into());
-        assert_eq!(ValueType::I64, NumberType::I64.into());
-        assert_eq!(ValueType::F32, FloatType::F32.into());
-        assert_eq!(ValueType::F32, NumberType::F32.into());
-        assert_eq!(ValueType::F64, FloatType::F64.into());
-        assert_eq!(ValueType::F64, NumberType::F64.into());
-        assert_eq!(ValueType::Function, ReferenceType::Function.into());
-        assert_eq!(ValueType::External, ReferenceType::External.into());
-    }
-
-    #[test]
-    fn new_function_type() {
-        let function_type = FunctionType::new(ResultType::new(), ResultType::new());
-
-        assert!(function_type.parameters().is_empty());
-        assert!(function_type.results().is_empty());
-    }
-
-    #[test]
-    fn new_result_type() {
-        let result_type = ResultType::from(vec![
-            IntegerType::I32.into(),
-            IntegerType::I64.into(),
-            FloatType::F32.into(),
-            FloatType::F64.into(),
-            ReferenceType::Function.into(),
-            ReferenceType::External.into(),
-        ]);
-
-        assert_eq!(result_type.len(), 6);
-        assert!(!result_type.is_empty());
-        assert_eq!(
-            result_type.kinds(),
-            &[
-                ValueType::I32,
-                ValueType::I64,
-                ValueType::F32,
-                ValueType::F64,
-                ValueType::Function,
-                ValueType::External,
-            ]
-        );
-    }
-
-    #[test]
-    fn limits() {
-        let max = Some(2);
-        let min = 0;
-        let limit = Limit::new(min, max);
-
-        assert_eq!(limit.min, min);
-        assert_eq!(limit.max, max);
-
-        assert_eq!(Limit::from(2), Limit::new(2, None));
-    }
-
-    #[test]
-    fn memory_type() {
-        let limit = Limit::from(0);
-        let memory_type = MemoryType::from(limit.clone());
-
-        assert_eq!(memory_type.limits(), &limit);
-    }
-
-    #[test]
-    fn table_type() {
-        let limit = Limit::new(0, None);
-        let reference_type = ReferenceType::External;
-        let table_type = TableType::new(limit.clone(), reference_type);
-
-        assert_eq!(table_type.limits(), &limit);
-        assert_eq!(table_type.kind(), &reference_type);
-    }
-
-    #[test]
-    fn global_type() {
-        let kind = ValueType::from(IntegerType::I64);
-        let mutable = GlobalType::mutable(kind);
-
-        assert_eq!(mutable.mutability(), Mutability::Mutable);
-        assert_eq!(mutable.kind(), &kind);
-
-        let immutable = GlobalType::immutable(kind);
-        assert_eq!(immutable.mutability(), Mutability::Immutable);
-        assert_eq!(immutable.kind(), &kind);
-    }
 }

@@ -6,11 +6,12 @@
 ///
 /// # Examples
 /// ```rust
-/// use wasm_ast::model::values::Name;
+/// use wasm_ast::Name;
 ///
 /// let text = "test";
-/// let name = Name::from(text);
+/// let name = Name::new(String::from(text));
 ///
+/// assert_eq!(name, Name::from(text));
 /// assert_eq!(name, Name::from(text.to_string()));
 /// assert_eq!(name.as_bytes(), text.as_bytes());
 /// assert_eq!(name.len(), text.len());
@@ -22,6 +23,11 @@ pub struct Name {
 }
 
 impl Name {
+    /// Creates a new name with the given Unicode text.
+    pub fn new(value: String) -> Self {
+        Name { value }
+    }
+
     /// Returns a byte slice of this `Name`’s contents.
     pub fn as_bytes(&self) -> &[u8] {
         self.value.as_bytes()
@@ -50,30 +56,5 @@ impl From<&str> for Name {
 impl From<String> for Name {
     fn from(name: String) -> Self {
         Name { value: name }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn name_from_str() {
-        let content = "Hello, World!";
-        let name = Name::from(content);
-
-        assert_eq!(name.len(), content.len());
-        assert_eq!(name.is_empty(), content.is_empty());
-        assert_eq!(name.as_bytes(), content.as_bytes());
-    }
-
-    #[test]
-    fn name_from_string() {
-        let content = "Hello, World!";
-        let name = Name::from(content.to_string());
-
-        assert_eq!(name.len(), content.len());
-        assert_eq!(name.is_empty(), content.is_empty());
-        assert_eq!(name.as_bytes(), content.as_bytes());
     }
 }

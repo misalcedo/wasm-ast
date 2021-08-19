@@ -14,6 +14,9 @@ use crate::model::{
 /// The following sections group instructions into a number of different categories.
 ///
 /// See https://webassembly.github.io/spec/core/syntax/instructions.html#instructions
+///
+/// # Examples
+/// See the specific instruction types for examples.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Instruction {
     Numeric(NumericInstruction),

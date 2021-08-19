@@ -96,19 +96,65 @@ pub enum NumericInstruction {
 /// These instruction produce a null value, check for a null value, or produce a reference to a given function, respectively.
 ///
 /// See https://webassembly.github.io/spec/core/syntax/instructions.html#reference-instructions
+///
+/// # Examples
+/// ```rust
+/// use wasm_ast::{ReferenceInstruction, Instruction, ReferenceType, FunctionIndex};
+///
+/// assert_eq!(
+///     Instruction::Reference(ReferenceInstruction::Null(ReferenceType::External)),
+///     ReferenceInstruction::Null(ReferenceType::External).into()
+/// );
+/// assert_eq!(
+///     Instruction::Reference(ReferenceInstruction::IsNull),
+///     ReferenceInstruction::IsNull.into()
+/// );
+/// assert_eq!(
+///     Instruction::Reference(ReferenceInstruction::Function(3)),
+///     ReferenceInstruction::Function(3).into()
+/// );
+/// ```
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum ReferenceInstruction {
     /// Produce a null value.
-    ReferenceNull(ReferenceType),
+    Null(ReferenceType),
     /// Check for a null value.
-    ReferenceIsNull,
+    IsNull,
     /// Produce a reference to a given function.
-    ReferenceFunction(FunctionIndex),
+    Function(FunctionIndex),
+}
+
+impl From<ReferenceInstruction> for Instruction {
+    fn from(instruction: ReferenceInstruction) -> Self {
+        Self::Reference(instruction)
+    }
 }
 
 /// Instructions in this group can operate on operands of any value type.
 ///
 /// https://webassembly.github.io/spec/core/syntax/instructions.html#parametric-instructions
+///
+/// # Examples
+/// ```rust
+/// use wasm_ast::{ParametricInstruction, Instruction, ValueType};
+///
+/// assert_eq!(
+///     Instruction::Parametric(ParametricInstruction::Drop),
+///     ParametricInstruction::Drop.into()
+/// );
+/// assert_eq!(
+///     Instruction::Parametric(ParametricInstruction::Select(Some(vec![ValueType::I32]))),
+///     ParametricInstruction::Select(Some(vec![ValueType::I32])).into()
+/// );
+/// assert_eq!(
+///     Instruction::Parametric(ParametricInstruction::Select(Some(vec![]))),
+///     ParametricInstruction::Select(Some(vec![])).into()
+/// );
+/// assert_eq!(
+///     Instruction::Parametric(ParametricInstruction::Select(None)),
+///     ParametricInstruction::Select(None).into()
+/// );
+/// ```
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum ParametricInstruction {
     /// The 𝖽𝗋𝗈𝗉 instruction simply throws away a single operand.
@@ -119,11 +165,43 @@ pub enum ParametricInstruction {
     Select(Option<Vec<ValueType>>),
 }
 
+impl From<ParametricInstruction> for Instruction {
+    fn from(instruction: ParametricInstruction) -> Self {
+        Instruction::Parametric(instruction)
+    }
+}
+
 /// Variable instructions are concerned with access to local or global variables.
 /// These instructions get or set the values of variables, respectively.
 /// The 𝗅𝗈𝖼𝖺𝗅.𝗍𝖾𝖾 instruction is like 𝗅𝗈𝖼𝖺𝗅.𝗌𝖾𝗍 but also returns its argument.
 ///
 /// See https://webassembly.github.io/spec/core/syntax/instructions.html#variable-instructions
+///
+/// # Examples
+/// ```rust
+/// use wasm_ast::{VariableInstruction, Instruction, ValueType};
+///
+/// assert_eq!(
+///     Instruction::Variable(VariableInstruction::LocalGet(0)),
+///     VariableInstruction::LocalGet(0).into()
+/// );
+/// assert_eq!(
+///     Instruction::Variable(VariableInstruction::LocalSet(1)),
+///     VariableInstruction::LocalSet(1).into()
+/// );
+/// assert_eq!(
+///     Instruction::Variable(VariableInstruction::LocalTee(1)),
+///     VariableInstruction::LocalTee(1).into()
+/// );
+/// assert_eq!(
+///     Instruction::Variable(VariableInstruction::GlobalGet(0)),
+///     VariableInstruction::GlobalGet(0).into()
+/// );
+/// assert_eq!(
+///     Instruction::Variable(VariableInstruction::GlobalSet(1)),
+///     VariableInstruction::GlobalSet(1).into()
+/// );
+/// ```
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum VariableInstruction {
     /// Get the value of a local variable.
@@ -138,34 +216,84 @@ pub enum VariableInstruction {
     GlobalSet(GlobalIndex),
 }
 
+impl From<VariableInstruction> for Instruction {
+    fn from(instruction: VariableInstruction) -> Self {
+        Instruction::Variable(instruction)
+    }
+}
+
 /// Instructions in this group are concerned with tables table.
 /// An additional instruction that accesses a table is the control instruction 𝖼𝖺𝗅𝗅_𝗂𝗇𝖽𝗂𝗋𝖾𝖼𝗍.
 ///
 /// See https://webassembly.github.io/spec/core/syntax/instructions.html#table-instructions
+///
+/// # Examples
+/// ```rust
+/// use wasm_ast::{TableInstruction, Instruction, TableIndex, ElementIndex};
+///
+/// assert_eq!(
+///     Instruction::Table(TableInstruction::Get(1)),
+///     TableInstruction::Get(1).into()
+/// );
+/// assert_eq!(
+///     Instruction::Table(TableInstruction::Set(1)),
+///     TableInstruction::Set(1).into()
+/// );
+/// assert_eq!(
+///     Instruction::Table(TableInstruction::Size(1)),
+///     TableInstruction::Size(1).into()
+/// );
+/// assert_eq!(
+///     Instruction::Table(TableInstruction::Grow(1)),
+///     TableInstruction::Grow(1).into()
+/// );
+/// assert_eq!(
+///     Instruction::Table(TableInstruction::Fill(1)),
+///     TableInstruction::Fill(1).into()
+/// );
+/// assert_eq!(
+///     Instruction::Table(TableInstruction::Copy(0, 1)),
+///     TableInstruction::Copy(0, 1).into()
+/// );
+/// assert_eq!(
+///     Instruction::Table(TableInstruction::Init(0, 0)),
+///     TableInstruction::Init(0, 0).into()
+/// );
+/// assert_eq!(
+///     Instruction::Table(TableInstruction::ElementDrop(0)),
+///     TableInstruction::ElementDrop(0).into()
+/// );
+/// ```
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum TableInstruction {
     /// The 𝗍𝖺𝖻𝗅𝖾.𝗀𝖾𝗍 instruction loads an element in a table.
-    TableGet(TableIndex),
+    Get(TableIndex),
     /// The 𝗍𝖺𝖻𝗅𝖾.𝗌𝖾𝗍 instruction stores an element in a table.
-    TableSet(TableIndex),
+    Set(TableIndex),
     /// The 𝗍𝖺𝖻𝗅𝖾.𝗌𝗂𝗓𝖾 instruction returns the current size of a table.
-    TableSize(TableIndex),
+    Size(TableIndex),
     /// The 𝗍𝖺𝖻𝗅𝖾.𝗀𝗋𝗈𝗐 instruction grows table by a given delta and returns the previous size,
     /// or −1 if enough space cannot be allocated.
     /// It also takes an initialization value for the newly allocated entries.
-    TableGrow(TableIndex),
+    Grow(TableIndex),
     /// The 𝗍𝖺𝖻𝗅𝖾.𝖿𝗂𝗅𝗅 instruction sets all entries in a range to a given value.
-    TableFill(TableIndex),
+    Fill(TableIndex),
     /// The 𝗍𝖺𝖻𝗅𝖾.𝖼𝗈𝗉𝗒 instruction copies elements from a source table region to a
     /// possibly overlapping destination region; the first index denotes the destination.
-    TableCopy(TableIndex, TableIndex),
+    Copy(TableIndex, TableIndex),
     /// The 𝗍𝖺𝖻𝗅𝖾.𝗂𝗇𝗂𝗍 instruction copies elements from a passive element segment into a table.
-    TableInit(ElementIndex, TableIndex),
+    Init(ElementIndex, TableIndex),
     /// The 𝖾𝗅𝖾𝗆.𝖽𝗋𝗈𝗉 instruction prevents further use of a passive element segment.
     /// This instruction is intended to be used as an optimization hint.
     /// After an element segment is dropped its elements can no longer be retrieved,
     /// so the memory used by this segment may be freed.
     ElementDrop(ElementIndex),
+}
+
+impl From<TableInstruction> for Instruction {
+    fn from(instruction: TableInstruction) -> Self {
+        Instruction::Table(instruction)
+    }
 }
 
 /// Instructions in this group are concerned with linear memory.
@@ -217,6 +345,12 @@ pub enum MemoryInstruction {
     /// After a data segment is dropped its data can no longer be retrieved,
     /// so the memory used by this segment may be freed.
     DataDrop(DataIndex),
+}
+
+impl From<MemoryInstruction> for Instruction {
+    fn from(instruction: MemoryInstruction) -> Self {
+        Instruction::Memory(instruction)
+    }
 }
 
 /// Instructions in this group affect the flow of control.
@@ -282,6 +416,12 @@ pub enum ControlInstruction {
     /// the callee is dynamically checked against the function type indexed by the instruction’s
     /// second immediate, and the call is aborted with a trap if it does not match.
     CallIndirect(TypeIndex, TableIndex),
+}
+
+impl From<ControlInstruction> for Instruction {
+    fn from(instruction: ControlInstruction) -> Self {
+        Instruction::Control(instruction)
+    }
 }
 
 /// A structured instruction can consume input and produce output on the operand stack according to

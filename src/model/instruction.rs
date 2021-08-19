@@ -37,8 +37,8 @@ pub enum Instruction {
 /// See https://webassembly.github.io/spec/core/syntax/instructions.html#numeric-instructions
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum NumericInstruction {
-    I32Constant(i32),
-    I64Constant(i64),
+    I32Constant(u32),
+    I64Constant(u64),
     F32Constant(f32),
     F64Constant(f64),
     CountLeadingZeros(IntegerType),  // clz
@@ -90,6 +90,72 @@ pub enum NumericInstruction {
     Convert(FloatType, IntegerType, SignExtension),
     ReinterpretFloat(IntegerType, FloatType),
     ReinterpretInteger(FloatType, IntegerType),
+}
+
+impl From<i8> for Instruction {
+    fn from(value: i8) -> Self {
+        Self::Numeric(NumericInstruction::I32Constant(value as u32))
+    }
+}
+
+impl From<i16> for Instruction {
+    fn from(value: i16) -> Self {
+        Self::Numeric(NumericInstruction::I32Constant(value as u32))
+    }
+}
+
+impl From<i32> for Instruction {
+    fn from(value: i32) -> Self {
+        Self::Numeric(NumericInstruction::I32Constant(value as u32))
+    }
+}
+
+impl From<i64> for Instruction {
+    fn from(value: i64) -> Self {
+        Self::Numeric(NumericInstruction::I64Constant(value as u64))
+    }
+}
+
+impl From<u8> for Instruction {
+    fn from(value: u8) -> Self {
+        Self::Numeric(NumericInstruction::I32Constant(value as u32))
+    }
+}
+
+impl From<u16> for Instruction {
+    fn from(value: u16) -> Self {
+        Self::Numeric(NumericInstruction::I32Constant(value as u32))
+    }
+}
+
+impl From<u32> for Instruction {
+    fn from(value: u32) -> Self {
+        Self::Numeric(NumericInstruction::I32Constant(value))
+    }
+}
+
+impl From<u64> for Instruction {
+    fn from(value: u64) -> Self {
+        Self::Numeric(NumericInstruction::I64Constant(value))
+    }
+}
+
+impl From<usize> for Instruction {
+    fn from(value: usize) -> Self {
+        Self::Numeric(NumericInstruction::I32Constant(value as u32))
+    }
+}
+
+impl From<f32> for Instruction {
+    fn from(value: f32) -> Self {
+        Self::Numeric(NumericInstruction::F32Constant(value))
+    }
+}
+
+impl From<f64> for Instruction {
+    fn from(value: f64) -> Self {
+        Self::Numeric(NumericInstruction::F64Constant(value))
+    }
 }
 
 /// Instructions in this group are concerned with accessing references.
@@ -547,35 +613,84 @@ pub enum SignExtension {
 /// which limits the set of allowable instructions.
 ///
 /// See https://webassembly.github.io/spec/core/syntax/instructions.html#expressions
+///
+/// # Examples
+/// ## Non-Empty
+/// ```rust
+/// use wasm_ast::{Expression, ControlInstruction, NumericInstruction, Instruction};
+///
+/// let expression = Expression::new(vec![0i32.into(), ControlInstruction::Nop.into()]);
+///
+/// assert_eq!(
+///     expression,
+///     Expression::new(vec![
+///         Instruction::Numeric(NumericInstruction::I32Constant(0 as u32)),
+///         Instruction::Control(ControlInstruction::Nop),
+///     ])
+/// );
+/// assert_eq!(expression.instructions(), &[
+///     Instruction::Numeric(NumericInstruction::I32Constant(0 as u32)),
+///     Instruction::Control(ControlInstruction::Nop),
+/// ]);
+/// assert_eq!(expression.len(), 2);
+/// assert!(!expression.is_empty());
+/// assert_eq!(
+///     expression,
+///     vec![
+///         Instruction::Numeric(NumericInstruction::I32Constant(0 as u32)),
+///         Instruction::Control(ControlInstruction::Nop),
+///     ].into()
+/// );
+/// ```
+///
+/// ## Empty
+/// ```rust
+/// use wasm_ast::Expression;
+///
+/// let expression = Expression::new(vec![]);
+///
+/// assert_eq!(expression, Expression::empty());
+/// assert_eq!(expression, vec![].into());
+/// assert_eq!(expression.instructions(), &[]);
+/// assert_eq!(expression.len(), 0);
+/// assert!(expression.is_empty());
+/// ```
 #[derive(Clone, Debug, PartialEq)]
 pub struct Expression {
     instructions: Vec<Instruction>,
 }
 
 impl Expression {
+    /// Create a new expression from the given instructions.
     pub fn new(instructions: Vec<Instruction>) -> Self {
         Expression { instructions }
     }
 
+    /// Create a new empty expression.
+    pub fn empty() -> Self {
+        Expression {
+            instructions: vec![],
+        }
+    }
+
+    /// The instructions for this expression.
     pub fn instructions(&self) -> &[Instruction] {
         &self.instructions
     }
 
+    /// Returns true if this `Expression` has a length of zero, false otherwise.
     pub fn is_empty(&self) -> bool {
         self.instructions.is_empty()
     }
+
+    /// Returns the length of this `Expression`, in number of instructions.
+    pub fn len(&self) -> usize {
+        self.instructions.len()
+    }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn new_expression() {
-        let instruction = Instruction::Control(ControlInstruction::Nop);
-        let expression = Expression::new(vec![instruction.clone()]);
-
-        assert_eq!(expression.instructions(), &[instruction]);
-        assert!(!expression.is_empty());
+impl From<Vec<Instruction>> for Expression {
+    fn from(instructions: Vec<Instruction>) -> Self {
+        Expression { instructions }
     }
 }

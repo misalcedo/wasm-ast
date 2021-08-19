@@ -1,12 +1,10 @@
 # WASM
-A Rust-native WebAssembly syntax model useful for generate, reading, and emitting WebAssembly code.
-
-
-## Badges
 [![Build](https://github.com/misalcedo/wasm-ast/actions/workflows/build.yml/badge.svg)](https://github.com/misalcedo/wasm-ast/actions/workflows/build.yml)
 [![License](https://img.shields.io/badge/License-Apache%202.0-yellowgreen.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Crates.io Version](https://img.shields.io/crates/v/wasm-ast.svg)](https://crates.io/crates/wasm-ast)
 [![Docs.rs Version](https://docs.rs/wasm-ast/badge.svg)](https://docs.rs/wasm-ast)
+
+A Rust-native WebAssembly syntax model useful for generate, reading, and emitting WebAssembly code.
 
 ## Usage
 To use `wasm`, first add this to your `Cargo.toml`:

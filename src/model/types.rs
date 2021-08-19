@@ -1,5 +1,3 @@
-use std::mem::size_of;
-
 /// Number types classify numeric values.
 /// Number types are transparent, meaning that their bit patterns can be observed.
 /// Values of number type can be stored in memories.

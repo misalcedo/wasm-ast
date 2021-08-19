@@ -2,6 +2,7 @@ use crate::model::{
     DataIndex, ElementIndex, FloatType, FunctionIndex, GlobalIndex, IntegerType, LabelIndex,
     LocalIndex, NumberType, ReferenceType, TableIndex, TypeIndex, ValueType,
 };
+use std::mem::size_of;
 
 /// WebAssembly code consists of sequences of instructions.
 /// Its computational model is based on a stack machine in that instructions manipulate values on

@@ -417,16 +417,25 @@ pub enum DataMode {
 /// start::={𝖿𝗎𝗇𝖼 funcidx}
 ///
 /// See https://webassembly.github.io/spec/core/syntax/modules.html#start-function
+///
+/// # Examples
+/// ```rust
+/// use wasm_ast::Start;
+///
+/// assert_eq!(Start::new(0).function(), 0);
+/// ```
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct Start {
     function: FunctionIndex,
 }
 
 impl Start {
+    /// Creates a new instance of `Start` referencing the given function.
     pub fn new(function: FunctionIndex) -> Self {
         Start { function }
     }
 
+    /// The index of the function to run at module instantiation.
     pub fn function(&self) -> FunctionIndex {
         self.function
     }
@@ -439,6 +448,59 @@ impl Start {
 /// which are referenced through a respective descriptor.
 ///
 /// See https://webassembly.github.io/spec/core/syntax/modules.html#exports
+///
+/// # Examples
+/// ## Table
+/// ```rust
+/// use wasm_ast::{Export, ExportDescription, Name};
+///
+/// let name = "functions";
+/// let description = ExportDescription::Table(0);
+/// let export = Export::new(name.into(), description.clone());
+///
+/// assert_eq!(export, Export::table(name.into(), 0));
+/// assert_eq!(export.name(), &Name::new(String::from(name)));
+/// assert_eq!(export.description(), &description);
+/// ```
+///
+/// ## Memory
+/// ```rust
+/// use wasm_ast::{Export, ExportDescription, Name};
+///
+/// let name = "io";
+/// let description = ExportDescription::Memory(1);
+/// let export = Export::new(name.into(), description.clone());
+///
+/// assert_eq!(export, Export::memory(name.into(), 1));
+/// assert_eq!(export.name(), &Name::new(String::from(name)));
+/// assert_eq!(export.description(), &description);
+/// ```
+///
+/// ## Function
+/// ```rust
+/// use wasm_ast::{Export, ExportDescription, Name};
+///
+/// let name = "print";
+/// let description = ExportDescription::Function(42);
+/// let export = Export::new(name.into(), description.clone());
+///
+/// assert_eq!(export, Export::function(name.into(), 42));
+/// assert_eq!(export.name(), &Name::new(String::from(name)));
+/// assert_eq!(export.description(), &description);
+/// ```
+///
+/// ## Global
+/// ```rust
+/// use wasm_ast::{Export, ExportDescription, Name};
+///
+/// let name = "functions";
+/// let description = ExportDescription::Global(2);
+/// let export = Export::new(name.into(), description.clone());
+///
+/// assert_eq!(export, Export::global(name.into(), 2));
+/// assert_eq!(export.name(), &Name::new(String::from(name)));
+/// assert_eq!(export.description(), &description);
+/// ```
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Export {
     name: Name,
@@ -446,14 +508,49 @@ pub struct Export {
 }
 
 impl Export {
+    /// Create a new instance of an `Export` with the given name and description.
     pub fn new(name: Name, description: ExportDescription) -> Self {
         Export { name, description }
     }
 
+    /// Create a new instance of an `Export` with the given name and description for a table.
+    pub fn table(name: Name, table: TableIndex) -> Self {
+        Export {
+            name,
+            description: ExportDescription::Table(table),
+        }
+    }
+
+    /// Create a new instance of an `Export` with the given name and description for a memory.
+    pub fn memory(name: Name, memory: MemoryIndex) -> Self {
+        Export {
+            name,
+            description: ExportDescription::Memory(memory),
+        }
+    }
+
+    /// Create a new instance of an `Export` with the given name and description for a function.
+    pub fn function(name: Name, function: FunctionIndex) -> Self {
+        Export {
+            name,
+            description: ExportDescription::Function(function),
+        }
+    }
+
+    /// Create a new instance of an `Export` with the given name and description for a global.
+    pub fn global(name: Name, global: GlobalIndex) -> Self {
+        Export {
+            name,
+            description: ExportDescription::Global(global),
+        }
+    }
+
+    /// The name of the export.
     pub fn name(&self) -> &Name {
         &self.name
     }
 
+    /// The description of the table.
     pub fn description(&self) -> &ExportDescription {
         &self.description
     }

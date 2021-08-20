@@ -1,7 +1,28 @@
 use crate::model::types::*;
 use crate::model::{Expression, Name};
 use std::collections::HashMap;
-use std::mem::discriminant;
+
+/// A builder pattern for `Module` that simplifies tracking of indices between segments.
+/// For example, imports change the index of most other types.
+/// Therefore, imports must be defined before any other segment and cannot be changed.
+///
+/// If you do not know the imports of a module ahead of time, then you cannot use the builder.
+/// Instead use `Module` directly.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ModuleBuilder {
+    imports: Option<Vec<Import>>,
+}
+
+impl ModuleBuilder {
+    /// Creates a new empty builder of WebAssembly modules.
+    pub fn new(imports: Option<Vec<Import>>) -> Self {
+        ModuleBuilder { imports }
+    }
+
+    pub fn build(self) -> Module {
+        Module::empty()
+    }
+}
 
 /// WebAssembly programs are organized into modules, which are the unit of deployment, loading, and compilation.
 /// A module collects definitions for types, functions, tables, memories, and globals.
@@ -11,7 +32,7 @@ use std::mem::discriminant;
 /// Each of the vectors – and thus the entire module – may be empty.
 ///
 /// See https://webassembly.github.io/spec/core/syntax/modules.html#modules
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub struct Module {
     function_types: Option<Vec<FunctionType>>,
     functions: Option<Vec<Function>>,
@@ -20,7 +41,7 @@ pub struct Module {
     globals: Option<Vec<Global>>,
     elements: Option<Vec<Element>>,
     data: Option<Vec<Data>>,
-    start: Option<Start>>,
+    start: Option<Start>,
     imports: Option<Vec<Import>>,
     exports: Option<Vec<Export>>,
     customs: HashMap<ModuleSection, Vec<Custom>>,
@@ -28,6 +49,37 @@ pub struct Module {
 }
 
 impl Module {
+    /// Creates a new `Module` with the given segments.
+    pub fn new(
+        function_types: Option<Vec<FunctionType>>,
+        functions: Option<Vec<Function>>,
+        tables: Option<Vec<Table>>,
+        memories: Option<Vec<Memory>>,
+        globals: Option<Vec<Global>>,
+        elements: Option<Vec<Element>>,
+        data: Option<Vec<Data>>,
+        start: Option<Start>,
+        imports: Option<Vec<Import>>,
+        exports: Option<Vec<Export>>,
+        customs: HashMap<ModuleSection, Vec<Custom>>,
+        data_count: bool,
+    ) -> Self {
+        Module {
+            function_types,
+            functions,
+            tables,
+            memories,
+            globals,
+            elements,
+            data,
+            start,
+            imports,
+            exports,
+            customs,
+            data_count,
+        }
+    }
+
     /// Creates a new empty `Module`.
     pub fn empty() -> Self {
         Module {
@@ -44,6 +96,28 @@ impl Module {
             customs: HashMap::new(),
             data_count: false,
         }
+    }
+
+    /// A builder for modules.
+    pub fn builder(imports: Option<Vec<Import>>) -> ModuleBuilder {
+        ModuleBuilder::new(imports)
+    }
+
+    /// Converts this module into a builder in order to mutate it.
+    /// Uses the given imports instead of those defined in the module.
+    /// To use the same imports as the module, clone the imports.
+    ///
+    /// # Examples
+    /// ```rust
+    /// use wasm_ast::Module;
+    ///
+    /// let module = Module::empty();
+    /// let imports = Some(module.imports().to_vec());
+    ///
+    /// assert_eq!(module.to_builder(imports), Module::builder(Some(vec![])));
+    /// ```
+    pub fn to_builder(&self, imports: Option<Vec<Import>>) -> ModuleBuilder {
+        ModuleBuilder::new(imports)
     }
 
     /// The 𝗍𝗒𝗉𝖾𝗌 component of a module defines a vector of function types.
@@ -969,7 +1043,7 @@ pub enum ImportDescription {
 /// separating their type declarations in the function section from their bodies in the code section.
 ///
 /// See https://webassembly.github.io/spec/core/binary/modules.html
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub enum ModuleSection {
     /// Custom sections have the id 0.
     /// They are intended to be used for debugging information or third-party extensions,
@@ -1018,91 +1092,4 @@ pub enum ModuleSection {
     /// It decodes into an optional u32 that represents the number of data segments in the data section.
     /// If this count does not match the length of the data segment vector, the module is malformed.
     DataCount,
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::model::{ControlInstruction, Instruction, NumericInstruction};
-
-    #[test]
-    fn empty_module() {
-        let module = Module::new();
-
-        assert!(module.types().is_empty());
-        assert!(module.functions().is_empty());
-        assert!(module.tables().is_empty());
-        assert!(module.memories().is_empty());
-        assert!(module.globals().is_empty());
-        assert!(module.imports().is_empty());
-        assert!(module.exports().is_empty());
-        assert!(module.data().is_empty());
-        assert!(module.elements().is_empty());
-        assert!(module.start().is_none());
-    }
-
-    #[test]
-    fn module() {
-        let mut module = Module::new();
-        let function_type = FunctionType::new(
-            ResultType::from(vec![IntegerType::I64.into()]),
-            ResultType::from(vec![FloatType::F64.into()]),
-        );
-        module.add_type(function_type.clone());
-
-        let function = Function::new(
-            0,
-            ResultType::from(vec![IntegerType::I32.into()]),
-            Expression::new(vec![Instruction::Control(ControlInstruction::Nop)]),
-        );
-        module.add_function(function.clone());
-
-        let element = Element::new(
-            ReferenceType::Function,
-            ElementMode::Passive,
-            ElementInitializer::FunctionIndex(vec![0]),
-        );
-        module.add_element(element.clone());
-
-        let data = Data::new(DataMode::Passive, vec![42]);
-        module.add_data(data.clone());
-
-        let table = Table::new(TableType::new(Limit::new(0, None), ReferenceType::Function));
-        module.add_table(table);
-
-        let memory = Memory::new(MemoryType::from(Limit::new(0, None)));
-        module.add_memory(memory);
-
-        let import = Import::new(
-            "test".into(),
-            "foobar".into(),
-            ImportDescription::Function(0),
-        );
-        module.add_import(import.clone());
-
-        let export = Export::new("foobar".into(), ExportDescription::Function(0));
-        module.add_export(export.clone());
-
-        let start = Start::new(0);
-        module.set_start(Some(start));
-
-        let global = Global::new(
-            GlobalType::immutable(IntegerType::I64.into()),
-            Expression::new(vec![Instruction::Numeric(NumericInstruction::I64Constant(
-                0,
-            ))]),
-        );
-        module.add_global(global.clone());
-
-        assert_eq!(module.types(), &[function_type]);
-        assert_eq!(module.functions(), &[function]);
-        assert_eq!(module.tables(), &[table]);
-        assert_eq!(module.memories(), &[memory]);
-        assert_eq!(module.globals(), &[global]);
-        assert_eq!(module.imports(), &[import]);
-        assert_eq!(module.exports(), &[export]);
-        assert_eq!(module.data(), &[data]);
-        assert_eq!(module.elements(), &[element]);
-        assert_eq!(module.start(), Some(&start));
-    }
 }

@@ -373,6 +373,35 @@ pub enum ElementMode {
 /// Data segments are referenced through data indices.
 ///
 /// See https://webassembly.github.io/spec/core/syntax/modules.html#data-segments
+///
+/// # Examples
+/// ## Passive
+/// ```rust
+/// use wasm_ast::{Data, DataMode};
+///
+/// let initializer = vec![42];
+/// let data = Data::passive(initializer.clone());
+///
+/// assert_eq!(data, Data::new(DataMode::Passive, initializer.clone()));
+/// assert_eq!(data, initializer.into());
+/// assert_eq!(data.mode(), &DataMode::Passive);
+/// assert_eq!(data.len(), 1);
+/// assert_eq!(data.is_empty(), false);
+/// ```
+///
+/// ## Active
+/// ```rust
+/// use wasm_ast::{Data, DataMode, MemoryIndex, Expression};
+///
+/// let initializer = vec![42];
+/// let offset: Expression = vec![1u32.into()].into();
+/// let data = Data::active(0, offset.clone(), initializer.clone());
+///
+/// assert_eq!(data, Data::new(DataMode::Active(0, offset.clone()), initializer.clone()));
+/// assert_eq!(data.mode(), &DataMode::Active(0, offset));
+/// assert_eq!(data.len(), 1);
+/// assert_eq!(data.is_empty(), false);
+/// ```
 #[derive(Clone, Debug, PartialEq)]
 pub struct Data {
     mode: DataMode,
@@ -380,24 +409,54 @@ pub struct Data {
 }
 
 impl Data {
+    /// Creates an instance of a data segment.
     pub fn new(mode: DataMode, initializer: Vec<u8>) -> Self {
         Data { mode, initializer }
     }
 
+    /// Creates an instance of a passive data segment.
+    pub fn passive(initializer: Vec<u8>) -> Self {
+        Data {
+            mode: DataMode::Passive,
+            initializer,
+        }
+    }
+
+    /// Creates an instance of an active data segment.
+    pub fn active(memory: MemoryIndex, offset: Expression, initializer: Vec<u8>) -> Self {
+        Data {
+            mode: DataMode::Active(memory, offset),
+            initializer,
+        }
+    }
+
+    /// The mode of the data segment.
     pub fn mode(&self) -> &DataMode {
         &self.mode
     }
 
+    /// The data to initialize the segment with.
     pub fn initializer(&self) -> &[u8] {
         &self.initializer
     }
 
+    /// The number of bytes in the data segment initializer.
     pub fn len(&self) -> usize {
         self.initializer.len()
     }
 
+    /// True if the data segment's initializer's length is zero, false otherwise.
     pub fn is_empty(&self) -> bool {
         self.initializer.is_empty()
+    }
+}
+
+impl From<Vec<u8>> for Data {
+    fn from(initializer: Vec<u8>) -> Self {
+        Data {
+            mode: DataMode::Passive,
+            initializer,
+        }
     }
 }
 

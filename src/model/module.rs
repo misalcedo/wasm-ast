@@ -200,6 +200,23 @@ pub type LabelIndex = usize;
 /// The 𝖻𝗈𝖽𝗒 is an instruction sequence that upon termination must produce a stack matching the function type’s result type.
 ///
 /// See https://webassembly.github.io/spec/core/syntax/modules.html#functions
+///
+/// # Examples
+/// ```rust
+/// use wasm_ast::{Function, TypeIndex, Expression, ResultType, ValueType, NumericInstruction, NumberType};
+///
+/// let locals: ResultType = vec![ValueType::I32, ValueType::F32].into();
+/// let body: Expression = vec![
+///     32u32.into(),
+///     2u32.into(),
+///     NumericInstruction::Multiply(NumberType::I32)
+/// ].into();
+/// let function = Function::new(0, locals.clone(), body.clone());
+///
+/// assert_eq!(function.kind(), 0);
+/// assert_eq!(function.locals(), &locals);
+/// assert_eq!(function.body(), &body);
+/// ```
 #[derive(Clone, Debug, PartialEq)]
 pub struct Function {
     kind: TypeIndex,
@@ -212,14 +229,17 @@ impl Function {
         Function { kind, locals, body }
     }
 
+    /// The index of the type definition for this `Function`.
     pub fn kind(&self) -> TypeIndex {
         self.kind
     }
 
+    /// The types of the locals of this `Function`.
     pub fn locals(&self) -> &ResultType {
         &self.locals
     }
 
+    /// The code for this `Function`.
     pub fn body(&self) -> &Expression {
         &self.body
     }

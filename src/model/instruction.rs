@@ -41,13 +41,12 @@ pub enum Instruction {
 /// # Examples
 /// ## Constant
 /// ```rust
-/// use wasm_ast::{NumericInstruction, Instruction, IntegerType, FloatType, SignExtension};
+/// use wasm_ast::{NumericInstruction, Instruction};
 ///
 /// assert_eq!(
 ///     Instruction::Numeric(NumericInstruction::I32Constant(42i32 as u32)),
 ///     42i32.into()
 /// );
-///
 /// assert_eq!(
 ///     Instruction::Numeric(NumericInstruction::I64Constant(42u64)),
 ///     42u64.into()
@@ -64,10 +63,80 @@ pub enum Instruction {
 ///
 /// ## Integer
 /// ```rust
+/// use wasm_ast::{NumericInstruction, Instruction, IntegerType, SignExtension};
+///
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::CountLeadingZeros(IntegerType::I32)),
+///     NumericInstruction::CountLeadingZeros(IntegerType::I32).into()
+/// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::CountTrailingZeros(IntegerType::I64)),
+///     NumericInstruction::CountLeadingZeros(IntegerType::I64).into()
+/// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::CountOnes(IntegerType::I64)),
+///     NumericInstruction::CountOnes(IntegerType::I64).into()
+/// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::DivideInteger(IntegerType::I64, SignExtension::Unsigned)),
+///     NumericInstruction::DivideInteger(IntegerType::I64, SignExtension::Unsigned).into()
+/// );
 /// ```
 ///
 /// ## Float
 /// ```rust
+/// use wasm_ast::{NumericInstruction, Instruction, FloatType};
+///
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::AbsoluteValue(FloatType::F32)),
+///     NumericInstruction::AbsoluteValue(FloatType::F32).into()
+/// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::Negate(FloatType::F64)),
+///     NumericInstruction::Negate(FloatType::F64).into()
+/// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::SquareRoot(FloatType::F64)),
+///     NumericInstruction::SquareRoot(FloatType::F64).into()
+/// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::Ceiling(FloatType::F32)),
+///     NumericInstruction::Ceiling(FloatType::F32).into()
+/// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::Floor(FloatType::F64)),
+///     NumericInstruction::Floor(FloatType::F64).into()
+/// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::Truncate(FloatType::F64)),
+///     NumericInstruction::Truncate(FloatType::F64).into()
+/// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::Nearest(FloatType::F64)),
+///     NumericInstruction::Nearest(FloatType::F64).into()
+/// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::DivideFloat(FloatType::F32)),
+///     NumericInstruction::DivideFloat(FloatType::F32).into()
+/// );
+/// ```
+///
+/// ## Number
+/// ```rust
+/// use wasm_ast::{NumericInstruction, Instruction, NumberType};
+///
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::Add(NumberType::I32)),
+///     NumericInstruction::Add(NumberType::I32).into()
+/// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::Subtract(NumberType::I32)),
+///     NumericInstruction::Subtract(NumberType::I32).into()
+/// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::Multiply(NumberType::I32)),
+///     NumericInstruction::Multiply(NumberType::I32).into()
+/// );
 /// ```
 ///
 /// ## Convert
@@ -94,6 +163,7 @@ pub enum NumericInstruction {
     Multiply(NumberType),
     DivideInteger(IntegerType, SignExtension),
     DivideFloat(FloatType),
+    // TODO: pick up from here.
     Remainder(IntegerType, SignExtension),
     And(IntegerType),
     Or(IntegerType),

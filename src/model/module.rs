@@ -257,18 +257,42 @@ impl Table {
 /// Most constructs implicitly reference memory index 0.
 ///
 /// See https://webassembly.github.io/spec/core/syntax/modules.html#memories
+///
+/// # Examples
+/// ```rust
+/// use wasm_ast::{Memory, MemoryType, Limit};
+///
+/// let limit = Limit::bounded(1, 2);
+/// let kind = MemoryType::new(limit);
+/// let memory = Memory::new(kind);
+///
+/// assert_eq!(memory, kind.into());
+/// assert_eq!(memory, limit.into());
+/// assert_eq!(memory.kind(), &kind);
+/// ```
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct Memory {
     kind: MemoryType,
 }
 
 impl Memory {
+    /// Creates a new `Memory` of the given type.
     pub fn new(kind: MemoryType) -> Self {
         Memory { kind }
     }
 
+    /// The type definition for this memory.
     pub fn kind(&self) -> &MemoryType {
         &self.kind
+    }
+}
+
+impl<T> From<T> for Memory
+where
+    T: Into<MemoryType>,
+{
+    fn from(kind: T) -> Self {
+        Memory { kind: kind.into() }
     }
 }
 
@@ -1029,23 +1053,5 @@ mod tests {
         let table = Table::new(kind);
 
         assert_eq!(table.kind(), &kind);
-    }
-
-    #[test]
-    fn new_memory() {
-        let kind = MemoryType::from(Limit::new(0, None));
-        let memory = Memory::new(kind);
-
-        assert_eq!(memory.kind(), &kind);
-    }
-
-    #[test]
-    fn new_global() {
-        let kind = GlobalType::mutable(IntegerType::I64.into());
-        let expression = Expression::new(Vec::new());
-        let global = Global::new(kind, expression.clone());
-
-        assert_eq!(global.kind(), &kind);
-        assert_eq!(global.initializer(), &expression);
     }
 }

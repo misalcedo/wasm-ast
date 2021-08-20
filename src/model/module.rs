@@ -1,5 +1,6 @@
 use crate::model::types::*;
 use crate::model::{Expression, Name};
+use std::collections::HashMap;
 use std::mem::discriminant;
 
 /// WebAssembly programs are organized into modules, which are the unit of deployment, loading, and compilation.
@@ -12,117 +13,73 @@ use std::mem::discriminant;
 /// See https://webassembly.github.io/spec/core/syntax/modules.html#modules
 #[derive(Clone, Debug, PartialEq)]
 pub struct Module {
-    function_types: Vec<FunctionType>,
-    functions: Vec<Function>,
-    tables: Vec<Table>,
-    memories: Vec<Memory>,
-    globals: Vec<Global>,
-    elements: Vec<Element>,
-    data: Vec<Data>,
-    start: Option<Start>,
-    imports: Vec<Import>,
-    exports: Vec<Export>,
-    customs: Vec<Custom>,
+    function_types: Option<Vec<FunctionType>>,
+    functions: Option<Vec<Function>>,
+    tables: Option<Vec<Table>>,
+    memories: Option<Vec<Memory>>,
+    globals: Option<Vec<Global>>,
+    elements: Option<Vec<Element>>,
+    data: Option<Vec<Data>>,
+    start: Option<Start>>,
+    imports: Option<Vec<Import>>,
+    exports: Option<Vec<Export>>,
+    customs: HashMap<ModuleSection, Vec<Custom>>,
+    data_count: bool,
 }
 
 impl Module {
     /// Creates a new empty `Module`.
-    pub fn new() -> Self {
+    pub fn empty() -> Self {
         Module {
-            function_types: vec![],
-            functions: vec![],
-            tables: vec![],
-            memories: vec![],
-            globals: vec![],
-            elements: vec![],
-            data: vec![],
+            function_types: None,
+            functions: None,
+            tables: None,
+            memories: None,
+            globals: None,
+            elements: None,
+            data: None,
             start: None,
-            imports: vec![],
-            exports: vec![],
-            customs: vec![],
+            imports: None,
+            exports: None,
+            customs: HashMap::new(),
+            data_count: false,
         }
     }
 
     /// The 𝗍𝗒𝗉𝖾𝗌 component of a module defines a vector of function types.
     pub fn types(&self) -> &[FunctionType] {
-        &self.function_types
-    }
-
-    pub fn add_type(&mut self, function_type: FunctionType) -> TypeIndex {
-        self.function_types.push(function_type);
-        self.function_types.len() - 1
+        &[]
     }
 
     /// The 𝖿𝗎𝗇𝖼𝗌 component of a module defines a vector of functions.
     pub fn functions(&self) -> &[Function] {
-        &self.functions
-    }
-
-    pub fn add_function(&mut self, function: Function) {
-        self.functions.push(function);
+        &[]
     }
 
     /// The 𝗍𝖺𝖻𝗅𝖾𝗌 component of a module defines a vector of tables described by their table type.
     pub fn tables(&self) -> &[Table] {
-        &self.tables
-    }
-
-    pub fn add_table(&mut self, table: Table) -> TableIndex {
-        self.tables.push(table);
-
-        let imported_tables = self
-            .imports()
-            .iter()
-            .filter(|import| matches!(import.description(), ImportDescription::Table(_)))
-            .count();
-
-        imported_tables + self.tables.len() - 1
+        &[]
     }
 
     /// The 𝗆𝖾𝗆𝗌 component of a module defines a vector of linear memories (or memories for short)
     /// as described by their memory type.
     pub fn memories(&self) -> &[Memory] {
-        &self.memories
-    }
-
-    pub fn add_memory(&mut self, memory: Memory) -> MemoryIndex {
-        self.memories.push(memory);
-
-        let imported_memories = self
-            .imports()
-            .iter()
-            .filter(|import| matches!(import.description(), ImportDescription::Memory(_)))
-            .count();
-
-        imported_memories + self.memories.len() - 1
+        &[]
     }
 
     /// The 𝗀𝗅𝗈𝖻𝖺𝗅𝗌 component of a module defines a vector of global variables (or globals for short).
     pub fn globals(&self) -> &[Global] {
-        &self.globals
-    }
-
-    pub fn add_global(&mut self, global: Global) {
-        self.globals.push(global);
+        &[]
     }
 
     /// The 𝖾𝗅𝖾𝗆𝗌 component of a module defines a vector of element segments.
     pub fn elements(&self) -> &[Element] {
-        &self.elements
-    }
-
-    pub fn add_element(&mut self, element: Element) -> ElementIndex {
-        self.elements.push(element);
-        self.elements().len() - 1
+        &[]
     }
 
     /// The 𝖽𝖺𝗍𝖺𝗌 component of a module defines a vector of data segments.
     pub fn data(&self) -> &[Data] {
-        &self.data
-    }
-
-    pub fn add_data(&mut self, data: Data) {
-        self.data.push(data);
+        &[]
     }
 
     /// The 𝗌𝗍𝖺𝗋𝗍 component of a module declares the function index of a start function that is
@@ -131,41 +88,15 @@ impl Module {
         self.start.as_ref()
     }
 
-    pub fn set_start(&mut self, start: Option<Start>) {
-        self.start = start;
-    }
-
     /// The 𝗂𝗆𝗉𝗈𝗋𝗍𝗌 component of a module defines a set of imports that are required for instantiation.
     pub fn imports(&self) -> &[Import] {
-        &self.imports
-    }
-
-    pub fn add_import(&mut self, import: Import) -> usize {
-        let import_discriminant = discriminant(import.description());
-
-        self.imports.push(import);
-
-        self.imports()
-            .iter()
-            .filter(|i| discriminant(i.description()) == import_discriminant)
-            .count()
-            - 1
+        &[]
     }
 
     /// The 𝖾𝗑𝗉𝗈𝗋𝗍𝗌 component of a module defines a set of exports that become accessible to the
     /// host environment once the module has been instantiated.
     pub fn exports(&self) -> &[Export] {
-        &self.exports
-    }
-
-    pub fn add_export(&mut self, export: Export) {
-        self.exports.push(export);
-    }
-}
-
-impl Default for Module {
-    fn default() -> Self {
-        Self::new()
+        &[]
     }
 }
 
@@ -1032,6 +963,63 @@ pub enum ImportDescription {
     Global(GlobalType),
 }
 
+/// The binary encoding of modules is organized into sections.
+/// Most sections correspond to one component of a module record,
+/// except that function definitions are split into two sections,
+/// separating their type declarations in the function section from their bodies in the code section.
+///
+/// See https://webassembly.github.io/spec/core/binary/modules.html
+#[derive(Copy, Clone)]
+pub enum ModuleSection {
+    /// Custom sections have the id 0.
+    /// They are intended to be used for debugging information or third-party extensions,
+    /// and are ignored by the WebAssembly semantics.
+    /// Their contents consist of a name further identifying the custom section,
+    /// followed by an uninterpreted sequence of bytes for custom use.
+    Custom = 0,
+    /// The type section has the id 1.
+    /// It decodes into a vector of function types that represent the 𝗍𝗒𝗉𝖾𝗌 component of a module.
+    Type,
+    /// The import section has the id 2.
+    /// It decodes into a vector of imports that represent the 𝗂𝗆𝗉𝗈𝗋𝗍𝗌 component of a module.
+    Import,
+    /// The function section has the id 3.
+    /// It decodes into a vector of type indices that represent the 𝗍𝗒𝗉𝖾 fields of the functions
+    /// in the 𝖿𝗎𝗇𝖼𝗌 component of a module. The 𝗅𝗈𝖼𝖺𝗅𝗌 and 𝖻𝗈𝖽𝗒 fields of the respective functions
+    /// are encoded separately in the code section.
+    Function,
+    /// The table section has the id 4.
+    /// It decodes into a vector of tables that represent the 𝗍𝖺𝖻𝗅𝖾𝗌 component of a module.
+    Table,
+    /// The memory section has the id 5.
+    /// It decodes into a vector of memories that represent the 𝗆𝖾𝗆𝗌 component of a module.
+    Memory,
+    /// The global section has the id 6.
+    /// It decodes into a vector of globals that represent the 𝗀𝗅𝗈𝖻𝖺𝗅𝗌 component of a module.
+    Global,
+    /// The export section has the id 7.
+    /// It decodes into a vector of exports that represent the 𝖾𝗑𝗉𝗈𝗋𝗍𝗌 component of a module.
+    Export,
+    /// The start section has the id 8.
+    /// It decodes into an optional start function that represents the 𝗌𝗍𝖺𝗋𝗍 component of a module.
+    Start,
+    /// The element section has the id 9.
+    /// It decodes into a vector of element segments that represent the 𝖾𝗅𝖾𝗆𝗌 component of a module.
+    Element,
+    /// The code section has the id 10.
+    /// It decodes into a vector of code entries that are pairs of value type vectors and expressions.
+    /// They represent the 𝗅𝗈𝖼𝖺𝗅𝗌 and 𝖻𝗈𝖽𝗒 field of the functions in the 𝖿𝗎𝗇𝖼𝗌 component of a module.
+    /// The 𝗍𝗒𝗉𝖾 fields of the respective functions are encoded separately in the function section.
+    Code,
+    /// The data section has the id 11.
+    /// It decodes into a vector of data segments that represent the 𝖽𝖺𝗍𝖺𝗌 component of a module.
+    Data,
+    /// The data count section has the id 12.
+    /// It decodes into an optional u32 that represents the number of data segments in the data section.
+    /// If this count does not match the length of the data segment vector, the module is malformed.
+    DataCount,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1116,25 +1104,5 @@ mod tests {
         assert_eq!(module.data(), &[data]);
         assert_eq!(module.elements(), &[element]);
         assert_eq!(module.start(), Some(&start));
-    }
-
-    #[test]
-    fn new_function() {
-        let kind = 1;
-        let locals = ResultType::from(vec![IntegerType::I64.into()]);
-        let body = Expression::new(Vec::new());
-        let function = Function::new(kind, locals.clone(), body.clone());
-
-        assert_eq!(function.kind(), 1);
-        assert_eq!(function.locals(), &locals);
-        assert_eq!(function.body(), &body);
-    }
-
-    #[test]
-    fn new_table() {
-        let kind = TableType::new(Limit::new(0, None), ReferenceType::Function);
-        let table = Table::new(kind);
-
-        assert_eq!(table.kind(), &kind);
     }
 }

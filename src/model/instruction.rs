@@ -41,6 +41,25 @@ pub enum Instruction {
 /// # Examples
 /// ## Constant
 /// ```rust
+/// use wasm_ast::{NumericInstruction, Instruction, IntegerType, FloatType, SignExtension};
+///
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::I32Constant(42i32 as u32)),
+///     42i32.into()
+/// );
+///
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::I64Constant(42u64)),
+///     42u64.into()
+/// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::F32Constant(0.1)),
+///     0.2f32.into()
+/// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::F64Constant(0.2)),
+///     0.2f64.into()
+/// );
 /// ```
 ///
 /// ## Integer

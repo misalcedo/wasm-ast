@@ -22,6 +22,7 @@ pub struct Module {
     start: Option<Start>,
     imports: Vec<Import>,
     exports: Vec<Export>,
+    customs: Vec<Custom>,
 }
 
 impl Module {
@@ -192,6 +193,47 @@ pub type DataIndex = usize;
 pub type LocalIndex = usize;
 pub type LabelIndex = usize;
 
+/// Custom sections have the id 0.
+/// They are intended to be used for debugging information or third-party extensions,
+/// and are ignored by the WebAssembly semantics. Their contents consist of a name further
+/// identifying the custom section, followed by an uninterpreted sequence of bytes for custom use.
+///
+/// See https://webassembly.github.io/spec/core/binary/modules.html#binary-customsec
+///
+/// # Examples
+/// ```rust
+/// use wasm_ast::{Custom, Name};
+///
+/// let name = "version";
+/// let version = b"1.0.0";
+/// let custom = Custom::new(name.into(), version.to_vec());
+///
+/// assert_eq!(custom.name(), &Name::new(name.to_string()));
+/// assert_eq!(custom.bytes(), &version[..]);
+/// ```
+#[derive(Clone, Debug, PartialEq)]
+pub struct Custom {
+    name: Name,
+    bytes: Vec<u8>,
+}
+
+impl Custom {
+    /// Creates a new instance of a custom section.
+    pub fn new(name: Name, bytes: Vec<u8>) -> Self {
+        Custom { name, bytes }
+    }
+
+    /// The name of the custom section.
+    pub fn name(&self) -> &Name {
+        &self.name
+    }
+
+    /// The contents of the custom section.
+    pub fn bytes(&self) -> &[u8] {
+        &self.bytes
+    }
+}
+
 /// The 𝗍𝗒𝗉𝖾 of a function declares its signature by reference to a type defined in the module.
 /// The parameters of the function are referenced through 0-based local indices in the function’s body; they are mutable.
 /// The 𝗅𝗈𝖼𝖺𝗅𝗌 declare a vector of mutable local variables and their types.
@@ -209,7 +251,7 @@ pub type LabelIndex = usize;
 /// let body: Expression = vec![
 ///     32u32.into(),
 ///     2u32.into(),
-///     NumericInstruction::Multiply(NumberType::I32)
+///     NumericInstruction::Multiply(NumberType::I32).into()
 /// ].into();
 /// let function = Function::new(0, locals.clone(), body.clone());
 ///

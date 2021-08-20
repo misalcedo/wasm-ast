@@ -39,6 +39,7 @@ impl Module {
             start: None,
             imports: vec![],
             exports: vec![],
+            customs: vec![],
         }
     }
 

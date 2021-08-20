@@ -576,6 +576,70 @@ pub enum ExportDescription {
 /// definition contained in the module itself.
 ///
 /// See https://webassembly.github.io/spec/core/syntax/modules.html#imports
+///
+/// # Examples
+/// ## Table
+/// ```rust
+/// use wasm_ast::{Import, ImportDescription, Name, TableType, Limit, ReferenceType};
+///
+/// let module = "system";
+/// let name = "functions";
+/// let kind = TableType::new(Limit::unbounded(1), ReferenceType::Function);
+/// let description = ImportDescription::Table(kind.clone());
+/// let import = Import::new(module.into(), name.into(), description.clone());
+///
+/// assert_eq!(import, Import::table(module.into(), name.into(), kind));
+/// assert_eq!(import.module(), &Name::new(String::from(module)));
+/// assert_eq!(import.name(), &Name::new(String::from(name)));
+/// assert_eq!(import.description(), &description);
+/// ```
+///
+/// ## Memory
+/// ```rust
+/// use wasm_ast::{Import, ImportDescription, Name, MemoryType, Limit};
+///
+/// let module = "system";
+/// let name = "io";
+/// let kind = Limit::bounded(1, 2).into();
+/// let description = ImportDescription::Memory(kind);
+/// let import = Import::new(module.into(), name.into(), description.clone());
+///
+/// assert_eq!(import, Import::memory(module.into(), name.into(), kind));
+/// assert_eq!(import.module(), &Name::new(String::from(module)));
+/// assert_eq!(import.name(), &Name::new(String::from(name)));
+/// assert_eq!(import.description(), &description);
+/// ```
+///
+/// ## Function
+/// ```rust
+/// use wasm_ast::{Import, ImportDescription, Name};
+///
+/// let module = "system";
+/// let name = "print";
+/// let description = ImportDescription::Function(42);
+/// let import = Import::new(module.into(), name.into(), description.clone());
+///
+/// assert_eq!(import, Import::function(module.into(), name.into(), 42));
+/// assert_eq!(import.module(), &Name::new(String::from(module)));
+/// assert_eq!(import.name(), &Name::new(String::from(name)));
+/// assert_eq!(import.description(), &description);
+/// ```
+///
+/// ## Global
+/// ```rust
+/// use wasm_ast::{Import, ImportDescription, Name, GlobalType, ValueType};
+///
+/// let module = "system";
+/// let name = "counter";
+/// let kind = GlobalType::mutable(ValueType::I64);
+/// let description = ImportDescription::Global(kind.clone());
+/// let import = Import::new(module.into(), name.into(), description.clone());
+///
+/// assert_eq!(import, Import::global(module.into(), name.into(), kind));
+/// assert_eq!(import.module(), &Name::new(String::from(module)));
+/// assert_eq!(import.name(), &Name::new(String::from(name)));
+/// assert_eq!(import.description(), &description);
+/// ```
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Import {
     module: Name,
@@ -584,6 +648,7 @@ pub struct Import {
 }
 
 impl Import {
+    /// Creates a new import.
     pub fn new(module: Name, name: Name, description: ImportDescription) -> Self {
         Import {
             module,
@@ -592,14 +657,53 @@ impl Import {
         }
     }
 
+    /// Create a new instance of an `Import` with the given name and description for a table.
+    pub fn table(module: Name, name: Name, table_kind: TableType) -> Self {
+        Import {
+            module,
+            name,
+            description: ImportDescription::Table(table_kind),
+        }
+    }
+
+    /// Create a new instance of an `Import` with the given name and description for a memory.
+    pub fn memory(module: Name, name: Name, memory_kind: MemoryType) -> Self {
+        Import {
+            module,
+            name,
+            description: ImportDescription::Memory(memory_kind),
+        }
+    }
+
+    /// Create a new instance of an `Import` with the given name and description for a function.
+    pub fn function(module: Name, name: Name, function_kind: TypeIndex) -> Self {
+        Import {
+            module,
+            name,
+            description: ImportDescription::Function(function_kind),
+        }
+    }
+
+    /// Create a new instance of an `Import` with the given name and description for a global.
+    pub fn global(module: Name, name: Name, global_kind: GlobalType) -> Self {
+        Import {
+            module,
+            name,
+            description: ImportDescription::Global(global_kind),
+        }
+    }
+
+    /// The name of the module (i.e.m namespace).
     pub fn module(&self) -> &Name {
         &self.module
     }
 
+    /// The name of the import.
     pub fn name(&self) -> &Name {
         &self.name
     }
 
+    /// The description of the import.
     pub fn description(&self) -> &ImportDescription {
         &self.description
     }

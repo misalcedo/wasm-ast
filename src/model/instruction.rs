@@ -53,7 +53,7 @@ pub enum Instruction {
 /// );
 /// assert_eq!(
 ///     Instruction::Numeric(NumericInstruction::F32Constant(0.1)),
-///     0.2f32.into()
+///     0.1f32.into()
 /// );
 /// assert_eq!(
 ///     Instruction::Numeric(NumericInstruction::F64Constant(0.2)),
@@ -71,7 +71,7 @@ pub enum Instruction {
 /// );
 /// assert_eq!(
 ///     Instruction::Numeric(NumericInstruction::CountTrailingZeros(IntegerType::I64)),
-///     NumericInstruction::CountLeadingZeros(IntegerType::I64).into()
+///     NumericInstruction::CountTrailingZeros(IntegerType::I64).into()
 /// );
 /// assert_eq!(
 ///     Instruction::Numeric(NumericInstruction::CountOnes(IntegerType::I64)),
@@ -80,6 +80,70 @@ pub enum Instruction {
 /// assert_eq!(
 ///     Instruction::Numeric(NumericInstruction::DivideInteger(IntegerType::I64, SignExtension::Unsigned)),
 ///     NumericInstruction::DivideInteger(IntegerType::I64, SignExtension::Unsigned).into()
+/// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::Remainder(IntegerType::I64, SignExtension::Unsigned)),
+///     NumericInstruction::Remainder(IntegerType::I64, SignExtension::Unsigned).into()
+/// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::And(IntegerType::I64)),
+///     NumericInstruction::And(IntegerType::I64).into()
+/// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::Or(IntegerType::I64)),
+///     NumericInstruction::Or(IntegerType::I64).into()
+/// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::Xor(IntegerType::I64)),
+///     NumericInstruction::Xor(IntegerType::I64).into()
+/// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::ShiftLeft(IntegerType::I64)),
+///     NumericInstruction::ShiftLeft(IntegerType::I64).into()
+/// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::ShiftRight(IntegerType::I64, SignExtension::Unsigned)),
+///     NumericInstruction::ShiftRight(IntegerType::I64, SignExtension::Unsigned).into()
+/// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::RotateLeft(IntegerType::I64)),
+///     NumericInstruction::RotateLeft(IntegerType::I64).into()
+/// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::RotateRight(IntegerType::I64)),
+///     NumericInstruction::RotateRight(IntegerType::I64).into()
+/// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::EqualToZero(IntegerType::I64)),
+///     NumericInstruction::EqualToZero(IntegerType::I64).into()
+/// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::LessThanInteger(IntegerType::I64, SignExtension::Unsigned)),
+///     NumericInstruction::LessThanInteger(IntegerType::I64, SignExtension::Unsigned).into()
+/// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::GreaterThanInteger(IntegerType::I64, SignExtension::Unsigned)),
+///     NumericInstruction::GreaterThanInteger(IntegerType::I64, SignExtension::Unsigned).into()
+/// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::LessThanOrEqualToInteger(IntegerType::I64, SignExtension::Unsigned)),
+///     NumericInstruction::LessThanOrEqualToInteger(IntegerType::I64, SignExtension::Unsigned).into()
+/// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::GreaterThanOrEqualToInteger(IntegerType::I64, SignExtension::Unsigned)),
+///     NumericInstruction::GreaterThanOrEqualToInteger(IntegerType::I64, SignExtension::Unsigned).into()
+/// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::ExtendSigned8(IntegerType::I64)),
+///     NumericInstruction::ExtendSigned8(IntegerType::I64).into()
+/// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::ExtendSigned16(IntegerType::I64)),
+///     NumericInstruction::ExtendSigned16(IntegerType::I64).into()
+/// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::ExtendSigned32),
+///     NumericInstruction::ExtendSigned32.into()
 /// );
 /// ```
 ///
@@ -119,6 +183,34 @@ pub enum Instruction {
 ///     Instruction::Numeric(NumericInstruction::DivideFloat(FloatType::F32)),
 ///     NumericInstruction::DivideFloat(FloatType::F32).into()
 /// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::Minimum(FloatType::F32)),
+///     NumericInstruction::Minimum(FloatType::F32).into()
+/// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::Maximum(FloatType::F32)),
+///     NumericInstruction::Maximum(FloatType::F32).into()
+/// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::CopySign(FloatType::F32)),
+///     NumericInstruction::CopySign(FloatType::F32).into()
+/// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::LessThanFloat(FloatType::F32)),
+///     NumericInstruction::LessThanFloat(FloatType::F32).into()
+/// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::GreaterThanFloat(FloatType::F32)),
+///     NumericInstruction::GreaterThanFloat(FloatType::F32).into()
+/// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::LessThanOrEqualToFloat(FloatType::F32)),
+///     NumericInstruction::LessThanOrEqualToFloat(FloatType::F32).into()
+/// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::GreaterThanOrEqualToFloat(FloatType::F32)),
+///     NumericInstruction::GreaterThanOrEqualToFloat(FloatType::F32).into()
+/// );
 /// ```
 ///
 /// ## Number
@@ -137,67 +229,171 @@ pub enum Instruction {
 ///     Instruction::Numeric(NumericInstruction::Multiply(NumberType::I32)),
 ///     NumericInstruction::Multiply(NumberType::I32).into()
 /// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::Equal(NumberType::I32)),
+///     NumericInstruction::Equal(NumberType::I32).into()
+/// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::NotEqual(NumberType::I32)),
+///     NumericInstruction::NotEqual(NumberType::I32).into()
+/// );
 /// ```
 ///
 /// ## Convert
 /// ```rust
+/// use wasm_ast::{NumericInstruction, Instruction, NumberType, SignExtension, IntegerType, FloatType};
+///
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::Wrap),
+///     NumericInstruction::Wrap.into()
+/// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::ExtendWithSignExtension(SignExtension::Signed)),
+///     NumericInstruction::ExtendWithSignExtension(SignExtension::Signed).into()
+/// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::ConvertAndTruncate(IntegerType::I32, FloatType::F64, SignExtension::Unsigned)),
+///     NumericInstruction::ConvertAndTruncate(IntegerType::I32, FloatType::F64, SignExtension::Unsigned).into()
+/// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::ConvertAndTruncateWithSaturation(IntegerType::I32, FloatType::F64, SignExtension::Unsigned)),
+///     NumericInstruction::ConvertAndTruncateWithSaturation(IntegerType::I32, FloatType::F64, SignExtension::Unsigned).into()
+/// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::Demote),
+///     NumericInstruction::Demote.into()
+/// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::Promote),
+///     NumericInstruction::Promote.into()
+/// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::Convert(FloatType::F64, IntegerType::I32, SignExtension::Unsigned)),
+///     NumericInstruction::Convert(FloatType::F64, IntegerType::I32, SignExtension::Unsigned).into()
+/// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::ReinterpretFloat(IntegerType::I32, FloatType::F64)),
+///     NumericInstruction::ReinterpretFloat(IntegerType::I32, FloatType::F64).into()
+/// );
+/// assert_eq!(
+///     Instruction::Numeric(NumericInstruction::ReinterpretInteger(FloatType::F64, IntegerType::I32)),
+///     NumericInstruction::ReinterpretInteger(FloatType::F64, IntegerType::I32).into()
+/// );
 /// ```
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum NumericInstruction {
+    /// i32.const
     I32Constant(u32),
+    /// i64.const
     I64Constant(u64),
+    /// f32.const
     F32Constant(f32),
+    /// f64.const
     F64Constant(f64),
-    CountLeadingZeros(IntegerType),  // clz
-    CountTrailingZeros(IntegerType), // ctz
-    CountOnes(IntegerType),          // popcnt
+    /// inn.clz
+    CountLeadingZeros(IntegerType),
+    /// inn.ctz
+    CountTrailingZeros(IntegerType),
+    /// inn.popcnt
+    CountOnes(IntegerType),
+    /// fnn.abs
     AbsoluteValue(FloatType),
+    /// fnn.negate
     Negate(FloatType),
+    /// fnn.sqrt
     SquareRoot(FloatType),
+    /// fnn.ceil
     Ceiling(FloatType),
+    /// fnn.floor
     Floor(FloatType),
+    /// fnn.trunc
     Truncate(FloatType),
+    /// fnn.nearest
     Nearest(FloatType),
+    /// xnn.add
     Add(NumberType),
+    /// xnn.sub
     Subtract(NumberType),
+    /// xnn.mul
     Multiply(NumberType),
+    /// inn.div_sx
     DivideInteger(IntegerType, SignExtension),
+    /// fnn.div
     DivideFloat(FloatType),
-    // TODO: pick up from here.
+    /// inn.rem_sx
     Remainder(IntegerType, SignExtension),
+    /// inn.and
     And(IntegerType),
+    /// inn.or
     Or(IntegerType),
+    /// inn.xor
     Xor(IntegerType),
+    /// inn.shl
     ShiftLeft(IntegerType),
+    /// inn.shr_sx
     ShiftRight(IntegerType, SignExtension),
+    /// inn.rotl
     RotateLeft(IntegerType),
+    /// inn.rotr
     RotateRight(IntegerType),
+    /// fnn.min
     Minimum(FloatType),
+    /// fnn.max
     Maximum(FloatType),
+    /// fnn.copysign
     CopySign(FloatType),
+    /// inn.eqz
     EqualToZero(IntegerType),
+    /// xnn.eq
     Equal(NumberType),
+    /// xnn.ne
     NotEqual(NumberType),
+    /// inn.lt_sx
     LessThanInteger(IntegerType, SignExtension),
+    /// fnn.lt
     LessThanFloat(FloatType),
+    /// inn.gt_sx
     GreaterThanInteger(IntegerType, SignExtension),
+    /// fnn.gt
     GreaterThanFloat(FloatType),
+    /// inn.le_sx
     LessThanOrEqualToInteger(IntegerType, SignExtension),
+    /// fnn.le
     LessThanOrEqualToFloat(FloatType),
+    /// inn.ge_sx
     GreaterThanOrEqualToInteger(IntegerType, SignExtension),
+    /// fnn.ge
     GreaterThanOrEqualToFloat(FloatType),
+    /// inn.extend8_s
     ExtendSigned8(IntegerType),
+    /// inn.extend16_s
     ExtendSigned16(IntegerType),
+    /// i64.extend32_s
     ExtendSigned32,
+    /// i32.wrap_i64
     Wrap,
+    /// i64.extend_i32_sx
     ExtendWithSignExtension(SignExtension),
-    ConvertAndTruncate(IntegerType, FloatType, SignExtension), // trunc
-    ConvertAndTruncateWithSaturation(IntegerType, FloatType, SignExtension), // trunc_sat
+    /// inn.trunc_fmm_sx
+    ConvertAndTruncate(IntegerType, FloatType, SignExtension),
+    /// inn.trunc_sat_fmm_sx
+    ConvertAndTruncateWithSaturation(IntegerType, FloatType, SignExtension),
+    ///f32.demote_f64
     Demote,
+    /// f64.promote_f32
     Promote,
+    /// fnn.convert_imm_sx
     Convert(FloatType, IntegerType, SignExtension),
+    /// inn.reinterpret_fmm
     ReinterpretFloat(IntegerType, FloatType),
+    /// fnn.reinterpret.imm
     ReinterpretInteger(FloatType, IntegerType),
+}
+
+impl From<NumericInstruction> for Instruction {
+    fn from(instruction: NumericInstruction) -> Self {
+        Instruction::Numeric(instruction)
+    }
 }
 
 impl From<i8> for Instruction {
@@ -290,10 +486,13 @@ impl From<f64> for Instruction {
 /// ```
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum ReferenceInstruction {
+    /// ref.null
     /// Produce a null value.
     Null(ReferenceType),
+    /// ref.is_null
     /// Check for a null value.
     IsNull,
+    /// ref.func funcidx
     /// Produce a reference to a given function.
     Function(FunctionIndex),
 }
@@ -378,14 +577,19 @@ impl From<ParametricInstruction> for Instruction {
 /// ```
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum VariableInstruction {
+    /// local.get localidx
     /// Get the value of a local variable.
     LocalGet(LocalIndex),
+    /// local.set localidx
     /// Set the value of a local variable.
     LocalSet(LocalIndex),
+    /// local.tee localidx
     /// The 𝗅𝗈𝖼𝖺𝗅.𝗍𝖾𝖾 instruction is like 𝗅𝗈𝖼𝖺𝗅.𝗌𝖾𝗍 but also returns its argument.
     LocalTee(LocalIndex),
+    /// global.get globalidx
     /// Get the value of a global variable.
     GlobalGet(GlobalIndex),
+    /// global.set globalidx
     /// Set the value of a global variable.
     GlobalSet(GlobalIndex),
 }
@@ -549,19 +753,27 @@ impl From<TableInstruction> for Instruction {
 /// ```
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum MemoryInstruction {
+    /// xnn.load memarg
     /// Load a number type from memory.
     Load(NumberType, MemoryArgument),
+    /// xnn.store memarg
     /// Store a number type from memory.
     Store(NumberType, MemoryArgument),
+    /// inn.load8_sx memarg
     /// Integer load that specifies a storage size that is smaller than
     /// the bit width of the respective value type.
     Load8(IntegerType, SignExtension, MemoryArgument),
+    /// inn.load16_sx memarg
     Load16(IntegerType, SignExtension, MemoryArgument),
+    /// i64.load32_sx memarg
     Load32(SignExtension, MemoryArgument),
+    /// inn.store8 memarg
     /// Integer store that specifies a storage size that is smaller than
     /// the bit width of the respective value type.
     Store8(IntegerType, MemoryArgument),
+    /// inn.store16 memarg
     Store16(IntegerType, MemoryArgument),
+    /// i64.store32 memarg
     Store32(MemoryArgument),
     /// The 𝗆𝖾𝗆𝗈𝗋𝗒.𝗌𝗂𝗓𝖾 instruction returns the current size of a memory.
     /// Operates in units of page size.
@@ -694,7 +906,7 @@ pub enum ControlInstruction {
     /// the label vector that is an immediate to the instruction,
     /// or to a default target if the operand is out of bounds.
     BranchTable(Vec<LabelIndex>, LabelIndex),
-    /// he 𝗋𝖾𝗍𝗎𝗋𝗇 instruction is a shortcut for an unconditional branch to the outermost block,
+    /// The 𝗋𝖾𝗍𝗎𝗋𝗇 instruction is a shortcut for an unconditional branch to the outermost block,
     /// which implicitly is the body of the current function.
     Return,
     /// The 𝖼𝖺𝗅𝗅 instruction invokes another function, consuming the necessary arguments from

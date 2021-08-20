@@ -233,18 +233,38 @@ impl Function {
 /// Most constructs implicitly reference table index 0.
 ///
 /// See https://webassembly.github.io/spec/core/syntax/modules.html#tables
+///
+/// # Examples
+/// ```rust
+/// use wasm_ast::{Table, TableType, Limit, ReferenceType};
+///
+/// let limit = Limit::bounded(1, 2);
+/// let kind = TableType::new(limit, ReferenceType::Function);
+/// let table = Table::new(kind);
+///
+/// assert_eq!(table, kind.into());
+/// assert_eq!(table.kind(), &kind);
+/// ```
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct Table {
     kind: TableType,
 }
 
 impl Table {
+    /// Creates a new instance of a `Table`.
     pub fn new(kind: TableType) -> Self {
         Table { kind }
     }
 
+    /// The type descriptor of this `Table`.
     pub fn kind(&self) -> &TableType {
         &self.kind
+    }
+}
+
+impl From<TableType> for Table {
+    fn from(kind: TableType) -> Self {
+        Table { kind }
     }
 }
 

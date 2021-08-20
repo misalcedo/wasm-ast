@@ -103,23 +103,6 @@ impl Module {
         ModuleBuilder::new(imports)
     }
 
-    /// Converts this module into a builder in order to mutate it.
-    /// Uses the given imports instead of those defined in the module.
-    /// To use the same imports as the module, clone the imports.
-    ///
-    /// # Examples
-    /// ```rust
-    /// use wasm_ast::Module;
-    ///
-    /// let module = Module::empty();
-    /// let imports = Some(module.imports().to_vec());
-    ///
-    /// assert_eq!(module.to_builder(imports), Module::builder(Some(vec![])));
-    /// ```
-    pub fn to_builder(&self, imports: Option<Vec<Import>>) -> ModuleBuilder {
-        ModuleBuilder::new(imports)
-    }
-
     /// The 𝗍𝗒𝗉𝖾𝗌 component of a module defines a vector of function types.
     pub fn types(&self) -> &[FunctionType] {
         &[]

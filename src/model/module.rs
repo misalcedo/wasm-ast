@@ -279,6 +279,33 @@ impl Memory {
 /// starting with the smallest index not referencing a global import.
 ///
 /// See https://webassembly.github.io/spec/core/syntax/modules.html#globals
+///
+/// # Examples
+/// ## Immutable
+/// ```rust
+/// use wasm_ast::{Global, GlobalType, ValueType, Expression};
+///
+/// let kind = GlobalType::immutable(ValueType::I64);
+/// let initializer: Expression = vec![0i64.into()].into();
+/// let global = Global::immutable(ValueType::I64, initializer.clone());
+///
+/// assert_eq!(global, Global::new(kind.clone(), initializer.clone()));
+/// assert_eq!(global.kind(), &kind);
+/// assert_eq!(global.initializer(), &initializer);
+/// ```
+///
+/// ## Mutable
+/// ```rust
+/// use wasm_ast::{Global, GlobalType, ValueType, Expression};
+///
+/// let kind = GlobalType::mutable(ValueType::I64);
+/// let initializer: Expression = vec![0i64.into()].into();
+/// let global = Global::mutable(ValueType::I64, initializer.clone());
+///
+/// assert_eq!(global, Global::new(kind.clone(), initializer.clone()));
+/// assert_eq!(global.kind(), &kind);
+/// assert_eq!(global.initializer(), &initializer);
+/// ```
 #[derive(Clone, Debug, PartialEq)]
 pub struct Global {
     kind: GlobalType,
@@ -286,14 +313,33 @@ pub struct Global {
 }
 
 impl Global {
+    /// Creates a new `Global` with the given type and initializer.
     pub fn new(kind: GlobalType, initializer: Expression) -> Self {
         Global { kind, initializer }
     }
 
+    /// Creates a new `Global` for a mutable global variable.
+    pub fn mutable(kind: ValueType, initializer: Expression) -> Self {
+        Global {
+            kind: GlobalType::mutable(kind),
+            initializer,
+        }
+    }
+
+    /// Creates a new `Global` for an immutable global variable.
+    pub fn immutable(kind: ValueType, initializer: Expression) -> Self {
+        Global {
+            kind: GlobalType::immutable(kind),
+            initializer,
+        }
+    }
+
+    /// The type of this `Global`.
     pub fn kind(&self) -> &GlobalType {
         &self.kind
     }
 
+    /// The expression to initialize this `Global` with.
     pub fn initializer(&self) -> &Expression {
         &self.initializer
     }

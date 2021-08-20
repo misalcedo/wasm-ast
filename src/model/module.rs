@@ -312,6 +312,59 @@ impl Global {
 /// Element segments are referenced through element indices.
 ///
 /// See https://webassembly.github.io/spec/core/syntax/modules.html#element-segments
+///
+/// # Examples
+/// ## Active
+/// ```rust
+/// use wasm_ast::{Element, ElementInitializer, ElementMode, TableIndex, FunctionIndex, Expression, ReferenceType};
+///
+/// let offset: Expression = vec![0i32.into()].into();
+/// let initializer: ElementInitializer = vec![0].into();
+/// let element = Element::active(0, offset.clone(), ReferenceType::Function, initializer.clone());
+///
+/// assert_eq!(element, Element::new(
+///     ReferenceType::Function,
+///     ElementMode::Active(0, offset.clone()),
+///     initializer.clone()
+/// ));
+/// assert_eq!(element.kind(), ReferenceType::Function);
+/// assert_eq!(element.mode(), &ElementMode::Active(0, offset.clone()));
+/// assert_eq!(element.initializers(), &initializer);
+/// ```
+///
+/// ## Passive
+/// ```rust
+/// use wasm_ast::{Element, ElementInitializer, ElementMode, TableIndex, Expression, ReferenceType, NumericInstruction};
+///
+/// let initializer: ElementInitializer = vec![Expression::from(vec![2i32.into()])].into();
+/// let element = Element::passive(ReferenceType::External, initializer.clone());
+///
+/// assert_eq!(element, Element::new(
+///     ReferenceType::External,
+///     ElementMode::Passive,
+///     initializer.clone()
+/// ));
+/// assert_eq!(element.kind(), ReferenceType::External);
+/// assert_eq!(element.mode(), &ElementMode::Passive);
+/// assert_eq!(element.initializers(), &initializer);
+/// ```
+///
+/// ## Declarative
+/// ```rust
+/// use wasm_ast::{Element, ElementInitializer, ElementMode, TableIndex, Expression, ReferenceType, NumericInstruction};
+///
+/// let initializer: ElementInitializer = vec![Expression::from(vec![2i32.into()])].into();
+/// let element = Element::declarative(ReferenceType::External, initializer.clone());
+///
+/// assert_eq!(element, Element::new(
+///     ReferenceType::External,
+///     ElementMode::Declarative,
+///     initializer.clone()
+/// ));
+/// assert_eq!(element.kind(), ReferenceType::External);
+/// assert_eq!(element.mode(), &ElementMode::Declarative);
+/// assert_eq!(element.initializers(), &initializer);
+/// ````
 #[derive(Clone, Debug, PartialEq)]
 pub struct Element {
     kind: ReferenceType,
@@ -320,6 +373,7 @@ pub struct Element {
 }
 
 impl Element {
+    /// Creates a new instance of an element segment.
     pub fn new(kind: ReferenceType, mode: ElementMode, initializers: ElementInitializer) -> Self {
         Element {
             kind,
@@ -328,14 +382,49 @@ impl Element {
         }
     }
 
-    pub fn kind(&self) -> &ReferenceType {
-        &self.kind
+    /// Creates a passive element segment.
+    pub fn passive(kind: ReferenceType, initializers: ElementInitializer) -> Self {
+        Element {
+            kind,
+            mode: ElementMode::Passive,
+            initializers,
+        }
     }
 
+    /// Creates an active element segment.
+    pub fn active(
+        table: TableIndex,
+        offset: Expression,
+        kind: ReferenceType,
+        initializers: ElementInitializer,
+    ) -> Self {
+        Element {
+            kind,
+            mode: ElementMode::Active(table, offset),
+            initializers,
+        }
+    }
+
+    /// Creates a declarative element segment.
+    pub fn declarative(kind: ReferenceType, initializers: ElementInitializer) -> Self {
+        Element {
+            kind,
+            mode: ElementMode::Declarative,
+            initializers,
+        }
+    }
+
+    /// The reference type of the element segment.
+    pub fn kind(&self) -> ReferenceType {
+        self.kind
+    }
+
+    /// The initializer for the element segment.
     pub fn initializers(&self) -> &ElementInitializer {
         &self.initializers
     }
 
+    /// The mode of the element segment.
     pub fn mode(&self) -> &ElementMode {
         &self.mode
     }
@@ -348,6 +437,18 @@ impl Element {
 pub enum ElementInitializer {
     Expression(Vec<Expression>),
     FunctionIndex(Vec<FunctionIndex>),
+}
+
+impl From<Vec<Expression>> for ElementInitializer {
+    fn from(expressions: Vec<Expression>) -> Self {
+        ElementInitializer::Expression(expressions)
+    }
+}
+
+impl From<Vec<FunctionIndex>> for ElementInitializer {
+    fn from(indices: Vec<FunctionIndex>) -> Self {
+        ElementInitializer::FunctionIndex(indices)
+    }
 }
 
 /// Element segments have a mode that identifies them as either passive, active, or declarative.
@@ -877,29 +978,6 @@ mod tests {
     }
 
     #[test]
-    fn new_elements() {
-        let kind = ReferenceType::Function;
-        let mode = ElementMode::Active(0, Expression::new(Vec::new()));
-        let initializers = ElementInitializer::FunctionIndex(vec![1]);
-        let element = Element::new(kind, mode.clone(), initializers.clone());
-
-        assert_eq!(element.mode(), &mode);
-        assert_eq!(element.initializers(), &initializers);
-        assert_eq!(element.kind(), &kind);
-    }
-
-    #[test]
-    fn new_data() {
-        let mode = DataMode::Active(0, Expression::new(Vec::new()));
-        let initializer = vec![42];
-        let data = Data::new(mode.clone(), initializer.clone());
-
-        assert_eq!(data.mode(), &mode);
-        assert_eq!(data.initializer(), &initializer);
-        assert_eq!(data.len(), initializer.len());
-    }
-
-    #[test]
     fn new_table() {
         let kind = TableType::new(Limit::new(0, None), ReferenceType::Function);
         let table = Table::new(kind);
@@ -913,37 +991,6 @@ mod tests {
         let memory = Memory::new(kind);
 
         assert_eq!(memory.kind(), &kind);
-    }
-
-    #[test]
-    fn new_import() {
-        let module = Name::from("test");
-        let name = Name::from("foobar");
-        let kind = MemoryType::from(Limit::new(0, None));
-        let description = ImportDescription::Memory(kind);
-        let import = Import::new(module.clone(), name.clone(), description);
-
-        assert_eq!(import.module(), &module);
-        assert_eq!(import.name(), &name);
-        assert_eq!(import.description(), &description);
-    }
-
-    #[test]
-    fn new_export() {
-        let name = Name::from("foobar");
-        let description = ExportDescription::Function(42);
-        let export = Export::new(name.clone(), description);
-
-        assert_eq!(export.name(), &name);
-        assert_eq!(export.description(), &description);
-    }
-
-    #[test]
-    fn new_start() {
-        let function = 42;
-        let start = Start::new(function);
-
-        assert_eq!(start.function(), function);
     }
 
     #[test]

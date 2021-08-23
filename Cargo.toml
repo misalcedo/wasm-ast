@@ -20,4 +20,4 @@ name = "emit_module"
 harness = false
 
 [dependencies]
-nom = "6"
+nom = "7"

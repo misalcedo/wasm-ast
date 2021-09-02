@@ -54,7 +54,9 @@ pub fn parse_binary(_bytes: &[u8]) -> Result<Module, ParseError> {
 /// assert_eq!(module.exports(), None);
 /// assert_eq!(module.include_data_count(), false);
 /// ```
-#[cfg(feature = "wat")]
-pub fn parse_text(_text: &str) -> Result<Module, ParseError> {
-    Ok(Module::empty())
+#[cfg(feature = "text")]
+pub fn parse_text(text: &str) -> Result<Module, ParseError> {
+    let binary = wat::parse_str(text)?;
+
+    parse_binary(binary.as_slice())
 }

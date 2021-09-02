@@ -13,7 +13,7 @@ use errors::ParseError;
 /// ```rust
 /// use wasm_ast::parse_binary;
 ///
-/// let module = parse_binary(b"\x00\x61\x73\x6D\x01\x00\x00\x00");
+/// let module = parse_binary(b"\x00\x61\x73\x6D\x01\x00\x00\x00").unwrap();
 ///
 /// assert_eq!(module.functions(), None);
 /// assert_eq!(module.functions(), None);
@@ -40,7 +40,7 @@ pub fn parse_binary(_bytes: &[u8]) -> Result<Module, ParseError> {
 /// ```rust
 /// use wasm_ast::parse_text;
 ///
-/// let module = parse_text("(module)");
+/// let module = parse_text("(module)").unwrap();
 ///
 /// assert_eq!(module.functions(), None);
 /// assert_eq!(module.functions(), None);

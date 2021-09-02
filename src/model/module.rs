@@ -4,6 +4,7 @@ use crate::model::indices::*;
 use crate::model::types::*;
 use crate::model::{Expression, Name};
 use std::collections::HashMap;
+use std::mem::discriminant;
 
 /// A builder pattern for `Module`s.
 pub struct ModuleBuilder {
@@ -23,9 +24,37 @@ impl ModuleBuilder {
         self.module.function_types = Some(function_types);
     }
 
+    /// Adds the function type to the module's segment.
+    /// Returns the index of the type in the module.
+    pub fn add_function_type(&mut self, function_type: FunctionType) -> TypeIndex {
+        let function_types = self.module.function_types.get_or_insert_with(Vec::new);
+        function_types.push(function_type);
+        function_types.len() - 1
+    }
+
     /// Sets the functions segment for the WebAssembly module to be built.
     pub fn set_functions(&mut self, functions: Vec<Function>) {
         self.module.functions = Some(functions);
+    }
+
+    /// Adds the function to the module's segment.
+    /// Returns the index of the function in the module.
+    ///
+    /// **Note:** In order for the returned index to be accurate,
+    /// all function imports must be defined prior to adding any functions.
+    pub fn add_function(&mut self, function: Function) -> FunctionIndex {
+        let functions = self.module.functions.get_or_insert_with(Vec::new);
+        functions.push(function);
+
+        let imports = match &self.module.imports {
+            Some(imports) => imports
+                .iter()
+                .filter(|import| matches!(import.description(), ImportDescription::Function(_)))
+                .count(),
+            None => 0,
+        };
+
+        functions.len() + imports - 1
     }
 
     /// Sets the table segment for the WebAssembly module to be built.
@@ -33,9 +62,49 @@ impl ModuleBuilder {
         self.module.tables = Some(tables);
     }
 
+    /// Adds the table to the module's segment.
+    /// Returns the index of the table in the module.
+    ///
+    /// **Note:** In order for the returned index to be accurate,
+    /// all table imports must be defined prior to adding any tables.
+    pub fn add_table(&mut self, table: Table) -> TableIndex {
+        let tables = self.module.tables.get_or_insert_with(Vec::new);
+        tables.push(table);
+
+        let imports = match &self.module.imports {
+            Some(imports) => imports
+                .iter()
+                .filter(|import| matches!(import.description(), ImportDescription::Table(_)))
+                .count(),
+            None => 0,
+        };
+
+        tables.len() + imports - 1
+    }
+
     /// Sets the tables segment for the WebAssembly module to be built.
     pub fn set_memories(&mut self, memories: Vec<Memory>) {
         self.module.memories = Some(memories);
+    }
+
+    /// Adds the memory to the module's segment.
+    /// Returns the index of the memory in the module.
+    ///
+    /// **Note:** In order for the returned index to be accurate,
+    /// all memory imports must be defined prior to adding any memories.
+    pub fn add_memory(&mut self, memory: Memory) -> MemoryIndex {
+        let memories = self.module.memories.get_or_insert_with(Vec::new);
+        memories.push(memory);
+
+        let imports = match &self.module.imports {
+            Some(imports) => imports
+                .iter()
+                .filter(|import| matches!(import.description(), ImportDescription::Memory(_)))
+                .count(),
+            None => 0,
+        };
+
+        memories.len() + imports - 1
     }
 
     /// Sets the globals segment for the WebAssembly module to be built.
@@ -43,14 +112,50 @@ impl ModuleBuilder {
         self.module.globals = Some(globals);
     }
 
+    /// Adds the global to the module's segment.
+    /// Returns the index of the global in the module.
+    ///
+    /// **Note:** In order for the returned index to be accurate,
+    /// all global imports must be defined prior to adding any globals.
+    pub fn add_global(&mut self, global: Global) -> GlobalIndex {
+        let globals = self.module.globals.get_or_insert_with(Vec::new);
+        globals.push(global);
+
+        let imports = match &self.module.imports {
+            Some(imports) => imports
+                .iter()
+                .filter(|import| matches!(import.description(), ImportDescription::Global(_)))
+                .count(),
+            None => 0,
+        };
+
+        globals.len() + imports - 1
+    }
+
     /// Sets the elements segment for the WebAssembly module to be built.
     pub fn set_elements(&mut self, elements: Vec<Element>) {
         self.module.elements = Some(elements);
     }
 
+    /// Adds the element to the module's segment.
+    /// Returns the index of the element in the module.
+    pub fn add_element(&mut self, element: Element) -> ElementIndex {
+        let elements = self.module.elements.get_or_insert_with(Vec::new);
+        elements.push(element);
+        elements.len() - 1
+    }
+
     /// Sets the data segment for the WebAssembly module to be built.
     pub fn set_data(&mut self, data: Vec<Data>) {
         self.module.data = Some(data);
+    }
+
+    /// Adds the data to the module's segment.
+    /// Returns the index of the data in the module.
+    pub fn add_data(&mut self, datum: Data) -> DataIndex {
+        let data = self.module.data.get_or_insert_with(Vec::new);
+        data.push(datum);
+        data.len() - 1
     }
 
     /// Sets the start segment for the WebAssembly module to be built.
@@ -63,9 +168,31 @@ impl ModuleBuilder {
         self.module.imports = Some(imports);
     }
 
+    /// Adds the import to the module's segment.
+    /// Returns the index of the import in the module (i.e function, table, memory, or global index).
+    pub fn add_import(&mut self, import: Import) -> usize {
+        let import_discriminant = discriminant(import.description());
+        let imports = self.module.imports.get_or_insert_with(Vec::new);
+        imports.push(import);
+
+        let import_count = imports
+            .iter()
+            .filter(|i| discriminant(i.description()) == import_discriminant)
+            .count();
+
+        import_count - 1
+    }
+
     /// Sets the exports segment for the WebAssembly module to be built.
     pub fn set_exports(&mut self, exports: Vec<Export>) {
         self.module.exports = Some(exports);
+    }
+
+    /// Adds the export to the module's segment.
+    /// Returns the index of the export in the module.
+    pub fn add_export(&mut self, export: Export) {
+        let exports = self.module.exports.get_or_insert_with(Vec::new);
+        exports.push(export);
     }
 
     /// Sets the custom section at the given insertion point for the WebAssembly module to be built.
@@ -75,7 +202,20 @@ impl ModuleBuilder {
         insertion_point: ModuleSection,
         custom_sections: Vec<Custom>,
     ) {
-        self.module.customs.insert(insertion_point, custom_sections);
+        self.module
+            .custom_sections
+            .insert(insertion_point, custom_sections);
+    }
+
+    /// Adds the export to the module's segment.
+    /// Returns the index of the export in the module.
+    pub fn add_custom_section(&mut self, insertion_point: ModuleSection, custom_section: Custom) {
+        let custom_sections = self
+            .module
+            .custom_sections
+            .entry(insertion_point)
+            .or_insert_with(Vec::new);
+        custom_sections.push(custom_section);
     }
 
     /// Determines whether the WebAssembly module to be built will include a data count section or not.  
@@ -163,7 +303,7 @@ pub struct Module {
     start: Option<Start>,
     imports: Option<Vec<Import>>,
     exports: Option<Vec<Export>>,
-    customs: HashMap<ModuleSection, Vec<Custom>>,
+    custom_sections: HashMap<ModuleSection, Vec<Custom>>,
     data_count: bool,
 }
 
@@ -186,7 +326,7 @@ impl Module {
             start: None,
             imports: None,
             exports: None,
-            customs: HashMap::new(),
+            custom_sections: HashMap::new(),
             data_count: false,
         }
     }
@@ -247,7 +387,9 @@ impl Module {
     /// The custom sections of a module for a given insertion point.
     /// Custom sections are allowed at the beginning of a module and after every other section.
     pub fn custom_sections_at(&self, insertion_point: ModuleSection) -> Option<&[Custom]> {
-        self.customs.get(&insertion_point).map(Vec::as_slice)
+        self.custom_sections
+            .get(&insertion_point)
+            .map(Vec::as_slice)
     }
 
     /// Whether the module includes the data count section or not.

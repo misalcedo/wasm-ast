@@ -20,5 +20,10 @@ name = "emit_module"
 harness = false
 
 [dependencies]
-nom = "7"
+nom = { version = "7", optional = true }
 thiserror = "1"
+
+[features]
+default = []
+parser = ["nom"]
+wat = ["parser"]

@@ -116,7 +116,6 @@ impl Default for ModuleBuilder {
 /// ## Empty
 /// ```rust
 /// use wasm_ast::{Module, ModuleSection};
-/// use std::collections::HashMap;
 ///
 /// let module = Module::empty();
 ///
@@ -136,7 +135,6 @@ impl Default for ModuleBuilder {
 /// ## Builder
 /// ```rust
 /// use wasm_ast::{Module, Import, FunctionType, ValueType, Start, Function, ResultType, ControlInstruction, Memory, Limit, Export, Data, Expression, ModuleSection, Custom};
-/// use std::collections::HashMap;
 ///
 /// let mut module = Module::builder();
 /// let module = module.build();

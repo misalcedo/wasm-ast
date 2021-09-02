@@ -66,6 +66,7 @@ impl ModuleBuilder {
     }
 
     /// Sets the custom section at the given insertion point for the WebAssembly module to be built.
+    /// WebAssembly binary format allows custom sections to be at the start of a module, or after any other section.
     pub fn set_custom_sections(
         &mut self,
         insertion_point: ModuleSection,

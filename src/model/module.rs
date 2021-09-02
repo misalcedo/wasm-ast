@@ -2,6 +2,103 @@ use crate::model::types::*;
 use crate::model::{Expression, Name};
 use std::collections::HashMap;
 
+/// A builder pattern for `Module`s.
+pub struct ModuleBuilder {
+    module: Module,
+}
+
+impl ModuleBuilder {
+    /// Creates a new empty builder of WebAssembly modules.
+    pub fn new() -> Self {
+        ModuleBuilder {
+            module: Module::empty(),
+        }
+    }
+
+    /// Sets the function types segment for the WebAssembly module to be built.
+    pub fn set_function_types(&mut self, function_types: Vec<FunctionType>) {
+        self.module.function_types = Some(function_types);
+    }
+
+    /// Sets the functions segment for the WebAssembly module to be built.
+    pub fn set_functions(&mut self, functions: Vec<Function>) {
+        self.module.functions = Some(functions);
+    }
+
+    /// Sets the table segment for the WebAssembly module to be built.
+    pub fn set_tables(&mut self, tables: Vec<Table>) {
+        self.module.tables = Some(tables);
+    }
+
+    /// Sets the tables segment for the WebAssembly module to be built.
+    pub fn set_memories(&mut self, memories: Vec<Memory>) {
+        self.module.memories = Some(memories);
+    }
+
+    /// Sets the globals segment for the WebAssembly module to be built.
+    pub fn set_globals(&mut self, globals: Vec<Global>) {
+        self.module.globals = Some(globals);
+    }
+
+    /// Sets the elements segment for the WebAssembly module to be built.
+    pub fn set_elements(&mut self, elements: Vec<Element>) {
+        self.module.elements = Some(elements);
+    }
+
+    /// Sets the data segment for the WebAssembly module to be built.
+    pub fn set_data(&mut self, data: Vec<Data>) {
+        self.module.data = Some(data);
+    }
+
+    /// Sets the start segment for the WebAssembly module to be built.
+    pub fn set_start(&mut self, start: Start) {
+        self.module.start = Some(start);
+    }
+
+    /// Sets the imports segment for the WebAssembly module to be built.
+    pub fn set_imports(&mut self, imports: Vec<Import>) {
+        self.module.imports = Some(imports);
+    }
+
+    /// Sets the exports segment for the WebAssembly module to be built.
+    pub fn set_exports(&mut self, exports: Vec<Export>) {
+        self.module.exports = Some(exports);
+    }
+
+    /// Sets the custom section at the given insertion point for the WebAssembly module to be built.
+    pub fn set_custom_sections(
+        &mut self,
+        insertion_point: ModuleSection,
+        custom_sections: Vec<Custom>,
+    ) {
+        self.module.customs.insert(insertion_point, custom_sections);
+    }
+
+    /// Determines whether the WebAssembly module to be built will include a data count section or not.  
+    pub fn include_data_count(&mut self, include: bool) {
+        self.module.data_count = include;
+    }
+
+    /// Builds the current segments into a module.
+    pub fn build(self) -> Module {
+        self.into()
+    }
+}
+
+impl From<ModuleBuilder> for Module {
+    fn from(builder: ModuleBuilder) -> Self {
+        builder.module
+    }
+}
+
+impl Default for ModuleBuilder {
+    fn default() -> Self {
+        ModuleBuilder {
+            module: Module::empty(),
+        }
+    }
+}
+
 /// WebAssembly programs are organized into modules, which are the unit of deployment, loading, and compilation.
 /// A module collects definitions for types, functions, tables, memories, and globals.
 /// In addition,
@@ -29,55 +126,28 @@ use std::collections::HashMap;
 /// assert_eq!(module.start(), None);
 /// assert_eq!(module.imports(), None);
 /// assert_eq!(module.exports(), None);
+/// assert_eq!(module.include_data_count(), false);
 /// ```
 ///
-/// ## Hello, World!
+/// ## Builder
 /// ```rust
-/// use wasm_ast::{Module, Import, FunctionType, ValueType, Start, Function, ResultType, ControlInstruction, NumericInstruction, Memory, Limit, Export, Data, Expression, ModuleSection, Custom};
+/// use wasm_ast::{Module, Import, FunctionType, ValueType, Start, Function, ResultType, ControlInstruction, Memory, Limit, Export, Data, Expression, ModuleSection, Custom};
 /// use std::collections::HashMap;
 ///
-/// let message = "Hello, World!";
-/// let function_types = vec![
-///     FunctionType::side_effect(vec![ValueType::I32, ValueType::I32].into()),
-///     FunctionType::runnable()
-/// ];
-/// let imports = vec![Import::function("console".into(), "log".into(), 0)];
-/// let start = Start::new(1);
-/// let functions = vec![Function::new(1, ResultType::empty(), vec![0i32.into(), message.len().into(), ControlInstruction::Call(0).into()].into())];
-/// let memories = vec![Memory::new(Limit::bounded(1, 4).into())];
-/// let exports = vec![Export::memory("memory".into(), 0)];
-/// let data = vec![Data::active(0, Expression::empty(), Vec::from(message))];
-/// let mut custom = HashMap::new();
-/// custom.insert(ModuleSection::Custom, vec![Custom::new("version".into(), Vec::from("1.0.0"))]);
-/// custom.insert(ModuleSection::Export, vec![Custom::new("footer".into(), Vec::from("foot"))]);
+/// let mut module = Module::builder();
+/// let module = module.build();
 ///
-/// let module = Module::new(
-///     Some(function_types.clone()),
-///     Some(functions.clone()),
-///     None,
-///     Some(memories.clone()),
-///     None,
-///     None,
-///     Some(data.clone()),
-///     Some(start.clone()),
-///     Some(imports.clone()),
-///     Some(exports.clone()),
-///     custom.clone(),
-///     true
-/// );
-///
-/// assert_eq!(module.function_types(), Some(function_types.as_slice()));
-/// assert_eq!(module.functions(), Some(functions.as_slice()));
+/// assert_eq!(module.functions(), None);
+/// assert_eq!(module.functions(), None);
 /// assert_eq!(module.tables(), None);
-/// assert_eq!(module.memories(), Some(memories.as_slice()));
+/// assert_eq!(module.memories(), None);
 /// assert_eq!(module.globals(), None);
 /// assert_eq!(module.elements(), None);
-/// assert_eq!(module.data(), Some(data.as_slice()));
-/// assert_eq!(module.start(), Some(&start));
-/// assert_eq!(module.imports(), Some(imports.as_slice()));
-/// assert_eq!(module.exports(), Some(exports.as_slice()));
-/// assert_eq!(module.custom_sections_at(ModuleSection::Custom), Some(custom[&ModuleSection::Custom].as_slice()));
-/// assert_eq!(module.custom_sections_at(ModuleSection::Export), Some(custom[&ModuleSection::Export].as_slice()));
+/// assert_eq!(module.data(), None);
+/// assert_eq!(module.start(), None);
+/// assert_eq!(module.imports(), None);
+/// assert_eq!(module.exports(), None);
+/// assert_eq!(module.include_data_count(), false);
 /// ```
 #[derive(Clone, Debug)]
 pub struct Module {
@@ -96,35 +166,9 @@ pub struct Module {
 }
 
 impl Module {
-    /// Creates a new `Module` with the given segments.
-    pub fn new(
-        function_types: Option<Vec<FunctionType>>,
-        functions: Option<Vec<Function>>,
-        tables: Option<Vec<Table>>,
-        memories: Option<Vec<Memory>>,
-        globals: Option<Vec<Global>>,
-        elements: Option<Vec<Element>>,
-        data: Option<Vec<Data>>,
-        start: Option<Start>,
-        imports: Option<Vec<Import>>,
-        exports: Option<Vec<Export>>,
-        customs: HashMap<ModuleSection, Vec<Custom>>,
-        data_count: bool,
-    ) -> Self {
-        Module {
-            function_types,
-            functions,
-            tables,
-            memories,
-            globals,
-            elements,
-            data,
-            start,
-            imports,
-            exports,
-            customs,
-            data_count,
-        }
+    /// Creates a builder for WebAssembly modules.
+    pub fn builder() -> ModuleBuilder {
+        ModuleBuilder::new()
     }
 
     /// Creates a new empty `Module`.
@@ -147,38 +191,38 @@ impl Module {
 
     /// The 𝗍𝗒𝗉𝖾𝗌 component of a module defines a vector of function types.
     pub fn function_types(&self) -> Option<&[FunctionType]> {
-        self.function_types.as_ref().map(Vec::as_slice)
+        self.function_types.as_deref()
     }
 
     /// The 𝖿𝗎𝗇𝖼𝗌 component of a module defines a vector of functions.
     pub fn functions(&self) -> Option<&[Function]> {
-        self.functions.as_ref().map(Vec::as_slice)
+        self.functions.as_deref()
     }
 
     /// The 𝗍𝖺𝖻𝗅𝖾𝗌 component of a module defines a vector of tables described by their table type.
     pub fn tables(&self) -> Option<&[Table]> {
-        self.tables.as_ref().map(Vec::as_slice)
+        self.tables.as_deref()
     }
 
     /// The 𝗆𝖾𝗆𝗌 component of a module defines a vector of linear memories (or memories for short)
     /// as described by their memory type.
     pub fn memories(&self) -> Option<&[Memory]> {
-        self.memories.as_ref().map(Vec::as_slice)
+        self.memories.as_deref()
     }
 
     /// The 𝗀𝗅𝗈𝖻𝖺𝗅𝗌 component of a module defines a vector of global variables (or globals for short).
     pub fn globals(&self) -> Option<&[Global]> {
-        self.globals.as_ref().map(Vec::as_slice)
+        self.globals.as_deref()
     }
 
     /// The 𝖾𝗅𝖾𝗆𝗌 component of a module defines a vector of element segments.
     pub fn elements(&self) -> Option<&[Element]> {
-        self.elements.as_ref().map(Vec::as_slice)
+        self.elements.as_deref()
     }
 
     /// The 𝖽𝖺𝗍𝖺𝗌 component of a module defines a vector of data segments.
     pub fn data(&self) -> Option<&[Data]> {
-        self.data.as_ref().map(Vec::as_slice)
+        self.data.as_deref()
     }
 
     /// The 𝗌𝗍𝖺𝗋𝗍 component of a module declares the function index of a start function that is
@@ -189,19 +233,24 @@ impl Module {
 
     /// The 𝗂𝗆𝗉𝗈𝗋𝗍𝗌 component of a module defines a set of imports that are required for instantiation.
     pub fn imports(&self) -> Option<&[Import]> {
-        self.imports.as_ref().map(Vec::as_slice)
+        self.imports.as_deref()
     }
 
     /// The 𝖾𝗑𝗉𝗈𝗋𝗍𝗌 component of a module defines a set of exports that become accessible to the
     /// host environment once the module has been instantiated.
     pub fn exports(&self) -> Option<&[Export]> {
-        self.exports.as_ref().map(Vec::as_slice)
+        self.exports.as_deref()
     }
 
     /// The custom sections of a module for a given insertion point.
     /// Custom sections are allowed at the beginning of a module and after every other section.
     pub fn custom_sections_at(&self, insertion_point: ModuleSection) -> Option<&[Custom]> {
         self.customs.get(&insertion_point).map(Vec::as_slice)
+    }
+
+    /// Whether the module includes the data count section or not.
+    pub fn include_data_count(&self) -> bool {
+        self.data_count
     }
 }
 

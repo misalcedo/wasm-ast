@@ -21,3 +21,4 @@ harness = false
 
 [dependencies]
 nom = "7"
+thiserror = "1"

@@ -1,8 +1,10 @@
+//! Model for types in the WebAssembly syntax.
+
 /// Number types classify numeric values.
 /// Number types are transparent, meaning that their bit patterns can be observed.
 /// Values of number type can be stored in memories.
 ///
-/// See https://webassembly.github.io/spec/core/syntax/types.html#number-types
+/// See <https://webassembly.github.io/spec/core/syntax/types.html#number-types>
 ///
 /// # Examples
 /// ```rust
@@ -84,7 +86,7 @@ pub enum FloatType {
 /// Reference types are opaque, meaning that neither their size nor their bit pattern can be observed.
 /// Values of reference type can be stored in tables.
 ///
-/// See https://webassembly.github.io/spec/core/syntax/types.html#reference-types
+/// See <https://webassembly.github.io/spec/core/syntax/types.html#reference-types>
 ///
 /// # Examples
 /// ```rust
@@ -102,7 +104,7 @@ pub enum ReferenceType {
 /// Value types classify the individual values that WebAssembly code can compute with and the values that a variable accepts.
 /// They are either number types or reference types.
 ///
-/// See https://webassembly.github.io/spec/core/syntax/types.html#value-types
+/// See <https://webassembly.github.io/spec/core/syntax/types.html#value-types>
 ///
 /// # Examples
 /// ```rust
@@ -155,7 +157,7 @@ impl From<ReferenceType> for ValueType {
 /// Result types classify the result of executing instructions or functions,
 /// which is a sequence of values, written with brackets.
 ///
-/// See https://webassembly.github.io/spec/core/syntax/types.html#result-types
+/// See <https://webassembly.github.io/spec/core/syntax/types.html#result-types>
 ///
 /// # Examples
 ///
@@ -250,7 +252,7 @@ impl From<Vec<ValueType>> for ResultType {
 /// mapping a vector of parameters to a vector of results.
 /// They are also used to classify the inputs and outputs of instructions
 ///
-/// See https://webassembly.github.io/spec/core/syntax/types.html#function-types
+/// See <https://webassembly.github.io/spec/core/syntax/types.html#function-types>
 ///
 /// # Examples
 ///
@@ -345,7 +347,7 @@ impl FunctionType {
 
 /// Limits classify the size range of resizeable storage associated with memory types and table types.
 ///
-/// See https://webassembly.github.io/spec/core/syntax/types.html#limits
+/// See <https://webassembly.github.io/spec/core/syntax/types.html#limits>
 ///
 /// # Examples
 ///
@@ -414,7 +416,7 @@ impl Limit {
 /// The limits constrain the minimum and optionally the maximum size of a memory.
 /// The limits are given in units of page size.
 ///
-/// See https://webassembly.github.io/spec/core/syntax/types.html#memory-types
+/// See <https://webassembly.github.io/spec/core/syntax/types.html#memory-types>
 ///
 /// # Examples
 /// ```rust
@@ -453,7 +455,7 @@ impl From<Limit> for MemoryType {
 /// Like memories, tables are constrained by limits for their minimum and optionally maximum size.
 /// The limits are given in numbers of entries.
 ///
-/// See https://webassembly.github.io/spec/core/syntax/types.html#table-types
+/// See <https://webassembly.github.io/spec/core/syntax/types.html#table-types>
 ///
 /// # Examples
 /// ```rust
@@ -490,7 +492,7 @@ impl TableType {
 
 /// Global types classify global variables, which hold a value and can either be mutable or immutable.
 ///
-/// See https://webassembly.github.io/spec/core/syntax/types.html#global-types
+/// See <https://webassembly.github.io/spec/core/syntax/types.html#global-types>
 ///
 /// # Examples
 /// ## Mutable

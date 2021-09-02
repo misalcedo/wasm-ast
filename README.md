@@ -4,7 +4,7 @@
 [![Crates.io Version](https://img.shields.io/crates/v/wasm-ast.svg)](https://crates.io/crates/wasm-ast)
 [![Docs.rs Version](https://docs.rs/wasm-ast/badge.svg)](https://docs.rs/wasm-ast)
 
-A Rust-native WebAssembly syntax model useful for generating, reading, and emitting WebAssembly code.
+A Rust-native WebAssembly syntax model useful for generating, parsing, and emitting WebAssembly code.
 
 ## Design
 WASM-AST is designed with minimal validation. The goal is to closely model the WASM syntax specification in order to allow valid and invalid abstract syntax trees.

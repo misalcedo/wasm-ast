@@ -1,3 +1,6 @@
+//! WebAssembly model of modules and their segments.
+
+use crate::model::indices::*;
 use crate::model::types::*;
 use crate::model::{Expression, Name};
 use std::collections::HashMap;
@@ -107,7 +110,7 @@ impl Default for ModuleBuilder {
 /// or a start function.
 /// Each of the vectors – and thus the entire module – may be empty.
 ///
-/// See https://webassembly.github.io/spec/core/syntax/modules.html#modules
+/// See <https://webassembly.github.io/spec/core/syntax/modules.html#modules>
 ///
 /// # Examples
 /// ## Empty
@@ -255,37 +258,12 @@ impl Module {
     }
 }
 
-/// Definitions are referenced with zero-based indices.
-/// Each class of definition has its own index space, as distinguished by the following classes.
-///
-/// The index space for functions, tables,
-/// memories and globals includes respective imports declared in the same module.
-/// The indices of these imports precede the indices of other definitions in the same index space.
-///
-/// Element indices reference element segments and data indices reference data segments.
-///
-/// The index space for locals is only accessible inside a function and includes the parameters of that function,
-/// which precede the local variables.
-///
-/// Label indices reference structured control instructions inside an instruction sequence.
-/// See https://webassembly.github.io/spec/core/syntax/modules.html#indices
-
-pub type TypeIndex = usize;
-pub type FunctionIndex = usize;
-pub type TableIndex = usize;
-pub type MemoryIndex = usize;
-pub type GlobalIndex = usize;
-pub type ElementIndex = usize;
-pub type DataIndex = usize;
-pub type LocalIndex = usize;
-pub type LabelIndex = usize;
-
 /// Custom sections have the id 0.
 /// They are intended to be used for debugging information or third-party extensions,
 /// and are ignored by the WebAssembly semantics. Their contents consist of a name further
 /// identifying the custom section, followed by an uninterpreted sequence of bytes for custom use.
 ///
-/// See https://webassembly.github.io/spec/core/binary/modules.html#binary-customsec
+/// See <https://webassembly.github.io/spec/core/binary/modules.html#binary-customsec>
 ///
 /// # Examples
 /// ```rust
@@ -328,7 +306,7 @@ impl Custom {
 /// The index of the first local is the smallest index not referencing a parameter.
 /// The 𝖻𝗈𝖽𝗒 is an instruction sequence that upon termination must produce a stack matching the function type’s result type.
 ///
-/// See https://webassembly.github.io/spec/core/syntax/modules.html#functions
+/// See <https://webassembly.github.io/spec/core/syntax/modules.html#functions>
 ///
 /// # Examples
 /// ```rust
@@ -381,7 +359,7 @@ impl Function {
 /// starting with the smallest index not referencing a table import.
 /// Most constructs implicitly reference table index 0.
 ///
-/// See https://webassembly.github.io/spec/core/syntax/modules.html#tables
+/// See <https://webassembly.github.io/spec/core/syntax/modules.html#tables>
 ///
 /// # Examples
 /// ```rust
@@ -425,7 +403,7 @@ impl From<TableType> for Table {
 /// starting with the smallest index not referencing a memory import.
 /// Most constructs implicitly reference memory index 0.
 ///
-/// See https://webassembly.github.io/spec/core/syntax/modules.html#memories
+/// See <https://webassembly.github.io/spec/core/syntax/modules.html#memories>
 ///
 /// # Examples
 /// ```rust
@@ -471,7 +449,7 @@ where
 /// Globals are referenced through global indices,
 /// starting with the smallest index not referencing a global import.
 ///
-/// See https://webassembly.github.io/spec/core/syntax/modules.html#globals
+/// See <https://webassembly.github.io/spec/core/syntax/modules.html#globals>
 ///
 /// # Examples
 /// ## Immutable
@@ -550,7 +528,7 @@ impl Global {
 /// The 𝗈𝖿𝖿𝗌𝖾𝗍 is given by a constant expression.
 /// Element segments are referenced through element indices.
 ///
-/// See https://webassembly.github.io/spec/core/syntax/modules.html#element-segments
+/// See <https://webassembly.github.io/spec/core/syntax/modules.html#element-segments>
 ///
 /// # Examples
 /// ## Active
@@ -712,7 +690,7 @@ pub enum ElementMode {
 /// as specified by a memory index and a constant expression defining an offset into that memory.
 /// Data segments are referenced through data indices.
 ///
-/// See https://webassembly.github.io/spec/core/syntax/modules.html#data-segments
+/// See <https://webassembly.github.io/spec/core/syntax/modules.html#data-segments>
 ///
 /// # Examples
 /// ## Passive
@@ -815,7 +793,7 @@ pub enum DataMode {
 /// after tables and memories have been initialized.
 /// start::={𝖿𝗎𝗇𝖼 funcidx}
 ///
-/// See https://webassembly.github.io/spec/core/syntax/modules.html#start-function
+/// See <https://webassembly.github.io/spec/core/syntax/modules.html#start-function>
 ///
 /// # Examples
 /// ```rust
@@ -846,7 +824,7 @@ impl Start {
 /// Exportable definitions are functions, tables, memories, and globals,
 /// which are referenced through a respective descriptor.
 ///
-/// See https://webassembly.github.io/spec/core/syntax/modules.html#exports
+/// See <https://webassembly.github.io/spec/core/syntax/modules.html#exports>
 ///
 /// # Examples
 /// ## Table
@@ -974,7 +952,7 @@ pub enum ExportDescription {
 /// In each index space, the indices of imports go before the first index of any
 /// definition contained in the module itself.
 ///
-/// See https://webassembly.github.io/spec/core/syntax/modules.html#imports
+/// See <https://webassembly.github.io/spec/core/syntax/modules.html#imports>
 ///
 /// # Examples
 /// ## Table
@@ -1123,7 +1101,7 @@ pub enum ImportDescription {
 /// except that function definitions are split into two sections,
 /// separating their type declarations in the function section from their bodies in the code section.
 ///
-/// See https://webassembly.github.io/spec/core/binary/modules.html
+/// See <https://webassembly.github.io/spec/core/binary/modules.html>
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum ModuleSection {
     /// Custom sections have the id 0.

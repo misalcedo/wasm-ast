@@ -1,3 +1,5 @@
+//! WebAssembly instruction set.
+
 use crate::model::{
     DataIndex, ElementIndex, FloatType, FunctionIndex, GlobalIndex, IntegerType, LabelIndex,
     LocalIndex, NumberType, ReferenceType, TableIndex, TypeIndex, ValueType,
@@ -13,7 +15,7 @@ use crate::model::{
 /// Some instructions are structured in that they bracket nested sequences of instructions.
 /// The following sections group instructions into a number of different categories.
 ///
-/// See https://webassembly.github.io/spec/core/syntax/instructions.html#instructions
+/// See <https://webassembly.github.io/spec/core/syntax/instructions.html#instructions>
 ///
 /// # Examples
 /// See the specific instruction types for examples.
@@ -36,7 +38,7 @@ pub enum Instruction {
 /// unsigned or signed integers. For the other integer instructions, the use of two’s complement
 /// for the signed interpretation means that they behave the same regardless of signedness.
 ///
-/// See https://webassembly.github.io/spec/core/syntax/instructions.html#numeric-instructions
+/// See <https://webassembly.github.io/spec/core/syntax/instructions.html#numeric-instructions>
 ///
 /// # Examples
 /// ## Constant
@@ -465,7 +467,7 @@ impl From<f64> for Instruction {
 /// Instructions in this group are concerned with accessing references.
 /// These instruction produce a null value, check for a null value, or produce a reference to a given function, respectively.
 ///
-/// See https://webassembly.github.io/spec/core/syntax/instructions.html#reference-instructions
+/// See <https://webassembly.github.io/spec/core/syntax/instructions.html#reference-instructions>
 ///
 /// # Examples
 /// ```rust
@@ -505,7 +507,7 @@ impl From<ReferenceInstruction> for Instruction {
 
 /// Instructions in this group can operate on operands of any value type.
 ///
-/// https://webassembly.github.io/spec/core/syntax/instructions.html#parametric-instructions
+/// See <https://webassembly.github.io/spec/core/syntax/instructions.html#parametric-instructions>
 ///
 /// # Examples
 /// ```rust
@@ -548,7 +550,7 @@ impl From<ParametricInstruction> for Instruction {
 /// These instructions get or set the values of variables, respectively.
 /// The 𝗅𝗈𝖼𝖺𝗅.𝗍𝖾𝖾 instruction is like 𝗅𝗈𝖼𝖺𝗅.𝗌𝖾𝗍 but also returns its argument.
 ///
-/// See https://webassembly.github.io/spec/core/syntax/instructions.html#variable-instructions
+/// See <https://webassembly.github.io/spec/core/syntax/instructions.html#variable-instructions>
 ///
 /// # Examples
 /// ```rust
@@ -603,7 +605,7 @@ impl From<VariableInstruction> for Instruction {
 /// Instructions in this group are concerned with tables table.
 /// An additional instruction that accesses a table is the control instruction 𝖼𝖺𝗅𝗅_𝗂𝗇𝖽𝗂𝗋𝖾𝖼𝗍.
 ///
-/// See https://webassembly.github.io/spec/core/syntax/instructions.html#table-instructions
+/// See <https://webassembly.github.io/spec/core/syntax/instructions.html#table-instructions>
 ///
 /// # Examples
 /// ```rust
@@ -688,7 +690,7 @@ impl From<TableInstruction> for Instruction {
 /// A trap results if any of the accessed memory bytes lies outside the address range implied by
 /// the memory’s current size.
 ///
-/// See https://webassembly.github.io/spec/core/syntax/instructions.html#memory-instructions
+/// See <https://webassembly.github.io/spec/core/syntax/instructions.html#memory-instructions>
 ///
 /// # Examples
 /// ```rust
@@ -831,7 +833,7 @@ impl From<MemoryInstruction> for Instruction {
 /// Backward branches require operands according to the input of the targeted block’s type, i.e.,
 /// represent the values consumed by the restarted block.
 ///
-/// See https://webassembly.github.io/spec/core/syntax/instructions.html#control-instructions
+/// See <https://webassembly.github.io/spec/core/syntax/instructions.html#control-instructions>
 ///
 /// # Examples
 /// ## Simple
@@ -931,7 +933,7 @@ impl From<ControlInstruction> for Instruction {
 /// It is given either as a type index that refers to a suitable function type,
 /// or as an optional value type inline, which is a shorthand for the function type []→[valtype?].
 ///
-/// See https://webassembly.github.io/spec/core/syntax/instructions.html#control-instructions
+/// See <https://webassembly.github.io/spec/core/syntax/instructions.html#control-instructions>
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum BlockType {
     None,
@@ -945,7 +947,7 @@ pub enum BlockType {
 /// The static address offset is added to the dynamic address operand,
 /// yielding a 33 bit effective address that is the zero-based index at which the memory is accessed.
 ///
-/// See https://webassembly.github.io/spec/core/syntax/instructions.html#memory-instructions
+/// See <https://webassembly.github.io/spec/core/syntax/instructions.html#memory-instructions>
 ///
 /// # Examples
 /// ## With Offset & Alignment
@@ -1041,7 +1043,7 @@ impl MemoryArgument {
 /// For the other integer instructions, the use of two’s complement for the signed interpretation
 /// means that they behave the same regardless of signedness.
 ///
-/// See https://webassembly.github.io/spec/core/syntax/instructions.html#numeric-instructions
+/// See <https://webassembly.github.io/spec/core/syntax/instructions.html#numeric-instructions>
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum SignExtension {
     Signed,
@@ -1053,7 +1055,7 @@ pub enum SignExtension {
 /// In some places, validation restricts expressions to be constant,
 /// which limits the set of allowable instructions.
 ///
-/// See https://webassembly.github.io/spec/core/syntax/instructions.html#expressions
+/// See <https://webassembly.github.io/spec/core/syntax/instructions.html#expressions>
 ///
 /// # Examples
 /// ## Non-Empty

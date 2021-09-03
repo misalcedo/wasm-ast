@@ -204,23 +204,80 @@ impl ModuleBuilder {
     ) {
         self.module
             .custom_sections
-            .insert(insertion_point, custom_sections);
+            .set_custom_sections(insertion_point, custom_sections);
     }
 
     /// Adds the export to the module's segment.
     /// Returns the index of the export in the module.
     pub fn add_custom_section(&mut self, insertion_point: ModuleSection, custom_section: Custom) {
-        let custom_sections = self
-            .module
+        self.module
             .custom_sections
-            .entry(insertion_point)
-            .or_insert_with(Vec::new);
-        custom_sections.push(custom_section);
+            .add_custom_section(insertion_point, custom_section);
     }
 
     /// Determines whether the WebAssembly module to be built will include a data count section or not.  
-    pub fn include_data_count(&mut self, include: bool) {
+    pub fn set_include_data_count(&mut self, include: bool) {
         self.module.data_count = include;
+    }
+
+    /// The 𝗍𝗒𝗉𝖾𝗌 component of the module to be built.
+    pub fn function_types(&self) -> Option<&[FunctionType]> {
+        self.module.function_types()
+    }
+
+    /// The 𝖿𝗎𝗇𝖼𝗌 component of the module to be built.
+    pub fn functions(&self) -> Option<&[Function]> {
+        self.module.functions()
+    }
+
+    /// The 𝗍𝖺𝖻𝗅𝖾𝗌 component of the module to be built.
+    pub fn tables(&self) -> Option<&[Table]> {
+        self.module.tables()
+    }
+
+    /// The 𝗆𝖾𝗆𝗌 component of the module to be built.
+    pub fn memories(&self) -> Option<&[Memory]> {
+        self.module.memories()
+    }
+
+    /// The 𝗀𝗅𝗈𝖻𝖺𝗅𝗌 component of the module to be built.
+    pub fn globals(&self) -> Option<&[Global]> {
+        self.module.globals()
+    }
+
+    /// The 𝖾𝗅𝖾𝗆𝗌 component of the module to be built.
+    pub fn elements(&self) -> Option<&[Element]> {
+        self.module.elements()
+    }
+
+    /// The 𝖽𝖺𝗍𝖺𝗌 component of the module to be built.
+    pub fn data(&self) -> Option<&[Data]> {
+        self.module.data()
+    }
+
+    /// The 𝗌𝗍𝖺𝗋𝗍 component of the module to be built.
+    pub fn start(&self) -> Option<&Start> {
+        self.module.start()
+    }
+
+    /// The 𝗂𝗆𝗉𝗈𝗋𝗍𝗌 component of the module to be built.
+    pub fn imports(&self) -> Option<&[Import]> {
+        self.module.imports()
+    }
+
+    /// The 𝖾𝗑𝗉𝗈𝗋𝗍𝗌 component of the module to be built.
+    pub fn exports(&self) -> Option<&[Export]> {
+        self.module.exports()
+    }
+
+    /// The custom sections of the module to be built.
+    pub fn custom_sections_at(&self, insertion_point: ModuleSection) -> Option<&[Custom]> {
+        self.module.custom_sections_at(insertion_point)
+    }
+
+    /// Whether the module to be built will include the data count section or not.
+    pub fn include_data_count(&self) -> bool {
+        self.module.include_data_count()
     }
 
     /// Builds the current segments into a module.
@@ -291,7 +348,7 @@ impl Default for ModuleBuilder {
 /// assert_eq!(module.exports(), None);
 /// assert_eq!(module.include_data_count(), false);
 /// ```
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Module {
     function_types: Option<Vec<FunctionType>>,
     functions: Option<Vec<Function>>,
@@ -303,7 +360,7 @@ pub struct Module {
     start: Option<Start>,
     imports: Option<Vec<Import>>,
     exports: Option<Vec<Export>>,
-    custom_sections: HashMap<ModuleSection, Vec<Custom>>,
+    custom_sections: CustomSections,
     data_count: bool,
 }
 
@@ -326,7 +383,7 @@ impl Module {
             start: None,
             imports: None,
             exports: None,
-            custom_sections: HashMap::new(),
+            custom_sections: CustomSections::new(),
             data_count: false,
         }
     }
@@ -387,14 +444,66 @@ impl Module {
     /// The custom sections of a module for a given insertion point.
     /// Custom sections are allowed at the beginning of a module and after every other section.
     pub fn custom_sections_at(&self, insertion_point: ModuleSection) -> Option<&[Custom]> {
-        self.custom_sections
-            .get(&insertion_point)
-            .map(Vec::as_slice)
+        self.custom_sections.custom_sections_at(insertion_point)
     }
 
     /// Whether the module includes the data count section or not.
     pub fn include_data_count(&self) -> bool {
         self.data_count
+    }
+}
+
+/// Maps insertion points to custom sections for a WebAssembly module.
+#[derive(Clone, Debug)]
+struct CustomSections {
+    custom_sections: HashMap<ModuleSection, Vec<Custom>>,
+}
+
+impl CustomSections {
+    /// Creates a new empty instance of custom sections.
+    pub fn new() -> Self {
+        CustomSections {
+            custom_sections: HashMap::new(),
+        }
+    }
+
+    /// The custom sections of the module to be built.
+    pub fn custom_sections_at(&self, insertion_point: ModuleSection) -> Option<&[Custom]> {
+        self.custom_sections
+            .get(&insertion_point)
+            .map(Vec::as_slice)
+    }
+
+    /// Sets the custom section at the given insertion point for the WebAssembly module to be built.
+    /// WebAssembly binary format allows custom sections to be at the start of a module, or after any other section.
+    pub fn set_custom_sections(
+        &mut self,
+        insertion_point: ModuleSection,
+        custom_sections: Vec<Custom>,
+    ) {
+        self.custom_sections
+            .insert(insertion_point, custom_sections);
+    }
+
+    /// Adds the export to the module's segment.
+    /// Returns the index of the export in the module.
+    pub fn add_custom_section(&mut self, insertion_point: ModuleSection, custom_section: Custom) {
+        let custom_sections = self
+            .custom_sections
+            .entry(insertion_point)
+            .or_insert_with(Vec::new);
+
+        custom_sections.push(custom_section);
+    }
+}
+
+impl PartialEq for CustomSections {
+    fn eq(&self, other: &Self) -> bool {
+        self.custom_sections.len() == other.custom_sections.len()
+            && self.custom_sections.keys().all(|key| {
+                other.custom_sections.contains_key(key)
+                    && self.custom_sections.get(key) == other.custom_sections.get(key)
+            })
     }
 }
 
@@ -1291,4 +1400,48 @@ pub enum ModuleSection {
     /// It decodes into an optional u32 that represents the number of data segments in the data section.
     /// If this count does not match the length of the data segment vector, the module is malformed.
     DataCount,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn module_equality_when_empty() {
+        assert_eq!(Module::builder().build(), Module::empty());
+    }
+
+    #[test]
+    fn module_equality_for_custom_sections() {
+        let mut builder = Module::builder();
+        builder.add_custom_section(
+            ModuleSection::Data,
+            Custom::new("version".into(), b"0.0.1".to_vec()),
+        );
+
+        let module = builder.build();
+
+        assert_eq!(module, module.clone());
+        assert_ne!(module, Module::empty());
+    }
+
+    #[test]
+    fn module_equality_not_same_custom_sections() {
+        let mut builder = Module::builder();
+        builder.add_custom_section(
+            ModuleSection::Data,
+            Custom::new("version".into(), b"0.0.1".to_vec()),
+        );
+
+        let mut other_builder = Module::builder();
+        other_builder.add_custom_section(
+            ModuleSection::Export,
+            Custom::new("version".into(), b"0.0.1".to_vec()),
+        );
+
+        let module = builder.build();
+        let other_module = other_builder.build();
+
+        assert_ne!(module, other_module);
+    }
 }

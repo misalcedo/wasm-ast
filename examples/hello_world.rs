@@ -38,7 +38,7 @@ fn main() {
     builder.set_exports(exports.clone());
     builder.set_custom_sections(ModuleSection::Custom, header_custom.clone());
     builder.set_custom_sections(ModuleSection::Export, footer_custom.clone());
-    builder.include_data_count(true);
+    builder.set_include_data_count(true);
 
     let module = builder.build();
 

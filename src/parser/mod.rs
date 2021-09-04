@@ -1,9 +1,13 @@
 //! Parser of the WebAssembly binary format.
 
-pub mod errors;
+mod errors;
+mod instructions;
+mod sections;
+mod types;
+mod values;
 
 use crate::Module;
-use errors::ParseError;
+pub use errors::ParseError;
 
 /// Parses the given bytes into a WebAssembly module.
 /// The bytes are parsed using the WebAssembly binary format.

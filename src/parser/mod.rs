@@ -24,6 +24,8 @@ const VERSION: [u8; 4] = [0x01, 0x00, 0x00, 0x00];
 /// Requires that no trailing information is present after the last group of custom sections
 /// (i.e. valid WebAssembly binary format passed in with trailing data will be treated as invalid).
 ///
+/// See <https://webassembly.github.io/spec/core/binary/index.html>
+///
 /// # Examples
 /// ## Empty
 /// ```rust

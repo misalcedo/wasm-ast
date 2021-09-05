@@ -1,5 +1,6 @@
 use thiserror::Error;
 
+/// An error in parser a WebAssembly module.
 #[derive(Error, Debug)]
 pub enum ParseError {
     #[cfg(feature = "text")]

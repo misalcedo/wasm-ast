@@ -10,6 +10,7 @@ use crate::parser::sections::{parse_custom_section, parse_type_section};
 use crate::{Module, ModuleSection};
 pub use errors::ParseError;
 use nom::bytes::complete::tag;
+use nom::combinator::all_consuming;
 use nom::sequence::tuple;
 
 /// A magic constant used to quickly identify WebAssembly binary file contents.
@@ -20,6 +21,8 @@ const VERSION: [u8; 4] = [0x01, 0x00, 0x00, 0x00];
 
 /// Parses the given bytes into a WebAssembly module.
 /// The bytes are parsed using the WebAssembly binary format.
+/// Requires that no trailing information is present after the last group of custom sections
+/// (i.e. valid WebAssembly binary format passed in with trailing data will be treated as invalid).
 ///
 /// # Examples
 /// ## Empty
@@ -52,40 +55,40 @@ pub fn parse_binary(input: &[u8]) -> Result<Module, ParseError> {
     let (input, types) = parse_type_section(input)?;
     builder.set_function_types(types);
 
-    let (_, custom_sections) = parse_custom_section(input)?;
+    let (input, custom_sections) = parse_custom_section(input)?;
     builder.set_custom_sections(ModuleSection::Type, custom_sections);
 
-    let (_, custom_sections) = parse_custom_section(input)?;
+    let (input, custom_sections) = parse_custom_section(input)?;
     builder.set_custom_sections(ModuleSection::Import, custom_sections);
 
-    let (_, custom_sections) = parse_custom_section(input)?;
+    let (input, custom_sections) = parse_custom_section(input)?;
     builder.set_custom_sections(ModuleSection::Function, custom_sections);
 
-    let (_, custom_sections) = parse_custom_section(input)?;
+    let (input, custom_sections) = parse_custom_section(input)?;
     builder.set_custom_sections(ModuleSection::Table, custom_sections);
 
-    let (_, custom_sections) = parse_custom_section(input)?;
+    let (input, custom_sections) = parse_custom_section(input)?;
     builder.set_custom_sections(ModuleSection::Memory, custom_sections);
 
-    let (_, custom_sections) = parse_custom_section(input)?;
+    let (input, custom_sections) = parse_custom_section(input)?;
     builder.set_custom_sections(ModuleSection::Global, custom_sections);
 
-    let (_, custom_sections) = parse_custom_section(input)?;
+    let (input, custom_sections) = parse_custom_section(input)?;
     builder.set_custom_sections(ModuleSection::Export, custom_sections);
 
-    let (_, custom_sections) = parse_custom_section(input)?;
+    let (input, custom_sections) = parse_custom_section(input)?;
     builder.set_custom_sections(ModuleSection::Start, custom_sections);
 
-    let (_, custom_sections) = parse_custom_section(input)?;
+    let (input, custom_sections) = parse_custom_section(input)?;
     builder.set_custom_sections(ModuleSection::Element, custom_sections);
 
-    let (_, custom_sections) = parse_custom_section(input)?;
+    let (input, custom_sections) = parse_custom_section(input)?;
     builder.set_custom_sections(ModuleSection::DataCount, custom_sections);
 
-    let (_, custom_sections) = parse_custom_section(input)?;
+    let (input, custom_sections) = parse_custom_section(input)?;
     builder.set_custom_sections(ModuleSection::Code, custom_sections);
 
-    let (_, custom_sections) = parse_custom_section(input)?;
+    let (_, custom_sections) = all_consuming(parse_custom_section)(input)?;
     builder.set_custom_sections(ModuleSection::Data, custom_sections);
 
     Ok(builder.build())

@@ -14,23 +14,25 @@ const fn max_leb128_size<T>() -> usize {
 }
 
 /// The high-order bit is equal to 0.
+#[inline]
 fn is_leb128_terminator(byte: u8) -> bool {
     byte & BASE == 0
 }
 
 /// The high-order bit is not equal to 0.
+#[inline]
 fn is_leb128_encoding(byte: u8) -> bool {
-    byte & BASE != 0
+    !is_leb128_terminator(byte)
 }
 
 /// Parses an unsigned 32-bit integer using LEB128 (Little-Endian Base 128) encoding.
 pub fn parse_u32(input: &[u8]) -> IResult<&[u8], u32> {
     let (remaining, input) =
-        take_while_m_n(1, max_leb128_size::<u32>(), is_leb128_encoding)(input)?;
-    let (remaining, _) = take_while_m_n(1, 1, is_leb128_terminator)(remaining)?;
-
+        take_while_m_n(0, max_leb128_size::<u32>() - 1, is_leb128_encoding)(input)?;
+    let (remaining, last) = take_while_m_n(1, 1, is_leb128_terminator)(remaining)?;
     let mut result = 0;
-    for (index, byte) in input.iter().enumerate() {
+
+    for (index, byte) in input.iter().chain(last.iter()).enumerate() {
         let part = (byte & !BASE) as u32;
 
         result |= part << (index * 7);
@@ -39,6 +41,7 @@ pub fn parse_u32(input: &[u8]) -> IResult<&[u8], u32> {
     Ok((remaining, result))
 }
 
+/// Parses a WebAssembly name value.
 pub fn parse_name(input: &[u8]) -> IResult<&[u8], Name> {
     let (input, length) = parse_u32(input)?;
     let (input, name) = map_res(take(length as usize), std::str::from_utf8)(input)?;
@@ -51,12 +54,29 @@ mod tests {
     use super::*;
 
     #[test]
-    fn parse_unsigned_leb128() {
-        let input = vec![0xFF, 0x00, 0x11];
+    fn parse_unsigned_leb128_large() {
+        let input = vec![0xE5, 0x8E, 0x26];
         let (remaining, actual) = parse_u32(input.as_slice()).unwrap();
-        let expected = leb128::read::unsigned(&mut input.as_slice()).unwrap();
 
-        assert_eq!(actual as u64, expected);
-        assert_eq!(remaining, &[0x11u8])
+        assert_eq!(actual, 624485);
+        assert_eq!(remaining, &[])
+    }
+
+    #[test]
+    fn parse_unsigned_leb128_small() {
+        let input = vec![64, 0xFF];
+        let (remaining, actual) = parse_u32(input.as_slice()).unwrap();
+
+        assert_eq!(actual, 64);
+        assert_eq!(remaining, &[0xFF])
+    }
+
+    #[test]
+    fn parse_unsigned_leb128_zero() {
+        let input = vec![0x00, 0xFF];
+        let (remaining, actual) = parse_u32(input.as_slice()).unwrap();
+
+        assert_eq!(actual, 0);
+        assert_eq!(remaining, &[0xFF])
     }
 }

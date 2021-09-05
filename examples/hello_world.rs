@@ -28,16 +28,15 @@ fn main() {
     let footer_custom = vec![Custom::new("footer".into(), Vec::from("foot"))];
 
     let mut builder = Module::builder();
-    builder.set_function_types(function_types.clone());
-    builder.set_functions(functions.clone());
-    builder.set_memories(memories.clone());
-    builder.set_data(data.clone());
-    builder.set_start(start.clone());
-    builder.set_imports(imports.clone());
-    builder.set_exports(exports.clone());
-    builder.set_exports(exports.clone());
-    builder.set_custom_sections(ModuleSection::Custom, header_custom.clone());
-    builder.set_custom_sections(ModuleSection::Export, footer_custom.clone());
+    builder.set_function_types(Some(function_types.clone()));
+    builder.set_functions(Some(functions.clone()));
+    builder.set_memories(Some(memories.clone()));
+    builder.set_data(Some(data.clone()));
+    builder.set_start(Some(start));
+    builder.set_imports(Some(imports.clone()));
+    builder.set_exports(Some(exports.clone()));
+    builder.set_custom_sections(ModuleSection::Custom, Some(header_custom.clone()));
+    builder.set_custom_sections(ModuleSection::Data, Some(footer_custom.clone()));
     builder.set_include_data_count(true);
 
     let module = builder.build();

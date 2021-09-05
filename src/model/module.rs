@@ -20,8 +20,8 @@ impl ModuleBuilder {
     }
 
     /// Sets the function types segment for the WebAssembly module to be built.
-    pub fn set_function_types(&mut self, function_types: Vec<FunctionType>) {
-        self.module.function_types = Some(function_types);
+    pub fn set_function_types(&mut self, function_types: Option<Vec<FunctionType>>) {
+        self.module.function_types = function_types;
     }
 
     /// Adds the function type to the module's segment.
@@ -33,8 +33,8 @@ impl ModuleBuilder {
     }
 
     /// Sets the functions segment for the WebAssembly module to be built.
-    pub fn set_functions(&mut self, functions: Vec<Function>) {
-        self.module.functions = Some(functions);
+    pub fn set_functions(&mut self, functions: Option<Vec<Function>>) {
+        self.module.functions = functions;
     }
 
     /// Adds the function to the module's segment.
@@ -58,8 +58,8 @@ impl ModuleBuilder {
     }
 
     /// Sets the table segment for the WebAssembly module to be built.
-    pub fn set_tables(&mut self, tables: Vec<Table>) {
-        self.module.tables = Some(tables);
+    pub fn set_tables(&mut self, tables: Option<Vec<Table>>) {
+        self.module.tables = tables;
     }
 
     /// Adds the table to the module's segment.
@@ -83,8 +83,8 @@ impl ModuleBuilder {
     }
 
     /// Sets the tables segment for the WebAssembly module to be built.
-    pub fn set_memories(&mut self, memories: Vec<Memory>) {
-        self.module.memories = Some(memories);
+    pub fn set_memories(&mut self, memories: Option<Vec<Memory>>) {
+        self.module.memories = memories;
     }
 
     /// Adds the memory to the module's segment.
@@ -108,8 +108,8 @@ impl ModuleBuilder {
     }
 
     /// Sets the globals segment for the WebAssembly module to be built.
-    pub fn set_globals(&mut self, globals: Vec<Global>) {
-        self.module.globals = Some(globals);
+    pub fn set_globals(&mut self, globals: Option<Vec<Global>>) {
+        self.module.globals = globals;
     }
 
     /// Adds the global to the module's segment.
@@ -133,8 +133,8 @@ impl ModuleBuilder {
     }
 
     /// Sets the elements segment for the WebAssembly module to be built.
-    pub fn set_elements(&mut self, elements: Vec<Element>) {
-        self.module.elements = Some(elements);
+    pub fn set_elements(&mut self, elements: Option<Vec<Element>>) {
+        self.module.elements = elements;
     }
 
     /// Adds the element to the module's segment.
@@ -146,8 +146,8 @@ impl ModuleBuilder {
     }
 
     /// Sets the data segment for the WebAssembly module to be built.
-    pub fn set_data(&mut self, data: Vec<Data>) {
-        self.module.data = Some(data);
+    pub fn set_data(&mut self, data: Option<Vec<Data>>) {
+        self.module.data = data;
     }
 
     /// Adds the data to the module's segment.
@@ -159,13 +159,13 @@ impl ModuleBuilder {
     }
 
     /// Sets the start segment for the WebAssembly module to be built.
-    pub fn set_start(&mut self, start: Start) {
-        self.module.start = Some(start);
+    pub fn set_start(&mut self, start: Option<Start>) {
+        self.module.start = start;
     }
 
     /// Sets the imports segment for the WebAssembly module to be built.
-    pub fn set_imports(&mut self, imports: Vec<Import>) {
-        self.module.imports = Some(imports);
+    pub fn set_imports(&mut self, imports: Option<Vec<Import>>) {
+        self.module.imports = imports;
     }
 
     /// Adds the import to the module's segment.
@@ -184,8 +184,8 @@ impl ModuleBuilder {
     }
 
     /// Sets the exports segment for the WebAssembly module to be built.
-    pub fn set_exports(&mut self, exports: Vec<Export>) {
-        self.module.exports = Some(exports);
+    pub fn set_exports(&mut self, exports: Option<Vec<Export>>) {
+        self.module.exports = exports;
     }
 
     /// Adds the export to the module's segment.
@@ -200,7 +200,7 @@ impl ModuleBuilder {
     pub fn set_custom_sections(
         &mut self,
         insertion_point: ModuleSection,
-        custom_sections: Vec<Custom>,
+        custom_sections: Option<Vec<Custom>>,
     ) {
         self.module
             .custom_sections
@@ -479,10 +479,12 @@ impl CustomSections {
     pub fn set_custom_sections(
         &mut self,
         insertion_point: ModuleSection,
-        custom_sections: Vec<Custom>,
+        custom_sections: Option<Vec<Custom>>,
     ) {
-        self.custom_sections
-            .insert(insertion_point, custom_sections);
+        match custom_sections {
+            Some(sections) => self.custom_sections.insert(insertion_point, sections),
+            None => self.custom_sections.remove(&insertion_point),
+        };
     }
 
     /// Adds the export to the module's segment.

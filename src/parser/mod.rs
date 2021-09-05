@@ -6,8 +6,17 @@ mod sections;
 mod types;
 mod values;
 
-use crate::Module;
+use crate::parser::sections::{parse_custom_section, parse_type_section};
+use crate::{Module, ModuleSection};
 pub use errors::ParseError;
+use nom::bytes::complete::tag;
+use nom::sequence::tuple;
+
+/// A magic constant used to quickly identify WebAssembly binary file contents.
+const PREAMBLE: [u8; 4] = [0x00, 0x61, 0x73, 0x6D];
+
+/// The version of the binary WebAssembly format emitted.
+const VERSION: [u8; 4] = [0x01, 0x00, 0x00, 0x00];
 
 /// Parses the given bytes into a WebAssembly module.
 /// The bytes are parsed using the WebAssembly binary format.
@@ -31,8 +40,55 @@ pub use errors::ParseError;
 /// assert_eq!(module.exports(), None);
 /// assert_eq!(module.include_data_count(), false);
 /// ```
-pub fn parse_binary(_bytes: &[u8]) -> Result<Module, ParseError> {
-    Ok(Module::empty())
+pub fn parse_binary(input: &[u8]) -> Result<Module, ParseError> {
+    let mut builder = Module::builder();
+
+    let (input, _) = tuple((tag(PREAMBLE), tag(VERSION)))(input)?;
+
+    let (input, custom_sections) =
+        parse_custom_section(input).map_err(|_| ParseError::InvalidBinary)?;
+    builder.set_custom_sections(ModuleSection::Custom, custom_sections);
+
+    let (input, types) = parse_type_section(input)?;
+    builder.set_function_types(types);
+
+    let (_, custom_sections) = parse_custom_section(input)?;
+    builder.set_custom_sections(ModuleSection::Type, custom_sections);
+
+    let (_, custom_sections) = parse_custom_section(input)?;
+    builder.set_custom_sections(ModuleSection::Import, custom_sections);
+
+    let (_, custom_sections) = parse_custom_section(input)?;
+    builder.set_custom_sections(ModuleSection::Function, custom_sections);
+
+    let (_, custom_sections) = parse_custom_section(input)?;
+    builder.set_custom_sections(ModuleSection::Table, custom_sections);
+
+    let (_, custom_sections) = parse_custom_section(input)?;
+    builder.set_custom_sections(ModuleSection::Memory, custom_sections);
+
+    let (_, custom_sections) = parse_custom_section(input)?;
+    builder.set_custom_sections(ModuleSection::Global, custom_sections);
+
+    let (_, custom_sections) = parse_custom_section(input)?;
+    builder.set_custom_sections(ModuleSection::Export, custom_sections);
+
+    let (_, custom_sections) = parse_custom_section(input)?;
+    builder.set_custom_sections(ModuleSection::Start, custom_sections);
+
+    let (_, custom_sections) = parse_custom_section(input)?;
+    builder.set_custom_sections(ModuleSection::Element, custom_sections);
+
+    let (_, custom_sections) = parse_custom_section(input)?;
+    builder.set_custom_sections(ModuleSection::DataCount, custom_sections);
+
+    let (_, custom_sections) = parse_custom_section(input)?;
+    builder.set_custom_sections(ModuleSection::Code, custom_sections);
+
+    let (_, custom_sections) = parse_custom_section(input)?;
+    builder.set_custom_sections(ModuleSection::Data, custom_sections);
+
+    Ok(builder.build())
 }
 
 /// Parses the given string into a WebAssembly module.

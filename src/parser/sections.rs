@@ -2,15 +2,23 @@ use crate::parser::types::parse_function_type;
 use crate::parser::values::{parse_name, parse_u32, parse_vector};
 use crate::{Custom, FunctionType, ModuleSection};
 use nom::bytes::complete::{tag, take};
-use nom::combinator::{all_consuming, map, map_parser, rest};
+use nom::combinator::{all_consuming, map, map_parser, opt, rest};
+use nom::multi::fold_many0;
 use nom::sequence::tuple;
 use nom::{IResult, Parser};
 
 /// Parses a WebAssembly custom section.
 ///
 /// See <https://webassembly.github.io/spec/core/binary/modules.html#binary-customsec>
-pub fn parse_custom_section(input: &[u8]) -> IResult<&[u8], Custom> {
-    parse_section(ModuleSection::Custom, parse_custom_content)(input)
+pub fn parse_custom_section(input: &[u8]) -> IResult<&[u8], Option<Vec<Custom>>> {
+    opt(fold_many0(
+        parse_section(ModuleSection::Custom, parse_custom_content),
+        Vec::new,
+        |mut accumulator, item| {
+            accumulator.push(item);
+            accumulator
+        },
+    ))(input)
 }
 
 /// Parses the custom content (name and bytes) of a custom section.
@@ -23,8 +31,11 @@ fn parse_custom_content(input: &[u8]) -> IResult<&[u8], Custom> {
 /// Parses a WebAssembly type section.
 ///
 /// See <https://webassembly.github.io/spec/core/binary/modules.html#binary-typesec>
-pub fn parse_type_section(input: &[u8]) -> IResult<&[u8], Vec<FunctionType>> {
-    parse_section(ModuleSection::Type, parse_vector(parse_function_type))(input)
+pub fn parse_type_section(input: &[u8]) -> IResult<&[u8], Option<Vec<FunctionType>>> {
+    opt(parse_section(
+        ModuleSection::Type,
+        parse_vector(parse_function_type),
+    ))(input)
 }
 
 /// Parses a section with the given identifier.

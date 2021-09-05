@@ -24,7 +24,7 @@ fn main() {
         ]
         .into(),
     ));
-    builder.set_start(Start::new(start_function));
+    builder.set_start(Some(Start::new(start_function)));
     let memory = builder.add_memory(Memory::new(Limit::bounded(1, 4).into()));
     builder.add_export(Export::memory("memory".into(), memory));
     builder.add_data(Data::active(
@@ -37,7 +37,7 @@ fn main() {
         Custom::new("version".into(), Vec::from("1.0.0")),
     );
     builder.add_custom_section(
-        ModuleSection::Export,
+        ModuleSection::Data,
         Custom::new("footer".into(), Vec::from("foot")),
     );
     builder.set_include_data_count(true);

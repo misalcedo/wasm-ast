@@ -1,7 +1,8 @@
 use crate::Name;
 use nom::bytes::complete::{take, take_while_m_n};
 use nom::combinator::map_res;
-use nom::IResult;
+use nom::multi::fold_many_m_n;
+use nom::{IResult, Parser};
 use std::mem::size_of;
 
 const BASE: u8 = 128;
@@ -37,9 +38,31 @@ pub fn parse_name(input: &[u8]) -> IResult<&[u8], Name> {
     Ok((input, name.into()))
 }
 
+pub fn parse_vector<'input, O, P>(parser: P, input: &'input [u8]) -> IResult<&'input [u8], Vec<O>>
+where
+    P: Parser<&'input [u8], O, nom::error::Error<&'input [u8]>>,
+{
+    let (input, length) = parse_u32(input)?;
+    let length = length as usize;
+    let (remaining, items) = fold_many_m_n(
+        length,
+        length,
+        parser,
+        move || Vec::with_capacity(length),
+        |mut accumulator, item| {
+            accumulator.push(item);
+            accumulator
+        },
+    )(input)?;
+
+    Ok((remaining, items))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use nom::bytes::complete::take;
+    use nom::combinator::map;
 
     #[test]
     fn parse_unsigned_leb128_large() {
@@ -47,7 +70,7 @@ mod tests {
         let (remaining, actual) = parse_u32(input.as_slice()).unwrap();
 
         assert_eq!(actual, 624485);
-        assert_eq!(remaining, &[])
+        assert!(remaining.is_empty())
     }
 
     #[test]
@@ -66,5 +89,36 @@ mod tests {
 
         assert_eq!(actual, 0);
         assert_eq!(remaining, &[0xFF])
+    }
+
+    #[test]
+    fn parse_name_with_remaining() {
+        let name = "Hello, World!";
+        let extra = 42;
+        let mut input = Vec::from(name);
+        input.insert(0, name.len() as u8);
+        input.push(extra);
+
+        let (remaining, parsed_name) = parse_name(input.as_slice()).unwrap();
+
+        assert_eq!(parsed_name, Name::from(name));
+        assert_eq!(remaining, &[extra]);
+    }
+
+    #[test]
+    fn parse_vector_with_remaining() {
+        let name = "Hello, World!";
+        let extra = 42;
+        let mut input = Vec::from(name);
+        input.insert(0, name.len() as u8);
+        input.push(extra);
+
+        let take_byte = map(take(1usize), |x: &[u8]| x[0]);
+        let (remaining, parsed_vector): (&[u8], Vec<u8>) =
+            parse_vector(take_byte, input.as_slice()).unwrap();
+        let vector_name = Name::new(String::from_utf8(parsed_vector).unwrap());
+
+        assert_eq!(vector_name, Name::from(name));
+        assert_eq!(remaining, &[extra]);
     }
 }

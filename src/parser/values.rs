@@ -13,23 +13,11 @@ const fn max_leb128_size<T>() -> usize {
     (bits / 7) + (bits % 7 != 0) as usize
 }
 
-/// The high-order bit is equal to 0.
-#[inline]
-fn is_leb128_terminator(byte: u8) -> bool {
-    byte & BASE == 0
-}
-
-/// The high-order bit is not equal to 0.
-#[inline]
-fn is_leb128_encoding(byte: u8) -> bool {
-    !is_leb128_terminator(byte)
-}
-
 /// Parses an unsigned 32-bit integer using LEB128 (Little-Endian Base 128) encoding.
 pub fn parse_u32(input: &[u8]) -> IResult<&[u8], u32> {
     let (remaining, input) =
-        take_while_m_n(0, max_leb128_size::<u32>() - 1, is_leb128_encoding)(input)?;
-    let (remaining, last) = take_while_m_n(1, 1, is_leb128_terminator)(remaining)?;
+        take_while_m_n(0, max_leb128_size::<u32>() - 1, |x| x & BASE != 0)(input)?;
+    let (remaining, last) = take_while_m_n(1, 1, |x| x & BASE == 0)(remaining)?;
     let mut result = 0;
 
     for (index, byte) in input.iter().chain(last.iter()).enumerate() {

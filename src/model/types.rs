@@ -92,8 +92,8 @@ pub enum FloatType {
 /// ```rust
 /// use wasm_ast::{ValueType, ReferenceType};
 ///
-/// assert_eq!(ValueType::Function, ReferenceType::Function.into());
-/// assert_eq!(ValueType::External, ReferenceType::External.into());
+/// assert_eq!(ValueType::FunctionReference, ReferenceType::Function.into());
+/// assert_eq!(ValueType::ExternalReference, ReferenceType::External.into());
 /// ```
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum ReferenceType {
@@ -118,8 +118,8 @@ pub enum ReferenceType {
 /// assert_eq!(ValueType::F32, NumberType::F32.into());
 /// assert_eq!(ValueType::F64, FloatType::F64.into());
 /// assert_eq!(ValueType::F64, NumberType::F64.into());
-/// assert_eq!(ValueType::Function, ReferenceType::Function.into());
-/// assert_eq!(ValueType::External, ReferenceType::External.into());
+/// assert_eq!(ValueType::FunctionReference, ReferenceType::Function.into());
+/// assert_eq!(ValueType::ExternalReference, ReferenceType::External.into());
 /// ```
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum ValueType {
@@ -127,8 +127,8 @@ pub enum ValueType {
     I64,
     F32,
     F64,
-    Function,
-    External,
+    FunctionReference,
+    ExternalReference,
 }
 
 impl<T> From<T> for ValueType
@@ -148,8 +148,8 @@ where
 impl From<ReferenceType> for ValueType {
     fn from(kind: ReferenceType) -> Self {
         match kind {
-            ReferenceType::Function => ValueType::Function,
-            ReferenceType::External => ValueType::External,
+            ReferenceType::Function => ValueType::FunctionReference,
+            ReferenceType::External => ValueType::ExternalReference,
         }
     }
 }
@@ -194,8 +194,8 @@ impl From<ReferenceType> for ValueType {
 ///         ValueType::I64,
 ///         ValueType::F32,
 ///         ValueType::F64,
-///         ValueType::Function,
-///         ValueType::External,
+///         ValueType::FunctionReference,
+///         ValueType::ExternalReference,
 ///     ]
 /// );
 /// assert_eq!(
@@ -205,8 +205,8 @@ impl From<ReferenceType> for ValueType {
 ///         ValueType::I64,
 ///         ValueType::F32,
 ///         ValueType::F64,
-///         ValueType::Function,
-///         ValueType::External,
+///         ValueType::FunctionReference,
+///         ValueType::ExternalReference,
 ///     ].into()
 /// );
 /// ```

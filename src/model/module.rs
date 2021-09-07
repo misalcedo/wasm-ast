@@ -36,6 +36,7 @@ impl ModuleBuilder {
         let index = u32::try_from(function_types.len())?;
 
         function_types.push(function_type);
+
         Ok(index)
     }
 
@@ -51,19 +52,18 @@ impl ModuleBuilder {
     /// all function imports must be defined prior to adding any functions.
     pub fn add_function(&mut self, function: Function) -> Result<FunctionIndex, ModelError> {
         let functions = self.module.functions.get_or_insert_with(Vec::new);
-        let index = u32::try_from(functions.len())?;
-
-        functions.push(function);
-
-        let imports = u32::try_from(match &self.module.imports {
+        let imports = match &self.module.imports {
             Some(imports) => imports
                 .iter()
                 .filter(|import| matches!(import.description(), ImportDescription::Function(_)))
                 .count(),
             None => 0,
-        })?;
+        };
+        let index = u32::try_from(functions.len() + imports)?;
 
-        Ok(index + imports)
+        functions.push(function);
+
+        Ok(index)
     }
 
     /// Sets the table segment for the WebAssembly module to be built.
@@ -78,19 +78,18 @@ impl ModuleBuilder {
     /// all table imports must be defined prior to adding any tables.
     pub fn add_table(&mut self, table: Table) -> Result<TableIndex, ModelError> {
         let tables = self.module.tables.get_or_insert_with(Vec::new);
-        let index = u32::try_from(tables.len())?;
-
-        tables.push(table);
-
-        let imports = u32::try_from(match &self.module.imports {
+        let imports = match &self.module.imports {
             Some(imports) => imports
                 .iter()
                 .filter(|import| matches!(import.description(), ImportDescription::Table(_)))
                 .count(),
             None => 0,
-        })?;
+        };
+        let index = u32::try_from(tables.len() + imports)?;
 
-        Ok(index + imports)
+        tables.push(table);
+
+        Ok(index)
     }
 
     /// Sets the tables segment for the WebAssembly module to be built.
@@ -105,19 +104,18 @@ impl ModuleBuilder {
     /// all memory imports must be defined prior to adding any memories.
     pub fn add_memory(&mut self, memory: Memory) -> Result<MemoryIndex, ModelError> {
         let memories = self.module.memories.get_or_insert_with(Vec::new);
-        let index = u32::try_from(memories.len())?;
-
-        memories.push(memory);
-
-        let imports = u32::try_from(match &self.module.imports {
+        let imports = match &self.module.imports {
             Some(imports) => imports
                 .iter()
                 .filter(|import| matches!(import.description(), ImportDescription::Memory(_)))
                 .count(),
             None => 0,
-        })?;
+        };
+        let index = u32::try_from(memories.len() + imports)?;
 
-        Ok(index + imports)
+        memories.push(memory);
+
+        Ok(index)
     }
 
     /// Sets the globals segment for the WebAssembly module to be built.
@@ -132,19 +130,18 @@ impl ModuleBuilder {
     /// all global imports must be defined prior to adding any globals.
     pub fn add_global(&mut self, global: Global) -> Result<GlobalIndex, ModelError> {
         let globals = self.module.globals.get_or_insert_with(Vec::new);
-        let index = u32::try_from(globals.len())?;
-
-        globals.push(global);
-
-        let imports = u32::try_from(match &self.module.imports {
+        let imports = match &self.module.imports {
             Some(imports) => imports
                 .iter()
                 .filter(|import| matches!(import.description(), ImportDescription::Global(_)))
                 .count(),
             None => 0,
-        })?;
+        };
+        let index = u32::try_from(globals.len() + imports)?;
 
-        Ok(index + imports)
+        globals.push(global);
+
+        Ok(index)
     }
 
     /// Sets the elements segment for the WebAssembly module to be built.

@@ -1,7 +1,8 @@
+use crate::parser::module::parse_import;
 use crate::parser::types::parse_function_type;
-use crate::parser::values::{parse_name, parse_u32, parse_vector};
-use crate::{Custom, FunctionType, ModuleSection};
-use nom::bytes::complete::{tag, take};
+use crate::parser::values::{match_byte, parse_name, parse_u32, parse_vector};
+use crate::{Custom, FunctionType, Import, ModuleSection};
+use nom::bytes::complete::take;
 use nom::combinator::{all_consuming, map, map_parser, opt, rest};
 use nom::multi::fold_many0;
 use nom::sequence::tuple;
@@ -38,6 +39,16 @@ pub fn parse_type_section(input: &[u8]) -> IResult<&[u8], Option<Vec<FunctionTyp
     ))(input)
 }
 
+/// Parses a WebAssembly import section.
+///
+/// See <https://webassembly.github.io/spec/core/binary/modules.html#binary-importsec>
+pub fn parse_import_section(input: &[u8]) -> IResult<&[u8], Option<Vec<Import>>> {
+    opt(parse_section(
+        ModuleSection::Import,
+        parse_vector(parse_import),
+    ))(input)
+}
+
 /// Parses a section with the given identifier.
 ///
 /// See <https://webassembly.github.io/spec/core/binary/modules.html#sections>
@@ -57,7 +68,7 @@ where
 /// See <https://webassembly.github.io/spec/core/binary/modules.html#sections>
 fn parse_section_raw(section: ModuleSection) -> impl Fn(&[u8]) -> IResult<&[u8], &[u8]> {
     move |input| {
-        let (input, _) = tag(&[section as u8])(input)?;
+        let (input, _) = match_byte(section as u8)(input)?;
         let (input, length) = parse_u32(input)?;
 
         take(length)(input)

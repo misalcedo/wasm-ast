@@ -29,7 +29,7 @@ impl ModuleBuilder {
     pub fn add_function_type(&mut self, function_type: FunctionType) -> TypeIndex {
         let function_types = self.module.function_types.get_or_insert_with(Vec::new);
         function_types.push(function_type);
-        function_types.len() - 1
+        (function_types.len() - 1) as u32
     }
 
     /// Sets the functions segment for the WebAssembly module to be built.
@@ -54,7 +54,7 @@ impl ModuleBuilder {
             None => 0,
         };
 
-        functions.len() + imports - 1
+        (functions.len() + imports - 1) as u32
     }
 
     /// Sets the table segment for the WebAssembly module to be built.
@@ -79,7 +79,7 @@ impl ModuleBuilder {
             None => 0,
         };
 
-        tables.len() + imports - 1
+        (tables.len() + imports - 1) as u32
     }
 
     /// Sets the tables segment for the WebAssembly module to be built.
@@ -104,7 +104,7 @@ impl ModuleBuilder {
             None => 0,
         };
 
-        memories.len() + imports - 1
+        (memories.len() + imports - 1) as u32
     }
 
     /// Sets the globals segment for the WebAssembly module to be built.
@@ -129,7 +129,7 @@ impl ModuleBuilder {
             None => 0,
         };
 
-        globals.len() + imports - 1
+        (globals.len() + imports - 1) as u32
     }
 
     /// Sets the elements segment for the WebAssembly module to be built.
@@ -142,7 +142,7 @@ impl ModuleBuilder {
     pub fn add_element(&mut self, element: Element) -> ElementIndex {
         let elements = self.module.elements.get_or_insert_with(Vec::new);
         elements.push(element);
-        elements.len() - 1
+        (elements.len() - 1) as u32
     }
 
     /// Sets the data segment for the WebAssembly module to be built.
@@ -155,7 +155,7 @@ impl ModuleBuilder {
     pub fn add_data(&mut self, datum: Data) -> DataIndex {
         let data = self.module.data.get_or_insert_with(Vec::new);
         data.push(datum);
-        data.len() - 1
+        (data.len() - 1) as u32
     }
 
     /// Sets the start segment for the WebAssembly module to be built.
@@ -170,7 +170,7 @@ impl ModuleBuilder {
 
     /// Adds the import to the module's segment.
     /// Returns the index of the import in the module (i.e function, table, memory, or global index).
-    pub fn add_import(&mut self, import: Import) -> usize {
+    pub fn add_import(&mut self, import: Import) -> u32 {
         let import_discriminant = discriminant(import.description());
         let imports = self.module.imports.get_or_insert_with(Vec::new);
         imports.push(import);
@@ -180,7 +180,7 @@ impl ModuleBuilder {
             .filter(|i| discriminant(i.description()) == import_discriminant)
             .count();
 
-        import_count - 1
+        (import_count - 1) as u32
     }
 
     /// Sets the exports segment for the WebAssembly module to be built.
@@ -617,7 +617,7 @@ impl Function {
 /// use wasm_ast::{Table, TableType, Limit, ReferenceType};
 ///
 /// let limit = Limit::bounded(1, 2);
-/// let kind = TableType::new(limit, ReferenceType::Function);
+/// let kind = TableType::new( ReferenceType::Function,limit);
 /// let table = Table::new(kind);
 ///
 /// assert_eq!(table, kind.into());
@@ -1212,7 +1212,7 @@ pub enum ExportDescription {
 ///
 /// let module = "system";
 /// let name = "functions";
-/// let kind = TableType::new(Limit::unbounded(1), ReferenceType::Function);
+/// let kind = TableType::new( ReferenceType::Function,Limit::unbounded(1));
 /// let description = ImportDescription::Table(kind.clone());
 /// let import = Import::new(module.into(), name.into(), description.clone());
 ///

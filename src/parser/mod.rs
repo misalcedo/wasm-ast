@@ -2,11 +2,12 @@
 
 mod errors;
 mod instructions;
+mod module;
 mod sections;
 mod types;
 mod values;
 
-use crate::parser::sections::{parse_custom_section, parse_type_section};
+use crate::parser::sections::{parse_custom_section, parse_import_section, parse_type_section};
 use crate::{Module, ModuleSection};
 pub use errors::ParseError;
 use nom::bytes::complete::tag;
@@ -59,6 +60,9 @@ pub fn parse_binary(input: &[u8]) -> Result<Module, ParseError> {
 
     let (input, custom_sections) = parse_custom_section(input)?;
     builder.set_custom_sections(ModuleSection::Type, custom_sections);
+
+    let (input, imports) = parse_import_section(input)?;
+    builder.set_imports(imports);
 
     let (input, custom_sections) = parse_custom_section(input)?;
     builder.set_custom_sections(ModuleSection::Import, custom_sections);

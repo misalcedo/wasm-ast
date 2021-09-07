@@ -1,6 +1,6 @@
 use crate::Name;
-use nom::bytes::complete::{take, take_while_m_n};
-use nom::combinator::map_res;
+use nom::bytes::complete::{tag, take, take_while_m_n};
+use nom::combinator::{map, map_res};
 use nom::multi::fold_many_m_n;
 use nom::{IResult, Parser};
 use std::mem::size_of;
@@ -15,6 +15,11 @@ const fn max_leb128_size<T>() -> usize {
     let bits = size_of::<T>() * 8;
 
     (bits / 7) + (bits % 7 != 0) as usize
+}
+
+/// Parses a single byte and verified the parsed byte matches the given byte.
+pub fn match_byte<'input>(byte: u8) -> impl FnMut(&'input [u8]) -> IResult<&'input [u8], u8> {
+    map(tag([byte]), |bytes: &'input [u8]| bytes[0])
 }
 
 /// Parses an unsigned 32-bit integer using LEB128 (Little-Endian Base 128) encoding.

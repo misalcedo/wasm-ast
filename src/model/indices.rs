@@ -14,12 +14,12 @@
 //!
 //! See <https://webassembly.github.io/spec/core/syntax/modules.html#indices>
 
-pub type TypeIndex = usize;
-pub type FunctionIndex = usize;
-pub type TableIndex = usize;
-pub type MemoryIndex = usize;
-pub type GlobalIndex = usize;
-pub type ElementIndex = usize;
-pub type DataIndex = usize;
-pub type LocalIndex = usize;
-pub type LabelIndex = usize;
+pub type TypeIndex = u32;
+pub type FunctionIndex = u32;
+pub type TableIndex = u32;
+pub type MemoryIndex = u32;
+pub type GlobalIndex = u32;
+pub type ElementIndex = u32;
+pub type DataIndex = u32;
+pub type LocalIndex = u32;
+pub type LabelIndex = u32;

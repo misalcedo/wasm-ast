@@ -1,7 +1,7 @@
-use crate::parser::module::parse_import;
+use crate::parser::module::{parse_global, parse_import, parse_memory, parse_table};
 use crate::parser::types::parse_function_type;
 use crate::parser::values::{match_byte, parse_name, parse_u32, parse_vector};
-use crate::{Custom, FunctionType, Import, ModuleSection};
+use crate::{Custom, FunctionType, Global, Import, Memory, ModuleSection, Table, TypeIndex};
 use nom::bytes::complete::take;
 use nom::combinator::{all_consuming, map, map_parser, opt, rest};
 use nom::multi::fold_many0;
@@ -46,6 +46,46 @@ pub fn parse_import_section(input: &[u8]) -> IResult<&[u8], Option<Vec<Import>>>
     opt(parse_section(
         ModuleSection::Import,
         parse_vector(parse_import),
+    ))(input)
+}
+
+/// Parses a WebAssembly function section.
+///
+/// See <https://webassembly.github.io/spec/core/binary/modules.html#function-section>
+pub fn parse_function_section(input: &[u8]) -> IResult<&[u8], Option<Vec<TypeIndex>>> {
+    opt(parse_section(
+        ModuleSection::Function,
+        parse_vector(parse_u32),
+    ))(input)
+}
+
+/// Parses a WebAssembly table section.
+///
+/// See <https://webassembly.github.io/spec/core/binary/modules.html#table-section>
+pub fn parse_table_section(input: &[u8]) -> IResult<&[u8], Option<Vec<Table>>> {
+    opt(parse_section(
+        ModuleSection::Table,
+        parse_vector(parse_table),
+    ))(input)
+}
+
+/// Parses a WebAssembly memory section.
+///
+/// See <https://webassembly.github.io/spec/core/binary/modules.html#memory-section>
+pub fn parse_memory_section(input: &[u8]) -> IResult<&[u8], Option<Vec<Memory>>> {
+    opt(parse_section(
+        ModuleSection::Memory,
+        parse_vector(parse_memory),
+    ))(input)
+}
+
+/// Parses a WebAssembly global section.
+///
+/// See <https://webassembly.github.io/spec/core/binary/modules.html#global-section>
+pub fn parse_global_section(input: &[u8]) -> IResult<&[u8], Option<Vec<Global>>> {
+    opt(parse_section(
+        ModuleSection::Global,
+        parse_vector(parse_global),
     ))(input)
 }
 

@@ -7,31 +7,40 @@ fn main() {
     let message = "Hello, World!";
     let mut builder = Module::builder();
 
-    let print_type = builder.add_function_type(FunctionType::side_effect(
-        vec![ValueType::I32, ValueType::I32].into(),
-    ));
-    let print_function =
-        builder.add_import(Import::function("console".into(), "log".into(), print_type));
+    let print_type = builder
+        .add_function_type(FunctionType::side_effect(
+            vec![ValueType::I32, ValueType::I32].into(),
+        ))
+        .unwrap();
+    let print_function = builder
+        .add_import(Import::function("console".into(), "log".into(), print_type))
+        .unwrap();
 
-    let start_type = builder.add_function_type(FunctionType::runnable());
-    let start_function = builder.add_function(Function::new(
-        start_type,
-        ResultType::empty(),
-        vec![
-            0i32.into(),
-            message.len().into(),
-            ControlInstruction::Call(print_function).into(),
-        ]
-        .into(),
-    ));
+    let start_type = builder.add_function_type(FunctionType::runnable()).unwrap();
+    let start_function = builder
+        .add_function(Function::new(
+            start_type,
+            ResultType::empty(),
+            vec![
+                0i32.into(),
+                message.len().into(),
+                ControlInstruction::Call(print_function).into(),
+            ]
+            .into(),
+        ))
+        .unwrap();
     builder.set_start(Some(Start::new(start_function)));
-    let memory = builder.add_memory(Memory::new(Limit::bounded(1, 4).into()));
+    let memory = builder
+        .add_memory(Memory::new(Limit::bounded(1, 4).into()))
+        .unwrap();
     builder.add_export(Export::memory("memory".into(), memory));
-    builder.add_data(Data::active(
-        memory,
-        Expression::empty(),
-        Vec::from(message),
-    ));
+    builder
+        .add_data(Data::active(
+            memory,
+            Expression::empty(),
+            Vec::from(message),
+        ))
+        .unwrap();
     builder.add_custom_section(
         ModuleSection::Custom,
         Custom::new("version".into(), Vec::from("1.0.0")),

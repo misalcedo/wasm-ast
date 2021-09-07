@@ -3,7 +3,9 @@
 use crate::model::indices::*;
 use crate::model::types::*;
 use crate::model::{Expression, Name};
+use crate::ModelError;
 use std::collections::HashMap;
+use std::convert::TryFrom;
 use std::mem::discriminant;
 
 /// A builder pattern for `Module`s.
@@ -26,10 +28,15 @@ impl ModuleBuilder {
 
     /// Adds the function type to the module's segment.
     /// Returns the index of the type in the module.
-    pub fn add_function_type(&mut self, function_type: FunctionType) -> TypeIndex {
+    pub fn add_function_type(
+        &mut self,
+        function_type: FunctionType,
+    ) -> Result<TypeIndex, ModelError> {
         let function_types = self.module.function_types.get_or_insert_with(Vec::new);
+        let index = u32::try_from(function_types.len())?;
+
         function_types.push(function_type);
-        (function_types.len() - 1) as u32
+        Ok(index)
     }
 
     /// Sets the functions segment for the WebAssembly module to be built.
@@ -42,19 +49,21 @@ impl ModuleBuilder {
     ///
     /// **Note:** In order for the returned index to be accurate,
     /// all function imports must be defined prior to adding any functions.
-    pub fn add_function(&mut self, function: Function) -> FunctionIndex {
+    pub fn add_function(&mut self, function: Function) -> Result<FunctionIndex, ModelError> {
         let functions = self.module.functions.get_or_insert_with(Vec::new);
+        let index = u32::try_from(functions.len())?;
+
         functions.push(function);
 
-        let imports = match &self.module.imports {
+        let imports = u32::try_from(match &self.module.imports {
             Some(imports) => imports
                 .iter()
                 .filter(|import| matches!(import.description(), ImportDescription::Function(_)))
                 .count(),
             None => 0,
-        };
+        })?;
 
-        (functions.len() + imports - 1) as u32
+        Ok(index + imports)
     }
 
     /// Sets the table segment for the WebAssembly module to be built.
@@ -67,19 +76,21 @@ impl ModuleBuilder {
     ///
     /// **Note:** In order for the returned index to be accurate,
     /// all table imports must be defined prior to adding any tables.
-    pub fn add_table(&mut self, table: Table) -> TableIndex {
+    pub fn add_table(&mut self, table: Table) -> Result<TableIndex, ModelError> {
         let tables = self.module.tables.get_or_insert_with(Vec::new);
+        let index = u32::try_from(tables.len())?;
+
         tables.push(table);
 
-        let imports = match &self.module.imports {
+        let imports = u32::try_from(match &self.module.imports {
             Some(imports) => imports
                 .iter()
                 .filter(|import| matches!(import.description(), ImportDescription::Table(_)))
                 .count(),
             None => 0,
-        };
+        })?;
 
-        (tables.len() + imports - 1) as u32
+        Ok(index + imports)
     }
 
     /// Sets the tables segment for the WebAssembly module to be built.
@@ -92,19 +103,21 @@ impl ModuleBuilder {
     ///
     /// **Note:** In order for the returned index to be accurate,
     /// all memory imports must be defined prior to adding any memories.
-    pub fn add_memory(&mut self, memory: Memory) -> MemoryIndex {
+    pub fn add_memory(&mut self, memory: Memory) -> Result<MemoryIndex, ModelError> {
         let memories = self.module.memories.get_or_insert_with(Vec::new);
+        let index = u32::try_from(memories.len())?;
+
         memories.push(memory);
 
-        let imports = match &self.module.imports {
+        let imports = u32::try_from(match &self.module.imports {
             Some(imports) => imports
                 .iter()
                 .filter(|import| matches!(import.description(), ImportDescription::Memory(_)))
                 .count(),
             None => 0,
-        };
+        })?;
 
-        (memories.len() + imports - 1) as u32
+        Ok(index + imports)
     }
 
     /// Sets the globals segment for the WebAssembly module to be built.
@@ -117,19 +130,21 @@ impl ModuleBuilder {
     ///
     /// **Note:** In order for the returned index to be accurate,
     /// all global imports must be defined prior to adding any globals.
-    pub fn add_global(&mut self, global: Global) -> GlobalIndex {
+    pub fn add_global(&mut self, global: Global) -> Result<GlobalIndex, ModelError> {
         let globals = self.module.globals.get_or_insert_with(Vec::new);
+        let index = u32::try_from(globals.len())?;
+
         globals.push(global);
 
-        let imports = match &self.module.imports {
+        let imports = u32::try_from(match &self.module.imports {
             Some(imports) => imports
                 .iter()
                 .filter(|import| matches!(import.description(), ImportDescription::Global(_)))
                 .count(),
             None => 0,
-        };
+        })?;
 
-        (globals.len() + imports - 1) as u32
+        Ok(index + imports)
     }
 
     /// Sets the elements segment for the WebAssembly module to be built.
@@ -139,10 +154,13 @@ impl ModuleBuilder {
 
     /// Adds the element to the module's segment.
     /// Returns the index of the element in the module.
-    pub fn add_element(&mut self, element: Element) -> ElementIndex {
+    pub fn add_element(&mut self, element: Element) -> Result<ElementIndex, ModelError> {
         let elements = self.module.elements.get_or_insert_with(Vec::new);
+        let index = u32::try_from(elements.len())?;
+
         elements.push(element);
-        (elements.len() - 1) as u32
+
+        Ok(index)
     }
 
     /// Sets the data segment for the WebAssembly module to be built.
@@ -152,10 +170,13 @@ impl ModuleBuilder {
 
     /// Adds the data to the module's segment.
     /// Returns the index of the data in the module.
-    pub fn add_data(&mut self, datum: Data) -> DataIndex {
+    pub fn add_data(&mut self, datum: Data) -> Result<DataIndex, ModelError> {
         let data = self.module.data.get_or_insert_with(Vec::new);
+        let index = u32::try_from(data.len())?;
+
         data.push(datum);
-        (data.len() - 1) as u32
+
+        Ok(index)
     }
 
     /// Sets the start segment for the WebAssembly module to be built.
@@ -170,17 +191,19 @@ impl ModuleBuilder {
 
     /// Adds the import to the module's segment.
     /// Returns the index of the import in the module (i.e function, table, memory, or global index).
-    pub fn add_import(&mut self, import: Import) -> u32 {
+    pub fn add_import(&mut self, import: Import) -> Result<u32, ModelError> {
         let import_discriminant = discriminant(import.description());
         let imports = self.module.imports.get_or_insert_with(Vec::new);
+        let index = u32::try_from(
+            imports
+                .iter()
+                .filter(|i| discriminant(i.description()) == import_discriminant)
+                .count(),
+        )?;
+
         imports.push(import);
 
-        let import_count = imports
-            .iter()
-            .filter(|i| discriminant(i.description()) == import_discriminant)
-            .count();
-
-        (import_count - 1) as u32
+        Ok(index)
     }
 
     /// Sets the exports segment for the WebAssembly module to be built.

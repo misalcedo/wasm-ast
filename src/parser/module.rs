@@ -1,7 +1,7 @@
 use crate::parser::instructions::parse_expression;
 use crate::parser::types::{parse_global_type, parse_memory_type, parse_table_type};
-use crate::parser::values::{match_byte, parse_name, parse_u32};
-use crate::{Global, Import, ImportDescription, Memory, Table};
+use crate::parser::values::{match_byte, parse_byte_vector, parse_name, parse_u32};
+use crate::{Data, Global, Import, ImportDescription, Memory, Table};
 use nom::branch::alt;
 use nom::combinator::map;
 use nom::sequence::{preceded, tuple};
@@ -61,4 +61,29 @@ pub fn parse_global(input: &[u8]) -> IResult<&[u8], Global> {
         tuple((parse_global_type, parse_expression)),
         |(kind, initializer)| Global::new(kind, initializer),
     )(input)
+}
+
+/// Parses a WebAssembly data component from the input.
+///
+/// See <https://webassembly.github.io/spec/core/binary/modules.html#data-section>
+pub fn parse_data(input: &[u8]) -> IResult<&[u8], Data> {
+    alt((
+        map(
+            preceded(
+                match_byte(0x00),
+                tuple((parse_expression, parse_byte_vector)),
+            ),
+            |(offset, bytes)| Data::active(0, offset, bytes.into()),
+        ),
+        map(preceded(match_byte(0x01), parse_byte_vector), |bytes| {
+            Data::passive(bytes.into())
+        }),
+        map(
+            preceded(
+                match_byte(0x02),
+                tuple((parse_u32, parse_expression, parse_byte_vector)),
+            ),
+            |(memory, offset, bytes)| Data::active(memory, offset, bytes.into()),
+        ),
+    ))(input)
 }

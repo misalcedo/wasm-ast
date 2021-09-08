@@ -8,8 +8,9 @@ mod types;
 mod values;
 
 use crate::parser::sections::{
-    parse_custom_section, parse_data_count_section, parse_function_section, parse_global_section,
-    parse_import_section, parse_memory_section, parse_table_section, parse_type_section,
+    parse_custom_section, parse_data_count_section, parse_data_section, parse_function_section,
+    parse_global_section, parse_import_section, parse_memory_section, parse_table_section,
+    parse_type_section,
 };
 use crate::{Module, ModuleSection};
 pub use errors::ParseError;
@@ -110,6 +111,9 @@ pub fn parse_binary(input: &[u8]) -> Result<Module, ParseError> {
 
     let (input, custom_sections) = parse_custom_section(input)?;
     builder.set_custom_sections(ModuleSection::Code, custom_sections);
+
+    let (input, data) = parse_data_section(input)?;
+    builder.set_data(data);
 
     let (_, custom_sections) = all_consuming(parse_custom_section)(input)?;
     builder.set_custom_sections(ModuleSection::Data, custom_sections);

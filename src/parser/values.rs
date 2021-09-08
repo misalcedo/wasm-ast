@@ -44,10 +44,17 @@ pub fn parse_u32(input: &[u8]) -> IResult<&[u8], u32> {
 ///
 /// See <https://webassembly.github.io/spec/core/binary/values.html#names>
 pub fn parse_name(input: &[u8]) -> IResult<&[u8], Name> {
-    let (input, length) = parse_u32(input)?;
-    let (input, name) = map_res(take(length as usize), std::str::from_utf8)(input)?;
+    map(map_res(parse_byte_vector, std::str::from_utf8), Name::from)(input)
+}
 
-    Ok((input, name.into()))
+/// Parses a WebAssembly byte vector.
+///
+/// See <https://webassembly.github.io/spec/core/binary/values.html#bytes>
+pub fn parse_byte_vector(input: &[u8]) -> IResult<&[u8], &[u8]> {
+    let (input, length) = parse_u32(input)?;
+    let (input, bytes) = take(length as usize)(input)?;
+
+    Ok((input, bytes))
 }
 
 /// Parses a WebAssembly encoded vector of items from the input.

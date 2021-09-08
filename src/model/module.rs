@@ -9,6 +9,9 @@ use std::convert::TryFrom;
 use std::mem::discriminant;
 
 /// A builder pattern for `Module`s.
+/// The builder performs minimal validation when using the `add_*` family of methods.
+/// The builder validates that the added element would not exceed the maximum size of a u32.
+/// No other validations are performed.
 pub struct ModuleBuilder {
     module: Module,
 }
@@ -236,8 +239,13 @@ impl ModuleBuilder {
     }
 
     /// Determines whether the WebAssembly module to be built will include a data count section or not.  
-    pub fn set_include_data_count(&mut self, include: bool) {
-        self.module.data_count = include;
+    pub fn set_data_count(&mut self, data_count: Option<u32>) {
+        self.module.data_count = data_count;
+    }
+
+    /// Includes a data count based on the number of data segments currently in this builder.
+    pub fn include_data_count(&mut self) {
+        self.module.data_count = self.module.data.as_ref().map(|v| v.len()).map(|l| l as u32);
     }
 
     /// The 𝗍𝗒𝗉𝖾𝗌 component of the module to be built.
@@ -295,11 +303,6 @@ impl ModuleBuilder {
         self.module.custom_sections_at(insertion_point)
     }
 
-    /// Whether the module to be built will include the data count section or not.
-    pub fn include_data_count(&self) -> bool {
-        self.module.include_data_count()
-    }
-
     /// Builds the current segments into a module.
     pub fn build(self) -> Module {
         self.into()
@@ -346,7 +349,7 @@ impl Default for ModuleBuilder {
 /// assert_eq!(module.start(), None);
 /// assert_eq!(module.imports(), None);
 /// assert_eq!(module.exports(), None);
-/// assert_eq!(module.include_data_count(), false);
+/// assert_eq!(module.data_count(), None);
 /// ```
 ///
 /// ## Builder
@@ -366,7 +369,7 @@ impl Default for ModuleBuilder {
 /// assert_eq!(module.start(), None);
 /// assert_eq!(module.imports(), None);
 /// assert_eq!(module.exports(), None);
-/// assert_eq!(module.include_data_count(), false);
+/// assert_eq!(module.data_count(), None);
 /// ```
 #[derive(Clone, Debug, PartialEq)]
 pub struct Module {
@@ -381,7 +384,7 @@ pub struct Module {
     imports: Option<Vec<Import>>,
     exports: Option<Vec<Export>>,
     custom_sections: CustomSections,
-    data_count: bool,
+    data_count: Option<u32>,
 }
 
 impl Module {
@@ -404,7 +407,7 @@ impl Module {
             imports: None,
             exports: None,
             custom_sections: CustomSections::new(),
-            data_count: false,
+            data_count: None,
         }
     }
 
@@ -468,7 +471,7 @@ impl Module {
     }
 
     /// Whether the module includes the data count section or not.
-    pub fn include_data_count(&self) -> bool {
+    pub fn data_count(&self) -> Option<u32> {
         self.data_count
     }
 }

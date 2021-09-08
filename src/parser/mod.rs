@@ -8,8 +8,8 @@ mod types;
 mod values;
 
 use crate::parser::sections::{
-    parse_custom_section, parse_function_section, parse_global_section, parse_import_section,
-    parse_memory_section, parse_table_section, parse_type_section,
+    parse_custom_section, parse_data_count_section, parse_function_section, parse_global_section,
+    parse_import_section, parse_memory_section, parse_table_section, parse_type_section,
 };
 use crate::{Module, ModuleSection};
 pub use errors::ParseError;
@@ -47,7 +47,7 @@ const VERSION: [u8; 4] = [0x01, 0x00, 0x00, 0x00];
 /// assert_eq!(module.start(), None);
 /// assert_eq!(module.imports(), None);
 /// assert_eq!(module.exports(), None);
-/// assert_eq!(module.include_data_count(), false);
+/// assert_eq!(module.data_count(), None);
 /// ```
 pub fn parse_binary(input: &[u8]) -> Result<Module, ParseError> {
     let mut builder = Module::builder();
@@ -102,6 +102,9 @@ pub fn parse_binary(input: &[u8]) -> Result<Module, ParseError> {
     let (input, custom_sections) = parse_custom_section(input)?;
     builder.set_custom_sections(ModuleSection::Element, custom_sections);
 
+    let (input, data_count) = parse_data_count_section(input)?;
+    builder.set_data_count(data_count);
+
     let (input, custom_sections) = parse_custom_section(input)?;
     builder.set_custom_sections(ModuleSection::DataCount, custom_sections);
 
@@ -135,7 +138,7 @@ pub fn parse_binary(input: &[u8]) -> Result<Module, ParseError> {
 /// assert_eq!(module.start(), None);
 /// assert_eq!(module.imports(), None);
 /// assert_eq!(module.exports(), None);
-/// assert_eq!(module.include_data_count(), false);
+/// assert_eq!(module.data_count(), None);
 /// ```
 #[cfg(feature = "text")]
 pub fn parse_text(text: &str) -> Result<Module, ParseError> {

@@ -49,7 +49,7 @@ fn main() {
         ModuleSection::Data,
         Custom::new("footer".into(), Vec::from("foot")),
     );
-    builder.set_include_data_count(true);
+    builder.include_data_count();
 
     let module = builder.build();
 
@@ -75,5 +75,5 @@ fn main() {
     assert_eq!(module.data().unwrap().len(), 1);
     assert_eq!(module.exports().unwrap().len(), 1);
     assert_eq!(module, module.clone());
-    assert!(module.include_data_count());
+    assert_eq!(module.data_count(), Some(1));
 }

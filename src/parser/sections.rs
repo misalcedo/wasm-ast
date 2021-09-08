@@ -89,6 +89,13 @@ pub fn parse_global_section(input: &[u8]) -> IResult<&[u8], Option<Vec<Global>>>
     ))(input)
 }
 
+/// Parses a WebAssembly data count section.
+///
+/// See <https://webassembly.github.io/spec/core/binary/modules.html#data-count-section>
+pub fn parse_data_count_section(input: &[u8]) -> IResult<&[u8], Option<u32>> {
+    opt(parse_section(ModuleSection::DataCount, parse_u32))(input)
+}
+
 /// Parses a section with the given identifier.
 ///
 /// See <https://webassembly.github.io/spec/core/binary/modules.html#sections>

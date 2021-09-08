@@ -37,7 +37,7 @@ fn main() {
     builder.set_exports(Some(exports.clone()));
     builder.set_custom_sections(ModuleSection::Custom, Some(header_custom.clone()));
     builder.set_custom_sections(ModuleSection::Data, Some(footer_custom.clone()));
-    builder.set_include_data_count(true);
+    builder.set_data_count(Some(1));
 
     let module = builder.build();
 
@@ -59,5 +59,5 @@ fn main() {
         module.custom_sections_at(ModuleSection::Export),
         Some(footer_custom.as_slice())
     );
-    assert!(module.include_data_count());
+    assert_eq!(module.data_count(), Some(1));
 }

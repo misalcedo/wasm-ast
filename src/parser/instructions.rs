@@ -1,4 +1,4 @@
-use crate::parser::types::parse_value_type;
+use crate::parser::types::{parse_reference_type, parse_value_type};
 use crate::parser::values::{match_byte, parse_u32, parse_vector};
 use crate::{
     ControlInstruction, Expression, Instruction, MemoryInstruction, NumericInstruction,
@@ -62,7 +62,17 @@ pub fn parse_control_instruction(input: &[u8]) -> IResult<&[u8], ControlInstruct
 ///
 /// See <https://webassembly.github.io/spec/core/binary/instructions.html#reference-instructions>
 pub fn parse_reference_instruction(input: &[u8]) -> IResult<&[u8], ReferenceInstruction> {
-    Ok((&input[1..], ReferenceInstruction::IsNull))
+    alt((
+        map(
+            preceded(match_byte(0xD0), parse_reference_type),
+            ReferenceInstruction::Null,
+        ),
+        map(match_byte(0xD1), |_| ReferenceInstruction::IsNull),
+        map(
+            preceded(match_byte(0xD2), parse_u32),
+            ReferenceInstruction::Function,
+        ),
+    ))(input)
 }
 
 /// Parses a WebAssembly parametric instruction from the input.

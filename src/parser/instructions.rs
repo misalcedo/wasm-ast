@@ -1,10 +1,12 @@
 use crate::parser::types::{parse_reference_type, parse_value_type};
 use crate::parser::values::{match_byte, parse_u32, parse_vector};
 use crate::{
-    ControlInstruction, Expression, Instruction, MemoryInstruction, NumericInstruction,
-    ParametricInstruction, ReferenceInstruction, TableInstruction, VariableInstruction,
+    ControlInstruction, Expression, Instruction, IntegerType, MemoryInstruction, NumberType,
+    NumericInstruction, ParametricInstruction, ReferenceInstruction, TableInstruction,
+    VariableInstruction,
 };
 use nom::branch::alt;
+use nom::bytes::complete::tag;
 use nom::combinator::map;
 use nom::multi::fold_many0;
 use nom::sequence::{preceded, terminated, tuple};
@@ -55,7 +57,10 @@ pub fn parse_instruction(input: &[u8]) -> IResult<&[u8], Instruction> {
 ///
 /// See <https://webassembly.github.io/spec/core/binary/instructions.html#control-instructions>
 pub fn parse_control_instruction(input: &[u8]) -> IResult<&[u8], ControlInstruction> {
-    Ok((&input[1..], ControlInstruction::Nop))
+    alt((
+        map(match_byte(0x00), |_| ControlInstruction::Unreachable),
+        map(match_byte(0x01), |_| ControlInstruction::Nop),
+    ))(input)
 }
 
 /// Parses a WebAssembly reference instruction from the input.
@@ -161,14 +166,24 @@ pub fn parse_table_instruction(input: &[u8]) -> IResult<&[u8], TableInstruction>
 ///
 /// See <https://webassembly.github.io/spec/core/binary/instructions.html#memory-instructions>
 pub fn parse_memory_instruction(input: &[u8]) -> IResult<&[u8], MemoryInstruction> {
-    Ok((&input[1..], MemoryInstruction::Fill))
+    alt((
+        map(tag([0x3F, 0x00]), |_| MemoryInstruction::Size),
+        map(tag([0x40, 0x00]), |_| MemoryInstruction::Grow),
+    ))(input)
 }
 
 /// Parses a WebAssembly numeric instruction from the input.
 ///
 /// See <https://webassembly.github.io/spec/core/binary/instructions.html#numeric-instructions>
 pub fn parse_numeric_instruction(input: &[u8]) -> IResult<&[u8], NumericInstruction> {
-    Ok((&input[1..], NumericInstruction::Demote))
+    alt((
+        map(match_byte(0x45), |_| {
+            NumericInstruction::EqualToZero(IntegerType::I32)
+        }),
+        map(match_byte(0x46), |_| {
+            NumericInstruction::Equal(NumberType::I32)
+        }),
+    ))(input)
 }
 
 #[cfg(test)]

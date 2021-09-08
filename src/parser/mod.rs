@@ -125,14 +125,7 @@ pub fn parse_binary(input: &[u8]) -> Result<Module, ParseError> {
 
     validate_function_counts(codes.as_ref(), signatures.as_ref())?;
 
-    let functions = codes.zip(signatures).map(|(codes, signatures)| {
-        codes
-            .into_iter()
-            .zip(signatures)
-            .map(|((locals, body), kind)| Function::new(kind, locals, body))
-            .collect()
-    });
-    builder.set_functions(functions);
+    builder.set_functions(zip_functions(signatures, codes));
 
     let (input, custom_sections) = parse_custom_section(input)?;
     builder.set_custom_sections(ModuleSection::Code, custom_sections);
@@ -146,6 +139,21 @@ pub fn parse_binary(input: &[u8]) -> Result<Module, ParseError> {
     Ok(builder.build())
 }
 
+/// Zips code and function sections into a function syntax type.
+fn zip_functions(
+    signatures: Option<Vec<TypeIndex>>,
+    codes: Option<Vec<(ResultType, Expression)>>,
+) -> Option<Vec<Function>> {
+    codes.zip(signatures).map(|(codes, signatures)| {
+        codes
+            .into_iter()
+            .zip(signatures)
+            .map(|((locals, body), kind)| Function::new(kind, locals, body))
+            .collect()
+    })
+}
+
+/// Validates the parsed function and code section lengths match.
 fn validate_function_counts(
     codes: Option<&Vec<(ResultType, Expression)>>,
     signatures: Option<&Vec<TypeIndex>>,
@@ -194,4 +202,97 @@ pub fn parse_text(text: &str) -> Result<Module, ParseError> {
     let binary = wat::parse_str(text)?;
 
     parse_binary(binary.as_slice())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn validate_functions_no_code() {
+        let result = validate_function_counts(None, Some(vec![]).as_ref());
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn validate_functions_no_signatures() {
+        let result = validate_function_counts(Some(vec![]).as_ref(), None);
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn validate_functions_empty() {
+        let result = validate_function_counts(None, None);
+
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn validate_functions_match() {
+        let result = validate_function_counts(
+            Some(vec![(ResultType::empty(), Expression::empty())]).as_ref(),
+            Some(vec![0]).as_ref(),
+        );
+
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn zip_functions_no_code() {
+        let result = zip_functions(Some(vec![]), None);
+
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn zip_functions_no_signatures() {
+        let result = zip_functions(None, Some(vec![]));
+
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn zip_functions_empty() {
+        let result = zip_functions(None, None);
+
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn zip_functions_match() {
+        let locals = ResultType::empty();
+        let body = Expression::empty();
+        let function = Function::new(0, locals.clone(), body.clone());
+
+        let result = zip_functions(Some(vec![0]), Some(vec![(locals, body)]));
+
+        assert_eq!(result, Some(vec![function]));
+    }
+
+    #[test]
+    fn zip_functions_signature_longer() {
+        let locals = ResultType::empty();
+        let body = Expression::empty();
+        let function = Function::new(0, locals.clone(), body.clone());
+
+        let result = zip_functions(Some(vec![0, 1]), Some(vec![(locals, body)]));
+
+        assert_eq!(result, Some(vec![function]));
+    }
+
+    #[test]
+    fn zip_functions_code_longer() {
+        let locals = ResultType::empty();
+        let body = Expression::empty();
+        let function = Function::new(0, locals.clone(), body.clone());
+
+        let result = zip_functions(
+            Some(vec![0]),
+            Some(vec![(locals.clone(), body.clone()), (locals, body)]),
+        );
+
+        assert_eq!(result, Some(vec![function]));
+    }
 }

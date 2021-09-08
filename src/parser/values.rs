@@ -147,6 +147,27 @@ mod tests {
         assert_eq!(remaining, &[extra]);
     }
 
+    #[test]
+    fn match_byte_matching() {
+        let extra = 3;
+        let byte = 42;
+        let input = vec![byte, extra];
+
+        let (remaining, actual): (&[u8], u8) = match_byte(byte)(input.as_slice()).unwrap();
+
+        assert_eq!(actual, byte);
+        assert_eq!(remaining, &[extra]);
+    }
+
+    #[test]
+    fn match_byte_not_matching() {
+        let input = vec![3];
+
+        let result = match_byte(42)(input.as_slice());
+
+        assert!(result.is_err());
+    }
+
     fn take_byte(input: &[u8]) -> IResult<&[u8], u8> {
         map(take(1usize), |x: &[u8]| x[0])(input)
     }

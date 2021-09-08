@@ -8,11 +8,12 @@ mod types;
 mod values;
 
 use crate::parser::sections::{
-    parse_custom_section, parse_data_count_section, parse_data_section, parse_element_section,
-    parse_export_section, parse_function_section, parse_global_section, parse_import_section,
-    parse_memory_section, parse_start_section, parse_table_section, parse_type_section,
+    parse_code_section, parse_custom_section, parse_data_count_section, parse_data_section,
+    parse_element_section, parse_export_section, parse_function_section, parse_global_section,
+    parse_import_section, parse_memory_section, parse_start_section, parse_table_section,
+    parse_type_section,
 };
-use crate::{Module, ModuleSection};
+use crate::{Expression, Function, Module, ModuleSection, ResultType, TypeIndex};
 pub use errors::ParseError;
 use nom::bytes::complete::tag;
 use nom::combinator::all_consuming;
@@ -28,6 +29,8 @@ const VERSION: [u8; 4] = [0x01, 0x00, 0x00, 0x00];
 /// The bytes are parsed using the WebAssembly binary format.
 /// Requires that no trailing information is present after the last group of custom sections
 /// (i.e. valid WebAssembly binary format passed in with trailing data will be treated as invalid).
+///
+/// Also, the function and code sections must have matching lengths.
 ///
 /// See <https://webassembly.github.io/spec/core/binary/index.html>
 ///
@@ -71,7 +74,7 @@ pub fn parse_binary(input: &[u8]) -> Result<Module, ParseError> {
     let (input, custom_sections) = parse_custom_section(input)?;
     builder.set_custom_sections(ModuleSection::Import, custom_sections);
 
-    let (input, _signatures) = parse_function_section(input)?;
+    let (input, signatures) = parse_function_section(input)?;
 
     let (input, custom_sections) = parse_custom_section(input)?;
     builder.set_custom_sections(ModuleSection::Function, custom_sections);
@@ -118,6 +121,19 @@ pub fn parse_binary(input: &[u8]) -> Result<Module, ParseError> {
     let (input, custom_sections) = parse_custom_section(input)?;
     builder.set_custom_sections(ModuleSection::DataCount, custom_sections);
 
+    let (input, codes) = parse_code_section(input)?;
+
+    validate_function_counts(codes.as_ref(), signatures.as_ref())?;
+
+    let functions = codes.zip(signatures).map(|(codes, signatures)| {
+        codes
+            .into_iter()
+            .zip(signatures)
+            .map(|((locals, body), kind)| Function::new(kind, locals, body))
+            .collect()
+    });
+    builder.set_functions(functions);
+
     let (input, custom_sections) = parse_custom_section(input)?;
     builder.set_custom_sections(ModuleSection::Code, custom_sections);
 
@@ -128,6 +144,23 @@ pub fn parse_binary(input: &[u8]) -> Result<Module, ParseError> {
     builder.set_custom_sections(ModuleSection::Data, custom_sections);
 
     Ok(builder.build())
+}
+
+fn validate_function_counts(
+    codes: Option<&Vec<(ResultType, Expression)>>,
+    signatures: Option<&Vec<TypeIndex>>,
+) -> Result<(), ParseError> {
+    if codes.is_none() && signatures.is_none() {
+        return Ok(());
+    }
+
+    let code_count = codes.as_ref().map(|v| v.len());
+    let signature_count = signatures.as_ref().map(|v| v.len());
+    let lengths_match = code_count.zip(signature_count).filter(|(a, b)| a == b);
+
+    lengths_match
+        .map(|_| ())
+        .ok_or_else(move || ParseError::MismatchedFunctionParts(code_count, signature_count))
 }
 
 /// Parses the given string into a WebAssembly module.

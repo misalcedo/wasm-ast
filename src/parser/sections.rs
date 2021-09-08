@@ -1,12 +1,12 @@
 use crate::parser::module::{
-    parse_data, parse_element, parse_export, parse_global, parse_import, parse_memory, parse_start,
-    parse_table,
+    parse_code, parse_data, parse_element, parse_export, parse_global, parse_import, parse_memory,
+    parse_start, parse_table,
 };
 use crate::parser::types::parse_function_type;
 use crate::parser::values::{match_byte, parse_name, parse_u32, parse_vector};
 use crate::{
-    Custom, Data, Element, Export, FunctionType, Global, Import, Memory, ModuleSection, Start,
-    Table, TypeIndex,
+    Custom, Data, Element, Export, Expression, FunctionType, Global, Import, Memory, ModuleSection,
+    ResultType, Start, Table, TypeIndex,
 };
 use nom::bytes::complete::take;
 use nom::combinator::{all_consuming, map, map_parser, opt, rest};
@@ -134,6 +134,13 @@ pub fn parse_element_section(input: &[u8]) -> IResult<&[u8], Option<Vec<Element>
         ModuleSection::Element,
         parse_vector(parse_element),
     ))(input)
+}
+
+/// Parses a WebAssembly code section.
+///
+/// See <https://webassembly.github.io/spec/core/binary/modules.html#code-section>
+pub fn parse_code_section(input: &[u8]) -> IResult<&[u8], Option<Vec<(ResultType, Expression)>>> {
+    opt(parse_section(ModuleSection::Code, parse_vector(parse_code)))(input)
 }
 
 /// Parses a section with the given identifier.

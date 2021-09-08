@@ -1,14 +1,16 @@
 use crate::parser::instructions::parse_expression;
 use crate::parser::types::{
-    parse_global_type, parse_memory_type, parse_reference_type, parse_table_type,
+    parse_global_type, parse_memory_type, parse_reference_type, parse_table_type, parse_value_type,
 };
 use crate::parser::values::{match_byte, parse_byte_vector, parse_name, parse_u32, parse_vector};
 use crate::{
-    Data, Element, ElementInitializer, Export, ExportDescription, Global, Import,
-    ImportDescription, Memory, ReferenceType, Start, Table,
+    Data, Element, ElementInitializer, Export, ExportDescription, Expression, Global, Import,
+    ImportDescription, Memory, ReferenceType, ResultType, Start, Table,
 };
 use nom::branch::alt;
-use nom::combinator::map;
+use nom::bytes::complete::take;
+use nom::combinator::{all_consuming, map};
+use nom::multi::fold_many_m_n;
 use nom::sequence::{preceded, tuple};
 use nom::IResult;
 
@@ -221,4 +223,36 @@ pub fn parse_element(input: &[u8]) -> IResult<&[u8], Element> {
             |(kind, initializers)| Element::declarative(kind, initializers),
         ),
     ))(input)
+}
+
+/// Parses a WebAssembly code portion of a function component from the input.
+///
+/// See <https://webassembly.github.io/spec/core/binary/modules.html#code-section>
+pub fn parse_code(input: &[u8]) -> IResult<&[u8], (ResultType, Expression)> {
+    let (input, size) = parse_u32(input)?;
+    let (remaining, input) = take(size as usize)(input)?;
+    let (_, code) = all_consuming(tuple((parse_locals, parse_expression)))(input)?;
+
+    Ok((remaining, code))
+}
+
+/// Parses the value types of locals in a function.
+///
+/// See <https://webassembly.github.io/spec/core/binary/modules.html#code-section>
+pub fn parse_locals(input: &[u8]) -> IResult<&[u8], ResultType> {
+    let (input, length) = parse_u32(input)?;
+    let length = length as usize;
+    let (remaining, value_types) = fold_many_m_n(
+        length,
+        length,
+        tuple((parse_u32, parse_value_type)),
+        Vec::new,
+        |mut accumulator, (count, kind)| {
+            accumulator.reserve(count as usize);
+            accumulator.extend((0..count).map(|_| kind));
+            accumulator
+        },
+    )(input)?;
+
+    Ok((remaining, value_types.into()))
 }

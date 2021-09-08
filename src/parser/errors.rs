@@ -10,6 +10,10 @@ pub enum ParseError {
     InvalidText(#[from] wat::Error),
     #[error("The WebAssembly module is not a valid binary format.")]
     InvalidBinary,
+    #[error(
+        "The module's type and code sections have different lengths (type: {0:?}, code: {1:?})."
+    )]
+    MismatchedFunctionParts(Option<usize>, Option<usize>),
 }
 
 /// Create a parse error from a nom error.

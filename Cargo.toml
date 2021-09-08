@@ -9,16 +9,6 @@ homepage = "https://github.com/misalcedo/wasm-ast"
 repository = "https://github.com/misalcedo/wasm-ast"
 documentation = "https://docs.rs/wasm-ast"
 
-[profile.release]
-lto = true
-
-[dev-dependencies]
-criterion = "0.3"
-
-[[bench]]
-name = "emit_module"
-harness = false
-
 [dependencies]
 nom = { version = "7", optional = true }
 thiserror = "1"

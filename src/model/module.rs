@@ -1092,6 +1092,12 @@ impl Start {
     }
 }
 
+impl From<u32> for Start {
+    fn from(function: u32) -> Self {
+        Start { function }
+    }
+}
+
 /// The 𝖾𝗑𝗉𝗈𝗋𝗍𝗌 component of a module defines a set of exports that become accessible to the
 /// host environment once the module has been instantiated.
 /// Each export is labeled by a unique name.

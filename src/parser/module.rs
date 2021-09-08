@@ -1,7 +1,7 @@
 use crate::parser::instructions::parse_expression;
 use crate::parser::types::{parse_global_type, parse_memory_type, parse_table_type};
 use crate::parser::values::{match_byte, parse_byte_vector, parse_name, parse_u32};
-use crate::{Data, Global, Import, ImportDescription, Memory, Table};
+use crate::{Data, Global, Import, ImportDescription, Memory, Start, Table};
 use nom::branch::alt;
 use nom::combinator::map;
 use nom::sequence::{preceded, tuple};
@@ -86,4 +86,14 @@ pub fn parse_data(input: &[u8]) -> IResult<&[u8], Data> {
             |(memory, offset, bytes)| Data::active(memory, offset, bytes.into()),
         ),
     ))(input)
+}
+
+/// Parses a WebAssembly start section.
+///
+/// See <https://webassembly.github.io/spec/core/binary/modules.html#start-section>
+/// Parses a WebAssembly data component from the input.
+///
+/// See <https://webassembly.github.io/spec/core/binary/modules.html#data-section>
+pub fn parse_start(input: &[u8]) -> IResult<&[u8], Start> {
+    map(parse_u32, Start::new)(input)
 }

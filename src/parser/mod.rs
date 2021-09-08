@@ -160,7 +160,10 @@ fn validate_function_counts(
 
     lengths_match
         .map(|_| ())
-        .ok_or_else(move || ParseError::MismatchedFunctionParts(code_count, signature_count))
+        .ok_or(ParseError::MismatchedFunctionParts(
+            code_count,
+            signature_count,
+        ))
 }
 
 /// Parses the given string into a WebAssembly module.

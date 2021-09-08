@@ -3,6 +3,9 @@
 pub mod model;
 pub use model::*;
 
+pub mod encoder;
+pub mod leb128;
+
 #[cfg(feature = "parser")]
 pub mod parser;
 

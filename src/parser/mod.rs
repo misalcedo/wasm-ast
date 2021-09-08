@@ -8,9 +8,9 @@ mod types;
 mod values;
 
 use crate::parser::sections::{
-    parse_custom_section, parse_data_count_section, parse_data_section, parse_function_section,
-    parse_global_section, parse_import_section, parse_memory_section, parse_start_section,
-    parse_table_section, parse_type_section,
+    parse_custom_section, parse_data_count_section, parse_data_section, parse_element_section,
+    parse_export_section, parse_function_section, parse_global_section, parse_import_section,
+    parse_memory_section, parse_start_section, parse_table_section, parse_type_section,
 };
 use crate::{Module, ModuleSection};
 pub use errors::ParseError;
@@ -71,7 +71,7 @@ pub fn parse_binary(input: &[u8]) -> Result<Module, ParseError> {
     let (input, custom_sections) = parse_custom_section(input)?;
     builder.set_custom_sections(ModuleSection::Import, custom_sections);
 
-    let (input, signatures) = parse_function_section(input)?;
+    let (input, _signatures) = parse_function_section(input)?;
 
     let (input, custom_sections) = parse_custom_section(input)?;
     builder.set_custom_sections(ModuleSection::Function, custom_sections);
@@ -94,6 +94,9 @@ pub fn parse_binary(input: &[u8]) -> Result<Module, ParseError> {
     let (input, custom_sections) = parse_custom_section(input)?;
     builder.set_custom_sections(ModuleSection::Global, custom_sections);
 
+    let (input, exports) = parse_export_section(input)?;
+    builder.set_exports(exports);
+
     let (input, custom_sections) = parse_custom_section(input)?;
     builder.set_custom_sections(ModuleSection::Export, custom_sections);
 
@@ -102,6 +105,9 @@ pub fn parse_binary(input: &[u8]) -> Result<Module, ParseError> {
 
     let (input, custom_sections) = parse_custom_section(input)?;
     builder.set_custom_sections(ModuleSection::Start, custom_sections);
+
+    let (input, elements) = parse_element_section(input)?;
+    builder.set_elements(elements);
 
     let (input, custom_sections) = parse_custom_section(input)?;
     builder.set_custom_sections(ModuleSection::Element, custom_sections);

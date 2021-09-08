@@ -1,10 +1,12 @@
 use crate::parser::module::{
-    parse_data, parse_global, parse_import, parse_memory, parse_start, parse_table,
+    parse_data, parse_element, parse_export, parse_global, parse_import, parse_memory, parse_start,
+    parse_table,
 };
 use crate::parser::types::parse_function_type;
 use crate::parser::values::{match_byte, parse_name, parse_u32, parse_vector};
 use crate::{
-    Custom, Data, FunctionType, Global, Import, Memory, ModuleSection, Start, Table, TypeIndex,
+    Custom, Data, Element, Export, FunctionType, Global, Import, Memory, ModuleSection, Start,
+    Table, TypeIndex,
 };
 use nom::bytes::complete::take;
 use nom::combinator::{all_consuming, map, map_parser, opt, rest};
@@ -112,6 +114,26 @@ pub fn parse_data_section(input: &[u8]) -> IResult<&[u8], Option<Vec<Data>>> {
 /// See <https://webassembly.github.io/spec/core/binary/modules.html#start-section>
 pub fn parse_start_section(input: &[u8]) -> IResult<&[u8], Option<Start>> {
     opt(parse_section(ModuleSection::Start, parse_start))(input)
+}
+
+/// Parses a WebAssembly export section.
+///
+/// See <https://webassembly.github.io/spec/core/binary/modules.html#export-section>
+pub fn parse_export_section(input: &[u8]) -> IResult<&[u8], Option<Vec<Export>>> {
+    opt(parse_section(
+        ModuleSection::Export,
+        parse_vector(parse_export),
+    ))(input)
+}
+
+/// Parses a WebAssembly element section.
+///
+/// See <https://webassembly.github.io/spec/core/binary/modules.html#element-section>
+pub fn parse_element_section(input: &[u8]) -> IResult<&[u8], Option<Vec<Element>>> {
+    opt(parse_section(
+        ModuleSection::Element,
+        parse_vector(parse_element),
+    ))(input)
 }
 
 /// Parses a section with the given identifier.

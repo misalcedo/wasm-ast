@@ -3,7 +3,7 @@
 use crate::model::indices::*;
 use crate::model::types::*;
 use crate::model::{Expression, Name};
-use crate::ModelError;
+use crate::{ModelError, ReferenceInstruction};
 use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::mem::discriminant;
@@ -810,41 +810,41 @@ impl Global {
 /// use wasm_ast::{Element, ElementInitializer, ElementMode, TableIndex, FunctionIndex, Expression, ReferenceType};
 ///
 /// let offset: Expression = vec![0i32.into()].into();
-/// let initializer: ElementInitializer = vec![0].into();
-/// let element = Element::active(0, offset.clone(), ReferenceType::Function, initializer.clone());
+/// let initializers = vec![0].to_initializers();
+/// let element = Element::active(0, offset.clone(), ReferenceType::Function, initializers.clone());
 ///
 /// assert_eq!(element, Element::new(
 ///     ReferenceType::Function,
 ///     ElementMode::Active(0, offset.clone()),
-///     initializer.clone()
+///     initializers.clone()
 /// ));
 /// assert_eq!(element.kind(), ReferenceType::Function);
 /// assert_eq!(element.mode(), &ElementMode::Active(0, offset.clone()));
-/// assert_eq!(element.initializers(), &initializer);
+/// assert_eq!(element.initializers(), initializers.as_slice());
 /// ```
 ///
 /// ## Passive
 /// ```rust
 /// use wasm_ast::{Element, ElementInitializer, ElementMode, TableIndex, Expression, ReferenceType, NumericInstruction};
 ///
-/// let initializer: ElementInitializer = vec![Expression::from(vec![2i32.into()])].into();
-/// let element = Element::passive(ReferenceType::External, initializer.clone());
+/// let initializers = vec![Expression::from(vec![2i32.into()])].to_initializers();
+/// let element = Element::passive(ReferenceType::External, initializers.clone());
 ///
 /// assert_eq!(element, Element::new(
 ///     ReferenceType::External,
 ///     ElementMode::Passive,
-///     initializer.clone()
+///     initializers.clone()
 /// ));
 /// assert_eq!(element.kind(), ReferenceType::External);
 /// assert_eq!(element.mode(), &ElementMode::Passive);
-/// assert_eq!(element.initializers(), &initializer);
+/// assert_eq!(element.initializers(), initializers.as_slice());
 /// ```
 ///
 /// ## Declarative
 /// ```rust
 /// use wasm_ast::{Element, ElementInitializer, ElementMode, TableIndex, Expression, ReferenceType, NumericInstruction};
 ///
-/// let initializer: ElementInitializer = vec![Expression::from(vec![2i32.into()])].into();
+/// let initializer: Vec<Expression> = vec![Expression::from(vec![2i32.into()])].into();
 /// let element = Element::declarative(ReferenceType::External, initializer.clone());
 ///
 /// assert_eq!(element, Element::new(
@@ -860,12 +860,12 @@ impl Global {
 pub struct Element {
     kind: ReferenceType,
     mode: ElementMode,
-    initializers: ElementInitializer,
+    initializers: Vec<Expression>,
 }
 
 impl Element {
     /// Creates a new instance of an element segment.
-    pub fn new(kind: ReferenceType, mode: ElementMode, initializers: ElementInitializer) -> Self {
+    pub fn new(kind: ReferenceType, mode: ElementMode, initializers: Vec<Expression>) -> Self {
         Element {
             kind,
             mode,
@@ -874,7 +874,7 @@ impl Element {
     }
 
     /// Creates a passive element segment.
-    pub fn passive(kind: ReferenceType, initializers: ElementInitializer) -> Self {
+    pub fn passive(kind: ReferenceType, initializers: Vec<Expression>) -> Self {
         Element {
             kind,
             mode: ElementMode::Passive,
@@ -887,7 +887,7 @@ impl Element {
         table: TableIndex,
         offset: Expression,
         kind: ReferenceType,
-        initializers: ElementInitializer,
+        initializers: Vec<Expression>,
     ) -> Self {
         Element {
             kind,
@@ -897,7 +897,7 @@ impl Element {
     }
 
     /// Creates a declarative element segment.
-    pub fn declarative(kind: ReferenceType, initializers: ElementInitializer) -> Self {
+    pub fn declarative(kind: ReferenceType, initializers: Vec<Expression>) -> Self {
         Element {
             kind,
             mode: ElementMode::Declarative,
@@ -911,7 +911,7 @@ impl Element {
     }
 
     /// The initializer for the element segment.
-    pub fn initializers(&self) -> &ElementInitializer {
+    pub fn initializers(&self) -> &[Expression] {
         &self.initializers
     }
 
@@ -921,24 +921,23 @@ impl Element {
     }
 }
 
-/// The specification only describes elements as allowing expressions for the initializer.
-/// However, the binary specification allows a vector of function indices.
-/// We need to deviate from the specification here in order to support the full binary format.
-#[derive(Clone, Debug, PartialEq)]
-pub enum ElementInitializer {
-    Expression(Vec<Expression>),
-    FunctionIndex(Vec<FunctionIndex>),
+/// Supported types for initializing an element component.
+pub trait ElementInitializer {
+    /// Maps this struct to a vector of expressions.
+    fn to_initializers(self) -> Vec<Expression>;
 }
 
-impl From<Vec<Expression>> for ElementInitializer {
-    fn from(expressions: Vec<Expression>) -> Self {
-        ElementInitializer::Expression(expressions)
+impl ElementInitializer for Vec<Expression> {
+    fn to_initializers(self) -> Vec<Expression> {
+        self
     }
 }
 
-impl From<Vec<FunctionIndex>> for ElementInitializer {
-    fn from(indices: Vec<FunctionIndex>) -> Self {
-        ElementInitializer::FunctionIndex(indices)
+impl ElementInitializer for Vec<FunctionIndex> {
+    fn to_initializers(self) -> Vec<Expression> {
+        self.into_iter()
+            .map(|function| Expression::new(vec![ReferenceInstruction::Function(function).into()]))
+            .collect()
     }
 }
 

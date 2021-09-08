@@ -1,7 +1,12 @@
 use crate::parser::instructions::parse_expression;
-use crate::parser::types::{parse_global_type, parse_memory_type, parse_table_type};
-use crate::parser::values::{match_byte, parse_byte_vector, parse_name, parse_u32};
-use crate::{Data, Global, Import, ImportDescription, Memory, Start, Table};
+use crate::parser::types::{
+    parse_global_type, parse_memory_type, parse_reference_type, parse_table_type,
+};
+use crate::parser::values::{match_byte, parse_byte_vector, parse_name, parse_u32, parse_vector};
+use crate::{
+    Data, Element, ElementInitializer, Export, ExportDescription, Global, Import,
+    ImportDescription, Memory, ReferenceType, Start, Table,
+};
 use nom::branch::alt;
 use nom::combinator::map;
 use nom::sequence::{preceded, tuple};
@@ -88,12 +93,132 @@ pub fn parse_data(input: &[u8]) -> IResult<&[u8], Data> {
     ))(input)
 }
 
-/// Parses a WebAssembly start section.
+/// Parses a WebAssembly start component from the input.
 ///
 /// See <https://webassembly.github.io/spec/core/binary/modules.html#start-section>
-/// Parses a WebAssembly data component from the input.
-///
-/// See <https://webassembly.github.io/spec/core/binary/modules.html#data-section>
 pub fn parse_start(input: &[u8]) -> IResult<&[u8], Start> {
     map(parse_u32, Start::new)(input)
+}
+
+/// Parses a WebAssembly export component from the input.
+///
+/// See <https://webassembly.github.io/spec/core/binary/modules.html#export-section>
+pub fn parse_export(input: &[u8]) -> IResult<&[u8], Export> {
+    map(
+        tuple((parse_name, parse_export_description)),
+        |(export, description)| Export::new(export, description),
+    )(input)
+}
+
+/// Parses an export description.
+fn parse_export_description(input: &[u8]) -> IResult<&[u8], ExportDescription> {
+    alt((
+        map(
+            preceded(match_byte(0x00), parse_u32),
+            ExportDescription::Function,
+        ),
+        map(
+            preceded(match_byte(0x01), parse_u32),
+            ExportDescription::Table,
+        ),
+        map(
+            preceded(match_byte(0x02), parse_u32),
+            ExportDescription::Memory,
+        ),
+        map(
+            preceded(match_byte(0x03), parse_u32),
+            ExportDescription::Global,
+        ),
+    ))(input)
+}
+
+/// Parses a WebAssembly element component from the input.
+///
+/// See <https://webassembly.github.io/spec/core/binary/modules.html#element-section>
+pub fn parse_element(input: &[u8]) -> IResult<&[u8], Element> {
+    alt((
+        map(
+            preceded(
+                match_byte(0x00),
+                tuple((parse_expression, parse_vector(parse_u32))),
+            ),
+            |(offset, functions)| {
+                Element::active(
+                    0,
+                    offset,
+                    ReferenceType::Function,
+                    functions.to_initializers(),
+                )
+            },
+        ),
+        map(
+            preceded(
+                match_byte(0x01),
+                preceded(match_byte(0x00), parse_vector(parse_u32)),
+            ),
+            |functions| Element::passive(ReferenceType::Function, functions.to_initializers()),
+        ),
+        map(
+            preceded(
+                match_byte(0x02),
+                tuple((
+                    parse_u32,
+                    parse_expression,
+                    preceded(match_byte(0x00), parse_vector(parse_u32)),
+                )),
+            ),
+            |(table, offset, functions)| {
+                Element::active(
+                    table,
+                    offset,
+                    ReferenceType::Function,
+                    functions.to_initializers(),
+                )
+            },
+        ),
+        map(
+            preceded(
+                match_byte(0x03),
+                preceded(match_byte(0x00), parse_vector(parse_u32)),
+            ),
+            |functions| Element::declarative(ReferenceType::Function, functions.to_initializers()),
+        ),
+        map(
+            preceded(
+                match_byte(0x04),
+                tuple((parse_expression, parse_vector(parse_expression))),
+            ),
+            |(offset, initializers)| {
+                Element::active(0, offset, ReferenceType::Function, initializers)
+            },
+        ),
+        map(
+            preceded(
+                match_byte(0x05),
+                tuple((parse_reference_type, parse_vector(parse_expression))),
+            ),
+            |(kind, initializers)| Element::passive(kind, initializers),
+        ),
+        map(
+            preceded(
+                match_byte(0x06),
+                tuple((
+                    parse_u32,
+                    parse_expression,
+                    parse_reference_type,
+                    parse_vector(parse_expression),
+                )),
+            ),
+            |(table, offset, kind, initializers)| {
+                Element::active(table, offset, kind, initializers)
+            },
+        ),
+        map(
+            preceded(
+                match_byte(0x07),
+                tuple((parse_reference_type, parse_vector(parse_expression))),
+            ),
+            |(kind, initializers)| Element::declarative(kind, initializers),
+        ),
+    ))(input)
 }

@@ -991,14 +991,14 @@ pub enum BlockType {
 /// ```
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct MemoryArgument {
-    offset: u32,
     align: Option<u32>,
+    offset: u32,
 }
 
 impl MemoryArgument {
-    /// Creates a new memory argument with the given offset and alignment.
-    pub fn new(offset: u32, align: Option<u32>) -> Self {
-        MemoryArgument { offset, align }
+    /// Creates a new memory argument with the given alignment and offset.
+    pub fn new(align: Option<u32>, offset: u32) -> Self {
+        MemoryArgument { align, offset }
     }
 
     /// Creates a new memory argument with the default alignment and an offset of 0.

@@ -4,7 +4,6 @@ mod errors;
 
 pub use errors::LEB128Error;
 
-use nom::InputIter;
 use std::convert::TryFrom;
 use std::io::Write;
 use std::mem::size_of;
@@ -52,7 +51,7 @@ pub fn parse_unsigned<T>(input: &[u8]) -> Result<(&[u8], T), LEB128Error>
 where
     T: TryFrom<u128, Error = std::num::TryFromIntError>,
 {
-    let end = input.position(|x| x & RADIX == 0);
+    let end = input.iter().position(|x| x & RADIX == 0);
     let max_size = max_leb128_size::<T>();
     let length = match end {
         Some(index) if index > max_size => Err(LEB128Error::Overflow(index, max_size)),

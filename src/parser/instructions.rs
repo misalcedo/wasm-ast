@@ -1,9 +1,9 @@
 use crate::parser::types::{parse_reference_type, parse_value_type};
 use crate::parser::values::{match_byte, parse_u32, parse_vector};
 use crate::{
-    ControlInstruction, Expression, Instruction, IntegerType, MemoryArgument, MemoryInstruction, NumberType,
-    NumericInstruction, ParametricInstruction, ReferenceInstruction, SignExtension, TableInstruction,
-    VariableInstruction,
+    ControlInstruction, Expression, Instruction, IntegerType, MemoryArgument, MemoryInstruction,
+    NumberType, NumericInstruction, ParametricInstruction, ReferenceInstruction, SignExtension,
+    TableInstruction, VariableInstruction,
 };
 use nom::branch::alt;
 use nom::bytes::complete::tag;
@@ -130,10 +130,7 @@ pub fn parse_table_instruction(input: &[u8]) -> IResult<&[u8], TableInstruction>
         map(preceded(match_byte(0x25), parse_u32), TableInstruction::Get),
         map(preceded(match_byte(0x26), parse_u32), TableInstruction::Set),
         map(
-            preceded(
-                tag([0xFC, 12u8]),
-                tuple((parse_u32, parse_u32)),
-            ),
+            preceded(tag([0xFC, 12u8]), tuple((parse_u32, parse_u32))),
             |(element, table)| TableInstruction::Init(element, table),
         ),
         map(
@@ -141,10 +138,7 @@ pub fn parse_table_instruction(input: &[u8]) -> IResult<&[u8], TableInstruction>
             TableInstruction::ElementDrop,
         ),
         map(
-            preceded(
-                tag([0xFC, 14u8]),
-                tuple((parse_u32, parse_u32)),
-            ),
+            preceded(tag([0xFC, 14u8]), tuple((parse_u32, parse_u32))),
             |(table_a, table_b)| TableInstruction::Copy(table_a, table_b),
         ),
         map(
@@ -167,33 +161,120 @@ pub fn parse_table_instruction(input: &[u8]) -> IResult<&[u8], TableInstruction>
 /// See <https://webassembly.github.io/spec/core/binary/instructions.html#memory-instructions>
 pub fn parse_memory_instruction(input: &[u8]) -> IResult<&[u8], MemoryInstruction> {
     alt((
-        map(preceded(match_byte(0x28), parse_memory_argument), |memarg| MemoryInstruction::Load(NumberType::I32, memarg)),
-        map(preceded(match_byte(0x29), parse_memory_argument), |memarg| MemoryInstruction::Load(NumberType::I64, memarg)),
-        map(preceded(match_byte(0x2A), parse_memory_argument), |memarg| MemoryInstruction::Load(NumberType::F32, memarg)),
-        map(preceded(match_byte(0x2B), parse_memory_argument), |memarg| MemoryInstruction::Load(NumberType::F64, memarg)),
-        map(preceded(match_byte(0x2C), parse_memory_argument), |memarg| MemoryInstruction::Load8(IntegerType::I32, SignExtension::Signed, memarg)),
-        map(preceded(match_byte(0x2D), parse_memory_argument), |memarg| MemoryInstruction::Load8(IntegerType::I32, SignExtension::Unsigned, memarg)),
-        map(preceded(match_byte(0x2E), parse_memory_argument), |memarg| MemoryInstruction::Load16(IntegerType::I32, SignExtension::Signed, memarg)),
-        map(preceded(match_byte(0x2F), parse_memory_argument), |memarg| MemoryInstruction::Load16(IntegerType::I32, SignExtension::Unsigned, memarg)),
-        map(preceded(match_byte(0x30), parse_memory_argument), |memarg| MemoryInstruction::Load8(IntegerType::I64, SignExtension::Signed, memarg)),
-        map(preceded(match_byte(0x31), parse_memory_argument), |memarg| MemoryInstruction::Load8(IntegerType::I64, SignExtension::Unsigned, memarg)),
-        map(preceded(match_byte(0x32), parse_memory_argument), |memarg| MemoryInstruction::Load16(IntegerType::I64, SignExtension::Signed, memarg)),
-        map(preceded(match_byte(0x33), parse_memory_argument), |memarg| MemoryInstruction::Load16(IntegerType::I64, SignExtension::Unsigned, memarg)),
-        map(preceded(match_byte(0x34), parse_memory_argument), |memarg| MemoryInstruction::Load32(SignExtension::Signed, memarg)),
-        map(preceded(match_byte(0x35), parse_memory_argument), |memarg| MemoryInstruction::Load32(SignExtension::Unsigned, memarg)),
-        map(preceded(match_byte(0x36), parse_memory_argument), |memarg| MemoryInstruction::Store(NumberType::I32, memarg)),
-        map(preceded(match_byte(0x37), parse_memory_argument), |memarg| MemoryInstruction::Store(NumberType::I64, memarg)),
-        map(preceded(match_byte(0x38), parse_memory_argument), |memarg| MemoryInstruction::Store(NumberType::F32, memarg)),
-        map(preceded(match_byte(0x39), parse_memory_argument), |memarg| MemoryInstruction::Store(NumberType::F64, memarg)),
-        map(preceded(match_byte(0x3A), parse_memory_argument), |memarg| MemoryInstruction::Store8(IntegerType::I32, memarg)),
-        map(preceded(match_byte(0x3B), parse_memory_argument), |memarg| MemoryInstruction::Store16(IntegerType::I32, memarg)),
-        map(preceded(match_byte(0x3C), parse_memory_argument), |memarg| MemoryInstruction::Store8(IntegerType::I64, memarg)),
-        map(preceded(match_byte(0x3D), parse_memory_argument), |memarg| MemoryInstruction::Store16(IntegerType::I64, memarg)),
-        map(preceded(match_byte(0x3E), parse_memory_argument), |memarg| MemoryInstruction::Store32(memarg)),
+        alt((
+            map(
+                preceded(match_byte(0x28), parse_memory_argument),
+                |memarg| MemoryInstruction::Load(NumberType::I32, memarg),
+            ),
+            map(
+                preceded(match_byte(0x29), parse_memory_argument),
+                |memarg| MemoryInstruction::Load(NumberType::I64, memarg),
+            ),
+            map(
+                preceded(match_byte(0x2A), parse_memory_argument),
+                |memarg| MemoryInstruction::Load(NumberType::F32, memarg),
+            ),
+            map(
+                preceded(match_byte(0x2B), parse_memory_argument),
+                |memarg| MemoryInstruction::Load(NumberType::F64, memarg),
+            ),
+            map(
+                preceded(match_byte(0x2C), parse_memory_argument),
+                |memarg| MemoryInstruction::Load8(IntegerType::I32, SignExtension::Signed, memarg),
+            ),
+            map(
+                preceded(match_byte(0x2D), parse_memory_argument),
+                |memarg| {
+                    MemoryInstruction::Load8(IntegerType::I32, SignExtension::Unsigned, memarg)
+                },
+            ),
+            map(
+                preceded(match_byte(0x2E), parse_memory_argument),
+                |memarg| MemoryInstruction::Load16(IntegerType::I32, SignExtension::Signed, memarg),
+            ),
+            map(
+                preceded(match_byte(0x2F), parse_memory_argument),
+                |memarg| {
+                    MemoryInstruction::Load16(IntegerType::I32, SignExtension::Unsigned, memarg)
+                },
+            ),
+            map(
+                preceded(match_byte(0x30), parse_memory_argument),
+                |memarg| MemoryInstruction::Load8(IntegerType::I64, SignExtension::Signed, memarg),
+            ),
+            map(
+                preceded(match_byte(0x31), parse_memory_argument),
+                |memarg| {
+                    MemoryInstruction::Load8(IntegerType::I64, SignExtension::Unsigned, memarg)
+                },
+            ),
+            map(
+                preceded(match_byte(0x32), parse_memory_argument),
+                |memarg| MemoryInstruction::Load16(IntegerType::I64, SignExtension::Signed, memarg),
+            ),
+            map(
+                preceded(match_byte(0x33), parse_memory_argument),
+                |memarg| {
+                    MemoryInstruction::Load16(IntegerType::I64, SignExtension::Unsigned, memarg)
+                },
+            ),
+            map(
+                preceded(match_byte(0x34), parse_memory_argument),
+                |memarg| MemoryInstruction::Load32(SignExtension::Signed, memarg),
+            ),
+            map(
+                preceded(match_byte(0x35), parse_memory_argument),
+                |memarg| MemoryInstruction::Load32(SignExtension::Unsigned, memarg),
+            ),
+        )),
+        alt((
+            map(
+                preceded(match_byte(0x36), parse_memory_argument),
+                |memarg| MemoryInstruction::Store(NumberType::I32, memarg),
+            ),
+            map(
+                preceded(match_byte(0x37), parse_memory_argument),
+                |memarg| MemoryInstruction::Store(NumberType::I64, memarg),
+            ),
+            map(
+                preceded(match_byte(0x38), parse_memory_argument),
+                |memarg| MemoryInstruction::Store(NumberType::F32, memarg),
+            ),
+            map(
+                preceded(match_byte(0x39), parse_memory_argument),
+                |memarg| MemoryInstruction::Store(NumberType::F64, memarg),
+            ),
+            map(
+                preceded(match_byte(0x3A), parse_memory_argument),
+                |memarg| MemoryInstruction::Store8(IntegerType::I32, memarg),
+            ),
+            map(
+                preceded(match_byte(0x3B), parse_memory_argument),
+                |memarg| MemoryInstruction::Store16(IntegerType::I32, memarg),
+            ),
+            map(
+                preceded(match_byte(0x3C), parse_memory_argument),
+                |memarg| MemoryInstruction::Store8(IntegerType::I64, memarg),
+            ),
+            map(
+                preceded(match_byte(0x3D), parse_memory_argument),
+                |memarg| MemoryInstruction::Store16(IntegerType::I64, memarg),
+            ),
+            map(
+                preceded(match_byte(0x3E), parse_memory_argument),
+                |memarg| MemoryInstruction::Store32(memarg),
+            ),
+        )),
         map(tag([0x3F, 0x00]), |_| MemoryInstruction::Size),
         map(tag([0x40, 0x00]), |_| MemoryInstruction::Grow),
-        map(delimited(tag([0xFC, 8u8]), parse_u32, match_byte(0x00)), MemoryInstruction::Init),
-        map(preceded(tag([0xFC, 9u8]), parse_u32), MemoryInstruction::DataDrop),
+        map(
+            delimited(tag([0xFC, 8u8]), parse_u32, match_byte(0x00)),
+            MemoryInstruction::Init,
+        ),
+        map(
+            preceded(tag([0xFC, 9u8]), parse_u32),
+            MemoryInstruction::DataDrop,
+        ),
         map(tag([0xFC, 10u8, 0x00, 0x00]), |_| MemoryInstruction::Copy),
         map(tag([0xFC, 11u8, 0x00]), |_| MemoryInstruction::Fill),
     ))(input)
@@ -203,7 +284,9 @@ pub fn parse_memory_instruction(input: &[u8]) -> IResult<&[u8], MemoryInstructio
 ///
 /// See <https://webassembly.github.io/spec/core/binary/instructions.html#memory-instructions>
 pub fn parse_memory_argument(input: &[u8]) -> IResult<&[u8], MemoryArgument> {
-    map(tuple((parse_u32, parse_u32)), |(align, offset)| MemoryArgument::new(Some(align), offset))(input)
+    map(tuple((parse_u32, parse_u32)), |(align, offset)| {
+        MemoryArgument::new(Some(align), offset)
+    })(input)
 }
 
 /// Parses a WebAssembly numeric instruction from the input.

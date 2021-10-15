@@ -1,9 +1,9 @@
 use crate::parser::types::{parse_reference_type, parse_value_type};
-use crate::parser::values::{match_byte, parse_u32, parse_vector};
+use crate::parser::values::{match_byte, parse_s33, parse_u32, parse_vector};
 use crate::{
-    ControlInstruction, Expression, Instruction, IntegerType, MemoryArgument, MemoryInstruction,
-    NumberType, NumericInstruction, ParametricInstruction, ReferenceInstruction, SignExtension,
-    TableInstruction, VariableInstruction,
+    BlockType, ControlInstruction, Expression, Instruction, IntegerType, MemoryArgument,
+    MemoryInstruction, NumberType, NumericInstruction, ParametricInstruction, ReferenceInstruction,
+    SignExtension, TableInstruction, VariableInstruction,
 };
 use nom::branch::alt;
 use nom::bytes::complete::tag;
@@ -60,6 +60,75 @@ pub fn parse_control_instruction(input: &[u8]) -> IResult<&[u8], ControlInstruct
     alt((
         map(match_byte(0x00), |_| ControlInstruction::Unreachable),
         map(match_byte(0x01), |_| ControlInstruction::Nop),
+        map(
+            preceded(
+                match_byte(0x02),
+                tuple((parse_block_type, parse_expression)),
+            ),
+            |(kind, expression)| ControlInstruction::Block(kind, expression),
+        ),
+        map(
+            preceded(
+                match_byte(0x03),
+                tuple((parse_block_type, parse_expression)),
+            ),
+            |(kind, expression)| ControlInstruction::Loop(kind, expression),
+        ),
+        map(
+            preceded(
+                match_byte(0x04),
+                tuple((parse_block_type, parse_expression)),
+            ),
+            |(kind, expression)| ControlInstruction::If(kind, expression, None),
+        ),
+        map(
+            preceded(
+                match_byte(0x04),
+                tuple((
+                    parse_block_type,
+                    parse_expression_with_terminal(0x05),
+                    parse_expression,
+                )),
+            ),
+            |(kind, true_expression, false_expression)| {
+                ControlInstruction::If(kind, true_expression, Some(false_expression))
+            },
+        ),
+        map(
+            preceded(match_byte(0x0C), parse_u32),
+            ControlInstruction::Branch,
+        ),
+        map(
+            preceded(match_byte(0x0D), parse_u32),
+            ControlInstruction::BranchIf,
+        ),
+        map(
+            preceded(
+                match_byte(0x0E),
+                tuple((parse_vector(parse_u32), parse_u32)),
+            ),
+            |head, last| ControlInstruction::BranchTable(head, last),
+        ),
+        map(match_byte(0x0F), |_| ControlInstruction::Return),
+        map(
+            preceded(match_byte(0x10), parse_u32),
+            ControlInstruction::Call,
+        ),
+        map(
+            preceded(match_byte(0x11), tuple((parse_u32, parse_u32))),
+            |(type_index, table_index)| ControlInstruction::CallIndirect(type_index, table_index),
+        ),
+    ))(input)
+}
+
+/// Parses a WebAssembly control instruction's block type from the input.
+///
+/// See <https://webassembly.github.io/spec/core/binary/instructions.html#control-instructions>
+pub fn parse_block_type(input: &[u8]) -> IResult<&[u8], BlockType> {
+    alt((
+        map(match_byte(0x40), |_| BlockType::None),
+        map(parse_value_type, BlockType::ValueType),
+        map(parse_s33, BlockType::ValueType),
     ))(input)
 }
 

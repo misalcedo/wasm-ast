@@ -40,6 +40,14 @@ pub fn parse_u32(input: &[u8]) -> IResult<&[u8], u32> {
     Ok((remaining, result))
 }
 
+/// Parses an signed 33-bit integer using LEB128 (Little-Endian Base 128) encoding.
+///
+/// See <https://webassembly.github.io/spec/core/binary/values.html#integers>
+pub fn parse_s33(input: &[u8]) -> IResult<&[u8], i64> {
+    // TODO
+    Ok((input, 0))
+}
+
 /// Parses a WebAssembly name value.
 ///
 /// See <https://webassembly.github.io/spec/core/binary/values.html#names>

@@ -44,8 +44,18 @@ pub fn parse_u32(input: &[u8]) -> IResult<&[u8], u32> {
 ///
 /// See <https://webassembly.github.io/spec/core/binary/values.html#integers>
 pub fn parse_s33(input: &[u8]) -> IResult<&[u8], i64> {
-    // TODO
-    Ok((input, 0))
+    let (remaining, input) =
+        take_while_m_n(0, max_leb128_size::<u32>() - 1, |x| x & RADIX != 0)(input)?;
+    let (remaining, last) = take_while_m_n(1, 1, |x| x & RADIX == 0)(remaining)?;
+    let mut result = 0;
+
+    for (index, byte) in input.iter().chain(last.iter()).enumerate() {
+        let part = (byte & !RADIX) as u32;
+
+        result |= part << (index * 7);
+    }
+
+    Ok((remaining, result))
 }
 
 /// Parses a WebAssembly name value.

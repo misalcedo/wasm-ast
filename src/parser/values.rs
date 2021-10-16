@@ -3,12 +3,13 @@ use nom::bytes::complete::{tag, take, take_while_m_n};
 use nom::combinator::{map, map_res};
 use nom::multi::fold_many_m_n;
 use nom::{IResult, Parser};
+use std::convert::TryFrom;
 use std::mem::size_of;
 
 /// The radix (i.e. base) for LEB128 encoding.
 const RADIX: u8 = 128;
 
-/// Maximum size of a n LEB128-encoded integer type
+/// Maximum size of a LEB128-encoded integer type
 ///
 /// See <https://en.wikipedia.org/wiki/LEB128>
 const fn max_leb128_size<T>() -> usize {
@@ -40,22 +41,27 @@ pub fn parse_u32(input: &[u8]) -> IResult<&[u8], u32> {
     Ok((remaining, result))
 }
 
-/// Parses an signed 33-bit integer using LEB128 (Little-Endian Base 128) encoding.
+/// Parses a signed 33-bit integer using LEB128 (Little-Endian Base 128) encoding.
 ///
 /// See <https://webassembly.github.io/spec/core/binary/values.html#integers>
-pub fn parse_s33(input: &[u8]) -> IResult<&[u8], i64> {
-    let (remaining, input) =
-        take_while_m_n(0, max_leb128_size::<u32>() - 1, |x| x & RADIX != 0)(input)?;
+pub fn parse_s33(input: &[u8]) -> IResult<&[u8], u32> {
+    let (remaining, input) = take_while_m_n(0, 4, |x| x & RADIX != 0)(input)?;
     let (remaining, last) = take_while_m_n(1, 1, |x| x & RADIX == 0)(remaining)?;
     let mut result = 0;
 
     for (index, byte) in input.iter().chain(last.iter()).enumerate() {
-        let part = (byte & !RADIX) as u32;
+        let part = (byte & !RADIX) as i64;
 
         result |= part << (index * 7);
     }
 
-    Ok((remaining, result))
+    if let Some(byte) = last.iter().next() {
+        if byte & 0x40 == 0x40 {
+            result |= !0 << ((input.len() + last.len()) * 7);
+        }
+    }
+
+    map_res(move |i| Ok((i, result)), u32::try_from)(remaining)
 }
 
 /// Parses a WebAssembly name value.

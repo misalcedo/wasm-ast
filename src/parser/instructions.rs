@@ -107,7 +107,7 @@ pub fn parse_control_instruction(input: &[u8]) -> IResult<&[u8], ControlInstruct
                 match_byte(0x0E),
                 tuple((parse_vector(parse_u32), parse_u32)),
             ),
-            |head, last| ControlInstruction::BranchTable(head, last),
+            |(head, last)| ControlInstruction::BranchTable(head, last),
         ),
         map(match_byte(0x0F), |_| ControlInstruction::Return),
         map(
@@ -128,7 +128,7 @@ pub fn parse_block_type(input: &[u8]) -> IResult<&[u8], BlockType> {
     alt((
         map(match_byte(0x40), |_| BlockType::None),
         map(parse_value_type, BlockType::ValueType),
-        map(parse_s33, BlockType::ValueType),
+        map(parse_s33, |index| BlockType::Index(index as u32)),
     ))(input)
 }
 

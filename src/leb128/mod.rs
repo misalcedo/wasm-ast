@@ -33,7 +33,6 @@ trait Bits: Copy + Sized {
     /// Sets the given bit to one.
     fn one_bit_at(&self, bit: usize) -> Self;
 
-
     /// Gets the given bit at the index.
     fn bit_at(&self, bit: usize) -> bool;
 }
@@ -138,7 +137,7 @@ where
 
     if let Some(byte) = input.iter().last() {
         if byte.bit_at(SIGN_BIT) {
-            result |= !0 << length * GROUP_BITS;
+            result |= !0 << (length * GROUP_BITS);
         }
     }
 

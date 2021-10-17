@@ -136,10 +136,13 @@ pub fn parse_element_section(input: &[u8]) -> IResult<&[u8], Option<Vec<Element>
     ))(input)
 }
 
+/// Type alias for a code section entry.
+type Code = Vec<(ResultType, Expression)>;
+
 /// Parses a WebAssembly code section.
 ///
 /// See <https://webassembly.github.io/spec/core/binary/modules.html#code-section>
-pub fn parse_code_section(input: &[u8]) -> IResult<&[u8], Option<Vec<(ResultType, Expression)>>> {
+pub fn parse_code_section(input: &[u8]) -> IResult<&[u8], Option<Code>> {
     opt(parse_section(ModuleSection::Code, parse_vector(parse_code)))(input)
 }
 

@@ -382,12 +382,41 @@ pub fn parse_numeric_instruction(input: &[u8]) -> IResult<&[u8], NumericInstruct
                 NumericInstruction::F64Constant,
             ),
         )),
-        map(match_byte(0x45), |_| {
-            NumericInstruction::EqualToZero(IntegerType::I32)
-        }),
-        map(match_byte(0x46), |_| {
-            NumericInstruction::Equal(NumberType::I32)
-        }),
+        alt((
+            map(match_byte(0x45), |_| {
+                NumericInstruction::EqualToZero(IntegerType::I32)
+            }),
+            map(match_byte(0x46), |_| {
+                NumericInstruction::Equal(NumberType::I32)
+            }),
+            map(match_byte(0x47), |_| {
+                NumericInstruction::NotEqual(IntegerType::I32)
+            }),
+            map(match_byte(0x48), |_| {
+                NumericInstruction::LessThanInteger(IntegerType::I32, SignExtension::Signed)
+            }),
+            map(match_byte(0x49), |_| {
+                NumericInstruction::LessThanInteger(IntegerType::I32, SignExtension::Unsigned)
+            }),
+            map(match_byte(0x4A), |_| {
+                NumericInstruction::GreaterThanInteger(IntegerType::I32, SignExtension::Signed)
+            }),
+            map(match_byte(0x4B), |_| {
+                NumericInstruction::GreaterThanInteger(IntegerType::I32, SignExtension::Unsigned)
+            }),
+            map(match_byte(0x4C), |_| {
+                NumericInstruction::LessThanOrEqualToInteger(IntegerType::I32, SignExtension::Signed)
+            }),
+            map(match_byte(0x4D), |_| {
+                NumericInstruction::LessThanOrEqualToInteger(IntegerType::I32, SignExtension::Unsigned)
+            }),
+            map(match_byte(0x4E), |_| {
+                NumericInstruction::GreaterThanOrEqualToInteger(IntegerType::I32, SignExtension::Signed)
+            }),
+            map(match_byte(0x4F), |_| {
+                NumericInstruction::GreaterThanOrEqualToInteger(IntegerType::I32, SignExtension::Unsigned)
+            }),
+        )),
     ))(input)
 }
 

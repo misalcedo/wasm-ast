@@ -492,6 +492,118 @@ pub fn parse_numeric_instruction(input: &[u8]) -> IResult<&[u8], NumericInstruct
                 NumericInstruction::GreaterThanOrEqualToFloat(FloatType::F64)
             }),
         )),
+        alt((
+            map(match_byte(0x67), |_| {
+                NumericInstruction::CountLeadingZeros(IntegerType::I32)
+            }),
+            map(match_byte(0x68), |_| {
+                NumericInstruction::CountTrailingZeros(IntegerType::I32)
+            }),
+            map(match_byte(0x69), |_| {
+                NumericInstruction::CountOnes(IntegerType::I32)
+            }),
+            map(match_byte(0x6A), |_| {
+                NumericInstruction::Add(NumberType::I32)
+            }),
+            map(match_byte(0x6B), |_| {
+                NumericInstruction::Subtract(NumberType::I32)
+            }),
+            map(match_byte(0x6C), |_| {
+                NumericInstruction::Multiply(NumberType::I32)
+            }),
+            map(match_byte(0x6D), |_| {
+                NumericInstruction::DivideInteger(IntegerType::I32, SignExtension::Signed)
+            }),
+            map(match_byte(0x6E), |_| {
+                NumericInstruction::DivideInteger(IntegerType::I32, SignExtension::Unsigned)
+            }),
+            map(match_byte(0x6F), |_| {
+                NumericInstruction::Remainder(IntegerType::I32, SignExtension::Signed)
+            }),
+            map(match_byte(0x70), |_| {
+                NumericInstruction::Remainder(IntegerType::I32, SignExtension::Unsigned)
+            }),
+            map(match_byte(0x71), |_| {
+                NumericInstruction::And(IntegerType::I32)
+            }),
+            map(match_byte(0x72), |_| {
+                NumericInstruction::Or(IntegerType::I32)
+            }),
+            map(match_byte(0x73), |_| {
+                NumericInstruction::Xor(IntegerType::I32)
+            }),
+            map(match_byte(0x74), |_| {
+                NumericInstruction::ShiftLeft(IntegerType::I32)
+            }),
+            map(match_byte(0x75), |_| {
+                NumericInstruction::ShiftRight(IntegerType::I32, SignExtension::Signed)
+            }),
+            map(match_byte(0x76), |_| {
+                NumericInstruction::ShiftRight(IntegerType::I32, SignExtension::Unsigned)
+            }),
+            map(match_byte(0x77), |_| {
+                NumericInstruction::RotateLeft(IntegerType::I32)
+            }),
+            map(match_byte(0x78), |_| {
+                NumericInstruction::RotateRight(IntegerType::I32)
+            }),
+        )),
+        alt((
+            map(match_byte(0x79), |_| {
+                NumericInstruction::CountLeadingZeros(IntegerType::I64)
+            }),
+            map(match_byte(0x7A), |_| {
+                NumericInstruction::CountTrailingZeros(IntegerType::I64)
+            }),
+            map(match_byte(0x7B), |_| {
+                NumericInstruction::CountOnes(IntegerType::I64)
+            }),
+            map(match_byte(0x7C), |_| {
+                NumericInstruction::Add(NumberType::I64)
+            }),
+            map(match_byte(0x7D), |_| {
+                NumericInstruction::Subtract(NumberType::I64)
+            }),
+            map(match_byte(0x7E), |_| {
+                NumericInstruction::Multiply(NumberType::I64)
+            }),
+            map(match_byte(0x7F), |_| {
+                NumericInstruction::DivideInteger(IntegerType::I64, SignExtension::Signed)
+            }),
+            map(match_byte(0x80), |_| {
+                NumericInstruction::DivideInteger(IntegerType::I64, SignExtension::Unsigned)
+            }),
+            map(match_byte(0x81), |_| {
+                NumericInstruction::Remainder(IntegerType::I64, SignExtension::Signed)
+            }),
+            map(match_byte(0x82), |_| {
+                NumericInstruction::Remainder(IntegerType::I64, SignExtension::Unsigned)
+            }),
+            map(match_byte(0x83), |_| {
+                NumericInstruction::And(IntegerType::I64)
+            }),
+            map(match_byte(0x84), |_| {
+                NumericInstruction::Or(IntegerType::I64)
+            }),
+            map(match_byte(0x85), |_| {
+                NumericInstruction::Xor(IntegerType::I64)
+            }),
+            map(match_byte(0x86), |_| {
+                NumericInstruction::ShiftLeft(IntegerType::I64)
+            }),
+            map(match_byte(0x87), |_| {
+                NumericInstruction::ShiftRight(IntegerType::I64, SignExtension::Signed)
+            }),
+            map(match_byte(0x88), |_| {
+                NumericInstruction::ShiftRight(IntegerType::I64, SignExtension::Unsigned)
+            }),
+            map(match_byte(0x89), |_| {
+                NumericInstruction::RotateLeft(IntegerType::I64)
+            }),
+            map(match_byte(0x8A), |_| {
+                NumericInstruction::RotateRight(IntegerType::I64)
+            }),
+        )),
     ))(input)
 }
 

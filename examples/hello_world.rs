@@ -16,7 +16,7 @@ fn main() {
         ResultType::empty(),
         vec![
             0i32.into(),
-            message.len().into(),
+            (message.len() as u32).into(),
             ControlInstruction::Call(0).into(),
         ]
         .into(),

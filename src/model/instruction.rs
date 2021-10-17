@@ -46,7 +46,7 @@ pub enum Instruction {
 /// use wasm_ast::{NumericInstruction, Instruction};
 ///
 /// assert_eq!(
-///     Instruction::Numeric(NumericInstruction::I32Constant(42i32 as u32)),
+///     Instruction::Numeric(NumericInstruction::I32Constant(42)),
 ///     42i32.into()
 /// );
 /// assert_eq!(
@@ -1055,7 +1055,7 @@ pub enum SignExtension {
 /// assert_eq!(
 ///     expression,
 ///     Expression::new(vec![
-///         Instruction::Numeric(NumericInstruction::I32Constant(0 as u32)),
+///         Instruction::Numeric(NumericInstruction::I32Constant(0 as i32)),
 ///         Instruction::Control(ControlInstruction::Nop),
 ///     ])
 /// );

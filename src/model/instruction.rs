@@ -285,9 +285,9 @@ pub enum Instruction {
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum NumericInstruction {
     /// i32.const
-    I32Constant(u32),
+    I32Constant(i32),
     /// i64.const
-    I64Constant(u64),
+    I64Constant(i64),
     /// f32.const
     F32Constant(f32),
     /// f64.const
@@ -400,55 +400,43 @@ impl From<NumericInstruction> for Instruction {
 
 impl From<i8> for Instruction {
     fn from(value: i8) -> Self {
-        Self::Numeric(NumericInstruction::I32Constant(value as u32))
+        Self::Numeric(NumericInstruction::I32Constant(value as i32))
     }
 }
 
 impl From<i16> for Instruction {
     fn from(value: i16) -> Self {
-        Self::Numeric(NumericInstruction::I32Constant(value as u32))
+        Self::Numeric(NumericInstruction::I32Constant(value as i32))
     }
 }
 
 impl From<i32> for Instruction {
     fn from(value: i32) -> Self {
-        Self::Numeric(NumericInstruction::I32Constant(value as u32))
+        Self::Numeric(NumericInstruction::I32Constant(value))
     }
 }
 
 impl From<i64> for Instruction {
     fn from(value: i64) -> Self {
-        Self::Numeric(NumericInstruction::I64Constant(value as u64))
+        Self::Numeric(NumericInstruction::I64Constant(value))
     }
 }
 
 impl From<u8> for Instruction {
     fn from(value: u8) -> Self {
-        Self::Numeric(NumericInstruction::I32Constant(value as u32))
+        Self::Numeric(NumericInstruction::I32Constant(value as i32))
     }
 }
 
 impl From<u16> for Instruction {
     fn from(value: u16) -> Self {
-        Self::Numeric(NumericInstruction::I32Constant(value as u32))
+        Self::Numeric(NumericInstruction::I32Constant(value as i32))
     }
 }
 
 impl From<u32> for Instruction {
     fn from(value: u32) -> Self {
-        Self::Numeric(NumericInstruction::I32Constant(value))
-    }
-}
-
-impl From<u64> for Instruction {
-    fn from(value: u64) -> Self {
-        Self::Numeric(NumericInstruction::I64Constant(value))
-    }
-}
-
-impl From<usize> for Instruction {
-    fn from(value: usize) -> Self {
-        Self::Numeric(NumericInstruction::I32Constant(value as u32))
+        Self::Numeric(NumericInstruction::I64Constant(value as i64))
     }
 }
 

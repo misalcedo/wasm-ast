@@ -1,5 +1,5 @@
 use crate::parser::types::{parse_reference_type, parse_value_type};
-use crate::parser::values::{match_byte, parse_s33, parse_u32, parse_vector};
+use crate::parser::values::{match_byte, parse_s32, parse_s33, parse_s64, parse_u32, parse_vector};
 use crate::{
     BlockType, ControlInstruction, Expression, Instruction, IntegerType, MemoryArgument,
     MemoryInstruction, NumberType, NumericInstruction, ParametricInstruction, ReferenceInstruction,
@@ -9,6 +9,7 @@ use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::combinator::map;
 use nom::multi::fold_many0;
+use nom::number::complete::{le_f32, le_f64};
 use nom::sequence::{delimited, preceded, terminated, tuple};
 use nom::IResult;
 
@@ -363,6 +364,24 @@ pub fn parse_memory_argument(input: &[u8]) -> IResult<&[u8], MemoryArgument> {
 /// See <https://webassembly.github.io/spec/core/binary/instructions.html#numeric-instructions>
 pub fn parse_numeric_instruction(input: &[u8]) -> IResult<&[u8], NumericInstruction> {
     alt((
+        alt((
+            map(
+                preceded(match_byte(0x41), parse_s32),
+                NumericInstruction::I32Constant,
+            ),
+            map(
+                preceded(match_byte(0x42), parse_s64),
+                NumericInstruction::I64Constant,
+            ),
+            map(
+                preceded(match_byte(0x43), le_f32),
+                NumericInstruction::F32Constant,
+            ),
+            map(
+                preceded(match_byte(0x44), le_f64),
+                NumericInstruction::F64Constant,
+            ),
+        )),
         map(match_byte(0x45), |_| {
             NumericInstruction::EqualToZero(IntegerType::I32)
         }),

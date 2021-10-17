@@ -604,6 +604,94 @@ pub fn parse_numeric_instruction(input: &[u8]) -> IResult<&[u8], NumericInstruct
                 NumericInstruction::RotateRight(IntegerType::I64)
             }),
         )),
+        alt((
+            map(match_byte(0x8B), |_| {
+                NumericInstruction::AbsoluteValue(FloatType::F32)
+            }),
+            map(match_byte(0x8C), |_| {
+                NumericInstruction::Negate(FloatType::F32)
+            }),
+            map(match_byte(0x8D), |_| {
+                NumericInstruction::Ceiling(FloatType::F32)
+            }),
+            map(match_byte(0x8E), |_| {
+                NumericInstruction::Floor(FloatType::F32)
+            }),
+            map(match_byte(0x8F), |_| {
+                NumericInstruction::Truncate(FloatType::F32)
+            }),
+            map(match_byte(0x90), |_| {
+                NumericInstruction::Nearest(FloatType::F32)
+            }),
+            map(match_byte(0x91), |_| {
+                NumericInstruction::SquareRoot(FloatType::F32)
+            }),
+            map(match_byte(0x92), |_| {
+                NumericInstruction::Add(NumberType::F32)
+            }),
+            map(match_byte(0x93), |_| {
+                NumericInstruction::Subtract(NumberType::F32)
+            }),
+            map(match_byte(0x94), |_| {
+                NumericInstruction::Multiply(NumberType::F32)
+            }),
+            map(match_byte(0x95), |_| {
+                NumericInstruction::DivideFloat(FloatType::F32)
+            }),
+            map(match_byte(0x96), |_| {
+                NumericInstruction::Minimum(FloatType::F32)
+            }),
+            map(match_byte(0x97), |_| {
+                NumericInstruction::Maximum(FloatType::F32)
+            }),
+            map(match_byte(0x98), |_| {
+                NumericInstruction::CopySign(FloatType::F32)
+            }),
+        )),
+        alt((
+            map(match_byte(0x99), |_| {
+                NumericInstruction::AbsoluteValue(FloatType::F64)
+            }),
+            map(match_byte(0x9A), |_| {
+                NumericInstruction::Negate(FloatType::F64)
+            }),
+            map(match_byte(0x9B), |_| {
+                NumericInstruction::Ceiling(FloatType::F64)
+            }),
+            map(match_byte(0x9C), |_| {
+                NumericInstruction::Floor(FloatType::F64)
+            }),
+            map(match_byte(0x9D), |_| {
+                NumericInstruction::Truncate(FloatType::F64)
+            }),
+            map(match_byte(0x9E), |_| {
+                NumericInstruction::Nearest(FloatType::F64)
+            }),
+            map(match_byte(0x9F), |_| {
+                NumericInstruction::SquareRoot(FloatType::F64)
+            }),
+            map(match_byte(0xA0), |_| {
+                NumericInstruction::Add(NumberType::F64)
+            }),
+            map(match_byte(0xA1), |_| {
+                NumericInstruction::Subtract(NumberType::F64)
+            }),
+            map(match_byte(0xA2), |_| {
+                NumericInstruction::Multiply(NumberType::F64)
+            }),
+            map(match_byte(0xA3), |_| {
+                NumericInstruction::DivideFloat(FloatType::F64)
+            }),
+            map(match_byte(0xA4), |_| {
+                NumericInstruction::Minimum(FloatType::F64)
+            }),
+            map(match_byte(0xA5), |_| {
+                NumericInstruction::Maximum(FloatType::F64)
+            }),
+            map(match_byte(0xA6), |_| {
+                NumericInstruction::CopySign(FloatType::F64)
+            }),
+        )),
     ))(input)
 }
 

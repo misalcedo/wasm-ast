@@ -716,6 +716,24 @@ pub fn parse_numeric_instruction(input: &[u8]) -> IResult<&[u8], NumericInstruct
                 NumericInstruction::CopySign(FloatType::F64)
             }),
         )),
+        // TODO: Conversions
+        alt((
+            map(match_byte(0xC0), |_| {
+                NumericInstruction::ExtendSigned8(IntegerType::I32)
+            }),
+            map(match_byte(0xC1), |_| {
+                NumericInstruction::ExtendSigned16(IntegerType::I32)
+            }),
+            map(match_byte(0xC2), |_| {
+                NumericInstruction::ExtendSigned8(IntegerType::I64)
+            }),
+            map(match_byte(0xC3), |_| {
+                NumericInstruction::ExtendSigned16(IntegerType::I64)
+            }),
+            map(match_byte(0xC4), |_| {
+                NumericInstruction::ExtendSigned32
+            }),
+        )),
         alt((
             map(tag([0xFC, 0u8]), |_| {
                 NumericInstruction::ConvertAndTruncateWithSaturation(

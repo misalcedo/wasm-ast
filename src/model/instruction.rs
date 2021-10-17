@@ -50,8 +50,8 @@ pub enum Instruction {
 ///     42i32.into()
 /// );
 /// assert_eq!(
-///     Instruction::Numeric(NumericInstruction::I64Constant(42u64)),
-///     42u64.into()
+///     Instruction::Numeric(NumericInstruction::I64Constant(42i64)),
+///     42i64.into()
 /// );
 /// assert_eq!(
 ///     Instruction::Numeric(NumericInstruction::F32Constant(0.1)),
@@ -1060,7 +1060,7 @@ pub enum SignExtension {
 ///     ])
 /// );
 /// assert_eq!(expression.instructions(), &[
-///     Instruction::Numeric(NumericInstruction::I32Constant(0 as u32)),
+///     Instruction::Numeric(NumericInstruction::I32Constant(0)),
 ///     Instruction::Control(ControlInstruction::Nop),
 /// ]);
 /// assert_eq!(expression.len(), 2);
@@ -1068,7 +1068,7 @@ pub enum SignExtension {
 /// assert_eq!(
 ///     expression,
 ///     vec![
-///         Instruction::Numeric(NumericInstruction::I32Constant(0 as u32)),
+///         Instruction::Numeric(NumericInstruction::I32Constant(0)),
 ///         Instruction::Control(ControlInstruction::Nop),
 ///     ].into()
 /// );

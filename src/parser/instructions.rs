@@ -332,7 +332,7 @@ pub fn parse_memory_instruction(input: &[u8]) -> IResult<&[u8], MemoryInstructio
             ),
             map(
                 preceded(match_byte(0x3E), parse_memory_argument),
-                |memarg| MemoryInstruction::Store32(memarg),
+                MemoryInstruction::Store32,
             ),
         )),
         map(tag([0x3F, 0x00]), |_| MemoryInstruction::Size),

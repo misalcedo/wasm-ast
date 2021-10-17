@@ -417,6 +417,41 @@ pub fn parse_numeric_instruction(input: &[u8]) -> IResult<&[u8], NumericInstruct
                 NumericInstruction::GreaterThanOrEqualToInteger(IntegerType::I32, SignExtension::Unsigned)
             }),
         )),
+        alt((
+            map(match_byte(0x50), |_| {
+                NumericInstruction::EqualToZero(IntegerType::I64)
+            }),
+            map(match_byte(0x51), |_| {
+                NumericInstruction::Equal(NumberType::I64)
+            }),
+            map(match_byte(0x52), |_| {
+                NumericInstruction::NotEqual(NumberType::I64)
+            }),
+            map(match_byte(0x53), |_| {
+                NumericInstruction::LessThanInteger(IntegerType::I64, SignExtension::Signed)
+            }),
+            map(match_byte(0x54), |_| {
+                NumericInstruction::LessThanInteger(IntegerType::I64, SignExtension::Unsigned)
+            }),
+            map(match_byte(0x55), |_| {
+                NumericInstruction::GreaterThanInteger(IntegerType::I64, SignExtension::Signed)
+            }),
+            map(match_byte(0x56), |_| {
+                NumericInstruction::GreaterThanInteger(IntegerType::I64, SignExtension::Unsigned)
+            }),
+            map(match_byte(0x57), |_| {
+                NumericInstruction::LessThanOrEqualToInteger(IntegerType::I64, SignExtension::Signed)
+            }),
+            map(match_byte(0x58), |_| {
+                NumericInstruction::LessThanOrEqualToInteger(IntegerType::I64, SignExtension::Unsigned)
+            }),
+            map(match_byte(0x59), |_| {
+                NumericInstruction::GreaterThanOrEqualToInteger(IntegerType::I64, SignExtension::Signed)
+            }),
+            map(match_byte(0x5A), |_| {
+                NumericInstruction::GreaterThanOrEqualToInteger(IntegerType::I64, SignExtension::Unsigned)
+            }),
+        )),
     ))(input)
 }
 

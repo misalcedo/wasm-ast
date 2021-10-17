@@ -1,7 +1,7 @@
 use crate::parser::types::{parse_reference_type, parse_value_type};
 use crate::parser::values::{match_byte, parse_s32, parse_s33, parse_s64, parse_u32, parse_vector};
 use crate::{
-    BlockType, ControlInstruction, Expression, Instruction, IntegerType, MemoryArgument,
+    BlockType, ControlInstruction, Expression, FloatType, Instruction, IntegerType, MemoryArgument,
     MemoryInstruction, NumberType, NumericInstruction, ParametricInstruction, ReferenceInstruction,
     SignExtension, TableInstruction, VariableInstruction,
 };
@@ -450,6 +450,46 @@ pub fn parse_numeric_instruction(input: &[u8]) -> IResult<&[u8], NumericInstruct
             }),
             map(match_byte(0x5A), |_| {
                 NumericInstruction::GreaterThanOrEqualToInteger(IntegerType::I64, SignExtension::Unsigned)
+            }),
+        )),
+        alt((
+            map(match_byte(0x5B), |_| {
+                NumericInstruction::Equal(NumberType::F32)
+            }),
+            map(match_byte(0x5C), |_| {
+                NumericInstruction::NotEqual(NumberType::F32)
+            }),
+            map(match_byte(0x5D), |_| {
+                NumericInstruction::LessThanFloat(FloatType::F32)
+            }),
+            map(match_byte(0x5E), |_| {
+                NumericInstruction::GreaterThanFloat(FloatType::F32)
+            }),
+            map(match_byte(0x5F), |_| {
+                NumericInstruction::LessThanOrEqualToFloat(FloatType::F32)
+            }),
+            map(match_byte(0x60), |_| {
+                NumericInstruction::GreaterThanOrEqualToFloat(FloatType::F32)
+            }),
+        )),
+        alt((
+            map(match_byte(0x61), |_| {
+                NumericInstruction::Equal(NumberType::F64)
+            }),
+            map(match_byte(0x62), |_| {
+                NumericInstruction::NotEqual(NumberType::F64)
+            }),
+            map(match_byte(0x63), |_| {
+                NumericInstruction::LessThanFloat(FloatType::F64)
+            }),
+            map(match_byte(0x64), |_| {
+                NumericInstruction::GreaterThanFloat(FloatType::F64)
+            }),
+            map(match_byte(0x65), |_| {
+                NumericInstruction::LessThanOrEqualToFloat(FloatType::F64)
+            }),
+            map(match_byte(0x66), |_| {
+                NumericInstruction::GreaterThanOrEqualToFloat(FloatType::F64)
             }),
         )),
     ))(input)

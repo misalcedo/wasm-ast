@@ -390,7 +390,7 @@ pub fn parse_numeric_instruction(input: &[u8]) -> IResult<&[u8], NumericInstruct
                 NumericInstruction::Equal(NumberType::I32)
             }),
             map(match_byte(0x47), |_| {
-                NumericInstruction::NotEqual(IntegerType::I32)
+                NumericInstruction::NotEqual(NumberType::I32)
             }),
             map(match_byte(0x48), |_| {
                 NumericInstruction::LessThanInteger(IntegerType::I32, SignExtension::Signed)

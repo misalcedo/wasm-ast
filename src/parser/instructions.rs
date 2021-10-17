@@ -405,16 +405,28 @@ pub fn parse_numeric_instruction(input: &[u8]) -> IResult<&[u8], NumericInstruct
                 NumericInstruction::GreaterThanInteger(IntegerType::I32, SignExtension::Unsigned)
             }),
             map(match_byte(0x4C), |_| {
-                NumericInstruction::LessThanOrEqualToInteger(IntegerType::I32, SignExtension::Signed)
+                NumericInstruction::LessThanOrEqualToInteger(
+                    IntegerType::I32,
+                    SignExtension::Signed,
+                )
             }),
             map(match_byte(0x4D), |_| {
-                NumericInstruction::LessThanOrEqualToInteger(IntegerType::I32, SignExtension::Unsigned)
+                NumericInstruction::LessThanOrEqualToInteger(
+                    IntegerType::I32,
+                    SignExtension::Unsigned,
+                )
             }),
             map(match_byte(0x4E), |_| {
-                NumericInstruction::GreaterThanOrEqualToInteger(IntegerType::I32, SignExtension::Signed)
+                NumericInstruction::GreaterThanOrEqualToInteger(
+                    IntegerType::I32,
+                    SignExtension::Signed,
+                )
             }),
             map(match_byte(0x4F), |_| {
-                NumericInstruction::GreaterThanOrEqualToInteger(IntegerType::I32, SignExtension::Unsigned)
+                NumericInstruction::GreaterThanOrEqualToInteger(
+                    IntegerType::I32,
+                    SignExtension::Unsigned,
+                )
             }),
         )),
         alt((
@@ -440,16 +452,28 @@ pub fn parse_numeric_instruction(input: &[u8]) -> IResult<&[u8], NumericInstruct
                 NumericInstruction::GreaterThanInteger(IntegerType::I64, SignExtension::Unsigned)
             }),
             map(match_byte(0x57), |_| {
-                NumericInstruction::LessThanOrEqualToInteger(IntegerType::I64, SignExtension::Signed)
+                NumericInstruction::LessThanOrEqualToInteger(
+                    IntegerType::I64,
+                    SignExtension::Signed,
+                )
             }),
             map(match_byte(0x58), |_| {
-                NumericInstruction::LessThanOrEqualToInteger(IntegerType::I64, SignExtension::Unsigned)
+                NumericInstruction::LessThanOrEqualToInteger(
+                    IntegerType::I64,
+                    SignExtension::Unsigned,
+                )
             }),
             map(match_byte(0x59), |_| {
-                NumericInstruction::GreaterThanOrEqualToInteger(IntegerType::I64, SignExtension::Signed)
+                NumericInstruction::GreaterThanOrEqualToInteger(
+                    IntegerType::I64,
+                    SignExtension::Signed,
+                )
             }),
             map(match_byte(0x5A), |_| {
-                NumericInstruction::GreaterThanOrEqualToInteger(IntegerType::I64, SignExtension::Unsigned)
+                NumericInstruction::GreaterThanOrEqualToInteger(
+                    IntegerType::I64,
+                    SignExtension::Unsigned,
+                )
             }),
         )),
         alt((
@@ -690,6 +714,64 @@ pub fn parse_numeric_instruction(input: &[u8]) -> IResult<&[u8], NumericInstruct
             }),
             map(match_byte(0xA6), |_| {
                 NumericInstruction::CopySign(FloatType::F64)
+            }),
+        )),
+        alt((
+            map(tag([0xFC, 0u8]), |_| {
+                NumericInstruction::ConvertAndTruncateWithSaturation(
+                    IntegerType::I32,
+                    FloatType::F32,
+                    SignExtension::Signed,
+                )
+            }),
+            map(tag([0xFC, 1u8]), |_| {
+                NumericInstruction::ConvertAndTruncateWithSaturation(
+                    IntegerType::I32,
+                    FloatType::F32,
+                    SignExtension::Unsigned,
+                )
+            }),
+            map(tag([0xFC, 2u8]), |_| {
+                NumericInstruction::ConvertAndTruncateWithSaturation(
+                    IntegerType::I32,
+                    FloatType::F64,
+                    SignExtension::Signed,
+                )
+            }),
+            map(tag([0xFC, 3u8]), |_| {
+                NumericInstruction::ConvertAndTruncateWithSaturation(
+                    IntegerType::I32,
+                    FloatType::F64,
+                    SignExtension::Unsigned,
+                )
+            }),
+            map(tag([0xFC, 4u8]), |_| {
+                NumericInstruction::ConvertAndTruncateWithSaturation(
+                    IntegerType::I64,
+                    FloatType::F32,
+                    SignExtension::Signed,
+                )
+            }),
+            map(tag([0xFC, 5u8]), |_| {
+                NumericInstruction::ConvertAndTruncateWithSaturation(
+                    IntegerType::I64,
+                    FloatType::F32,
+                    SignExtension::Unsigned,
+                )
+            }),
+            map(tag([0xFC, 6u8]), |_| {
+                NumericInstruction::ConvertAndTruncateWithSaturation(
+                    IntegerType::I64,
+                    FloatType::F64,
+                    SignExtension::Signed,
+                )
+            }),
+            map(tag([0xFC, 7u8]), |_| {
+                NumericInstruction::ConvertAndTruncateWithSaturation(
+                    IntegerType::I64,
+                    FloatType::F64,
+                    SignExtension::Unsigned,
+                )
             }),
         )),
     ))(input)

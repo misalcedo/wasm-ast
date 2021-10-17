@@ -92,8 +92,8 @@ pub enum FloatType {
 /// ```rust
 /// use wasm_ast::{ValueType, ReferenceType};
 ///
-/// assert_eq!(ValueType::Function, ReferenceType::Function.into());
-/// assert_eq!(ValueType::External, ReferenceType::External.into());
+/// assert_eq!(ValueType::FunctionReference, ReferenceType::Function.into());
+/// assert_eq!(ValueType::ExternalReference, ReferenceType::External.into());
 /// ```
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum ReferenceType {
@@ -118,8 +118,8 @@ pub enum ReferenceType {
 /// assert_eq!(ValueType::F32, NumberType::F32.into());
 /// assert_eq!(ValueType::F64, FloatType::F64.into());
 /// assert_eq!(ValueType::F64, NumberType::F64.into());
-/// assert_eq!(ValueType::Function, ReferenceType::Function.into());
-/// assert_eq!(ValueType::External, ReferenceType::External.into());
+/// assert_eq!(ValueType::FunctionReference, ReferenceType::Function.into());
+/// assert_eq!(ValueType::ExternalReference, ReferenceType::External.into());
 /// ```
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum ValueType {
@@ -127,8 +127,8 @@ pub enum ValueType {
     I64,
     F32,
     F64,
-    Function,
-    External,
+    FunctionReference,
+    ExternalReference,
 }
 
 impl<T> From<T> for ValueType
@@ -148,8 +148,8 @@ where
 impl From<ReferenceType> for ValueType {
     fn from(kind: ReferenceType) -> Self {
         match kind {
-            ReferenceType::Function => ValueType::Function,
-            ReferenceType::External => ValueType::External,
+            ReferenceType::Function => ValueType::FunctionReference,
+            ReferenceType::External => ValueType::ExternalReference,
         }
     }
 }
@@ -194,8 +194,8 @@ impl From<ReferenceType> for ValueType {
 ///         ValueType::I64,
 ///         ValueType::F32,
 ///         ValueType::F64,
-///         ValueType::Function,
-///         ValueType::External,
+///         ValueType::FunctionReference,
+///         ValueType::ExternalReference,
 ///     ]
 /// );
 /// assert_eq!(
@@ -205,8 +205,8 @@ impl From<ReferenceType> for ValueType {
 ///         ValueType::I64,
 ///         ValueType::F32,
 ///         ValueType::F64,
-///         ValueType::Function,
-///         ValueType::External,
+///         ValueType::FunctionReference,
+///         ValueType::ExternalReference,
 ///     ].into()
 /// );
 /// ```
@@ -462,7 +462,7 @@ impl From<Limit> for MemoryType {
 /// use wasm_ast::{Limit, TableType, ReferenceType};
 ///
 /// let limit = Limit::unbounded(0);
-/// let table_type = TableType::new(limit.clone(), ReferenceType::External);
+/// let table_type = TableType::new( ReferenceType::External,limit.clone());
 ///
 /// assert_eq!(table_type.limits(), &limit);
 /// assert_eq!(table_type.kind(), ReferenceType::External);
@@ -475,7 +475,7 @@ pub struct TableType {
 
 impl TableType {
     /// Creates a new `TableType` for the given limits and reference type.
-    pub fn new(limits: Limit, kind: ReferenceType) -> Self {
+    pub fn new(kind: ReferenceType, limits: Limit) -> Self {
         TableType { limits, kind }
     }
 
@@ -503,7 +503,7 @@ impl TableType {
 ///
 /// assert_eq!(mutable.mutability(), Mutability::Mutable);
 /// assert_eq!(mutable.kind(), ValueType::I64);
-/// assert_eq!(mutable, GlobalType::new(Mutability::Mutable, ValueType::I64));
+/// assert_eq!(mutable, GlobalType::new( ValueType::I64,Mutability::Mutable));
 /// ```
 ///
 /// ## Immutable
@@ -514,7 +514,7 @@ impl TableType {
 ///
 /// assert_eq!(immutable.mutability(), Mutability::Immutable);
 /// assert_eq!(immutable.kind(), ValueType::F64);
-/// assert_eq!(immutable, GlobalType::new(Mutability::Immutable, ValueType::F64));
+/// assert_eq!(immutable, GlobalType::new( ValueType::F64,Mutability::Immutable));
 /// ```
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct GlobalType {
@@ -524,7 +524,7 @@ pub struct GlobalType {
 
 impl GlobalType {
     /// Creates a new `GlobalType` for a global variable with the given mutability and value type.
-    pub fn new(mutability: Mutability, kind: ValueType) -> Self {
+    pub fn new(kind: ValueType, mutability: Mutability) -> Self {
         GlobalType { mutability, kind }
     }
 

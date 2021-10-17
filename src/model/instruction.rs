@@ -46,12 +46,12 @@ pub enum Instruction {
 /// use wasm_ast::{NumericInstruction, Instruction};
 ///
 /// assert_eq!(
-///     Instruction::Numeric(NumericInstruction::I32Constant(42i32 as u32)),
+///     Instruction::Numeric(NumericInstruction::I32Constant(42)),
 ///     42i32.into()
 /// );
 /// assert_eq!(
-///     Instruction::Numeric(NumericInstruction::I64Constant(42u64)),
-///     42u64.into()
+///     Instruction::Numeric(NumericInstruction::I64Constant(42i64)),
+///     42i64.into()
 /// );
 /// assert_eq!(
 ///     Instruction::Numeric(NumericInstruction::F32Constant(0.1)),
@@ -285,9 +285,9 @@ pub enum Instruction {
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum NumericInstruction {
     /// i32.const
-    I32Constant(u32),
+    I32Constant(i32),
     /// i64.const
-    I64Constant(u64),
+    I64Constant(i64),
     /// f32.const
     F32Constant(f32),
     /// f64.const
@@ -400,55 +400,43 @@ impl From<NumericInstruction> for Instruction {
 
 impl From<i8> for Instruction {
     fn from(value: i8) -> Self {
-        Self::Numeric(NumericInstruction::I32Constant(value as u32))
+        Self::Numeric(NumericInstruction::I32Constant(value as i32))
     }
 }
 
 impl From<i16> for Instruction {
     fn from(value: i16) -> Self {
-        Self::Numeric(NumericInstruction::I32Constant(value as u32))
+        Self::Numeric(NumericInstruction::I32Constant(value as i32))
     }
 }
 
 impl From<i32> for Instruction {
     fn from(value: i32) -> Self {
-        Self::Numeric(NumericInstruction::I32Constant(value as u32))
+        Self::Numeric(NumericInstruction::I32Constant(value))
     }
 }
 
 impl From<i64> for Instruction {
     fn from(value: i64) -> Self {
-        Self::Numeric(NumericInstruction::I64Constant(value as u64))
+        Self::Numeric(NumericInstruction::I64Constant(value))
     }
 }
 
 impl From<u8> for Instruction {
     fn from(value: u8) -> Self {
-        Self::Numeric(NumericInstruction::I32Constant(value as u32))
+        Self::Numeric(NumericInstruction::I32Constant(value as i32))
     }
 }
 
 impl From<u16> for Instruction {
     fn from(value: u16) -> Self {
-        Self::Numeric(NumericInstruction::I32Constant(value as u32))
+        Self::Numeric(NumericInstruction::I32Constant(value as i32))
     }
 }
 
 impl From<u32> for Instruction {
     fn from(value: u32) -> Self {
-        Self::Numeric(NumericInstruction::I32Constant(value))
-    }
-}
-
-impl From<u64> for Instruction {
-    fn from(value: u64) -> Self {
-        Self::Numeric(NumericInstruction::I64Constant(value))
-    }
-}
-
-impl From<usize> for Instruction {
-    fn from(value: usize) -> Self {
-        Self::Numeric(NumericInstruction::I32Constant(value as u32))
+        Self::Numeric(NumericInstruction::I64Constant(value as i64))
     }
 }
 
@@ -714,7 +702,7 @@ impl From<TableInstruction> for Instruction {
 /// );
 /// assert_eq!(
 ///     Instruction::Memory(MemoryInstruction::Store(NumberType::F64, MemoryArgument::default_offset(8))),
-///     MemoryInstruction::Store(NumberType::F64, MemoryArgument::new(0, Some(8))).into()
+///     MemoryInstruction::Store(NumberType::F64, MemoryArgument::new(Some(8), 0)).into()
 /// );
 /// assert_eq!(
 ///     Instruction::Memory(MemoryInstruction::Store8(IntegerType::I32, MemoryArgument::default())),
@@ -954,7 +942,7 @@ pub enum BlockType {
 /// ```rust
 /// use wasm_ast::MemoryArgument;
 ///
-/// let argument = MemoryArgument::new(42, Some(4));
+/// let argument = MemoryArgument::new(Some(4), 42);
 ///
 /// assert_eq!(argument.offset(), 42);
 /// assert_eq!(argument.align(), Some(4));
@@ -991,14 +979,14 @@ pub enum BlockType {
 /// ```
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct MemoryArgument {
-    offset: u32,
     align: Option<u32>,
+    offset: u32,
 }
 
 impl MemoryArgument {
-    /// Creates a new memory argument with the given offset and alignment.
-    pub fn new(offset: u32, align: Option<u32>) -> Self {
-        MemoryArgument { offset, align }
+    /// Creates a new memory argument with the given alignment and offset.
+    pub fn new(align: Option<u32>, offset: u32) -> Self {
+        MemoryArgument { align, offset }
     }
 
     /// Creates a new memory argument with the default alignment and an offset of 0.
@@ -1067,12 +1055,12 @@ pub enum SignExtension {
 /// assert_eq!(
 ///     expression,
 ///     Expression::new(vec![
-///         Instruction::Numeric(NumericInstruction::I32Constant(0 as u32)),
+///         Instruction::Numeric(NumericInstruction::I32Constant(0 as i32)),
 ///         Instruction::Control(ControlInstruction::Nop),
 ///     ])
 /// );
 /// assert_eq!(expression.instructions(), &[
-///     Instruction::Numeric(NumericInstruction::I32Constant(0 as u32)),
+///     Instruction::Numeric(NumericInstruction::I32Constant(0)),
 ///     Instruction::Control(ControlInstruction::Nop),
 /// ]);
 /// assert_eq!(expression.len(), 2);
@@ -1080,7 +1068,7 @@ pub enum SignExtension {
 /// assert_eq!(
 ///     expression,
 ///     vec![
-///         Instruction::Numeric(NumericInstruction::I32Constant(0 as u32)),
+///         Instruction::Numeric(NumericInstruction::I32Constant(0)),
 ///         Instruction::Control(ControlInstruction::Nop),
 ///     ].into()
 /// );

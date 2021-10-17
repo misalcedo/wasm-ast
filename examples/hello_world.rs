@@ -16,7 +16,7 @@ fn main() {
         ResultType::empty(),
         vec![
             0i32.into(),
-            message.len().into(),
+            (message.len() as u32).into(),
             ControlInstruction::Call(0).into(),
         ]
         .into(),
@@ -28,17 +28,16 @@ fn main() {
     let footer_custom = vec![Custom::new("footer".into(), Vec::from("foot"))];
 
     let mut builder = Module::builder();
-    builder.set_function_types(function_types.clone());
-    builder.set_functions(functions.clone());
-    builder.set_memories(memories.clone());
-    builder.set_data(data.clone());
-    builder.set_start(start.clone());
-    builder.set_imports(imports.clone());
-    builder.set_exports(exports.clone());
-    builder.set_exports(exports.clone());
-    builder.set_custom_sections(ModuleSection::Custom, header_custom.clone());
-    builder.set_custom_sections(ModuleSection::Export, footer_custom.clone());
-    builder.include_data_count(true);
+    builder.set_function_types(Some(function_types.clone()));
+    builder.set_functions(Some(functions.clone()));
+    builder.set_memories(Some(memories.clone()));
+    builder.set_data(Some(data.clone()));
+    builder.set_start(Some(start));
+    builder.set_imports(Some(imports.clone()));
+    builder.set_exports(Some(exports.clone()));
+    builder.set_custom_sections(ModuleSection::Custom, Some(header_custom.clone()));
+    builder.set_custom_sections(ModuleSection::Data, Some(footer_custom.clone()));
+    builder.set_data_count(Some(1));
 
     let module = builder.build();
 
@@ -60,5 +59,5 @@ fn main() {
         module.custom_sections_at(ModuleSection::Export),
         Some(footer_custom.as_slice())
     );
-    assert!(module.include_data_count());
+    assert_eq!(module.data_count(), Some(1));
 }

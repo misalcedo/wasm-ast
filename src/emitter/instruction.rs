@@ -1,7 +1,7 @@
-use crate::compiler::emitter::values::*;
-use crate::compiler::emitter::{emit_reference_type, emit_value_type};
-use crate::compiler::CompilerError;
-use crate::syntax::web_assembly::{
+use crate::emitter::errors::EmitError;
+use crate::emitter::values::*;
+use crate::emitter::{emit_reference_type, emit_value_type};
+use crate::model::{
     BlockType, ControlInstruction, Expression, FloatType, Instruction, IntegerType, MemoryArgument,
     MemoryInstruction, NumberType, NumericInstruction, ParametricInstruction, ReferenceInstruction,
     SignExtension, StorageSize, TableInstruction, VariableInstruction,
@@ -14,7 +14,7 @@ use std::io::Write;
 pub fn emit_expression<O: Write + ?Sized>(
     expression: &Expression,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     let mut bytes = 0;
     let expression = expression;
 
@@ -33,7 +33,7 @@ pub fn emit_expression<O: Write + ?Sized>(
 pub fn emit_instruction<O: Write + ?Sized>(
     instruction: &Instruction,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     match instruction {
         Instruction::Numeric(instruction) => emit_numeric_instruction(instruction, output),
         Instruction::Reference(instruction) => emit_reference_instruction(instruction, output),
@@ -51,7 +51,7 @@ pub fn emit_instruction<O: Write + ?Sized>(
 fn emit_numeric_instruction<O: Write + ?Sized>(
     instruction: &NumericInstruction,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     let mut bytes = 0;
 
     match instruction {
@@ -579,7 +579,7 @@ fn emit_numeric_instruction<O: Write + ?Sized>(
             bytes += emit_byte(0xFCu8, output)?;
             bytes += emit_u32(7u32, output)?;
         }
-        _ => return Err(CompilerError::InvalidSyntax),
+        _ => return Err(EmitError::InvalidSyntax),
     }
 
     Ok(bytes)
@@ -591,7 +591,7 @@ fn emit_numeric_instruction<O: Write + ?Sized>(
 pub fn emit_reference_instruction<O: Write + ?Sized>(
     instruction: &ReferenceInstruction,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     let mut bytes = 0;
 
     match instruction {
@@ -617,7 +617,7 @@ pub fn emit_reference_instruction<O: Write + ?Sized>(
 pub fn emit_parametric_instruction<O: Write + ?Sized>(
     instruction: &ParametricInstruction,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     let mut bytes = 0;
 
     match instruction {
@@ -642,7 +642,7 @@ pub fn emit_parametric_instruction<O: Write + ?Sized>(
 fn emit_variable_instruction<O: Write + ?Sized>(
     instruction: &VariableInstruction,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     let mut bytes = 0;
 
     match instruction {
@@ -677,7 +677,7 @@ fn emit_variable_instruction<O: Write + ?Sized>(
 fn emit_table_instruction<O: Write + ?Sized>(
     instruction: &TableInstruction,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     let mut bytes = 0;
 
     match instruction {
@@ -732,7 +732,7 @@ fn emit_table_instruction<O: Write + ?Sized>(
 pub fn emit_memory_instruction<O: Write + ?Sized>(
     instruction: &MemoryInstruction,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     let mut bytes = 0;
 
     match instruction {
@@ -909,7 +909,7 @@ pub fn emit_memory_instruction<O: Write + ?Sized>(
 fn emit_control_instruction<O: Write + ?Sized>(
     instruction: &ControlInstruction,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     let mut bytes = 0;
 
     match instruction {
@@ -977,7 +977,7 @@ fn emit_control_instruction<O: Write + ?Sized>(
 pub fn emit_block_type<O: Write + ?Sized>(
     kind: &BlockType,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     match kind {
         BlockType::Index(index) => emit_i64(*index as i64, output),
         BlockType::ValueType(kind) => emit_value_type(kind, output),
@@ -991,7 +991,7 @@ pub fn emit_block_type<O: Write + ?Sized>(
 pub fn emit_memory_argument<O: Write + ?Sized>(
     argument: &MemoryArgument,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     let mut bytes = 0;
 
     bytes += emit_usize(argument.align(), output)?;

@@ -1,9 +1,8 @@
-use crate::compiler::errors::CompilerError;
-use crate::syntax::web_assembly::Name;
-use byteorder::{LittleEndian, WriteBytesExt};
+use crate::emitter::errors::EmitError;
+use crate::model::Name;
+use crate::leb128::{encode_signed, encode_unsigned};
 use std::borrow::Borrow;
 use std::io::Write;
-use std::mem::size_of;
 
 /// Emit a name to the output.
 ///
@@ -11,10 +10,10 @@ use std::mem::size_of;
 pub fn emit_f32<T: Borrow<f32>, O: Write + ?Sized>(
     value: T,
     output: &mut O,
-) -> Result<usize, CompilerError> {
-    output.write_f32::<LittleEndian>(*value.borrow())?;
-
-    Ok(size_of::<f32>())
+) -> Result<usize, EmitError> {
+    let bytes = value.borrow().to_le_bytes();
+    output.write_all(&bytes);
+    Ok(bytes.len())
 }
 
 /// Emit a name to the output.
@@ -23,16 +22,16 @@ pub fn emit_f32<T: Borrow<f32>, O: Write + ?Sized>(
 pub fn emit_f64<T: Borrow<f64>, O: Write + ?Sized>(
     value: T,
     output: &mut O,
-) -> Result<usize, CompilerError> {
-    output.write_f64::<LittleEndian>(*value.borrow())?;
-
-    Ok(size_of::<f64>())
+) -> Result<usize, EmitError> {
+    let bytes = value.borrow().to_le_bytes();
+    output.write_all(&bytes);
+    Ok(bytes.len())
 }
 
 /// Emit a name to the output.
 ///
 /// See https://webassembly.github.io/spec/core/binary/values.html#names
-pub fn emit_name<O: Write + ?Sized>(value: &Name, output: &mut O) -> Result<usize, CompilerError> {
+pub fn emit_name<O: Write + ?Sized>(value: &Name, output: &mut O) -> Result<usize, EmitError> {
     emit_bytes(value.as_bytes(), output, true)
 }
 
@@ -42,9 +41,10 @@ pub fn emit_name<O: Write + ?Sized>(value: &Name, output: &mut O) -> Result<usiz
 pub fn emit_byte<T: Borrow<u8>, O: Write + ?Sized>(
     byte: T,
     output: &mut O,
-) -> Result<usize, CompilerError> {
-    output.write_u8(*byte.borrow())?;
-    Ok(size_of::<u8>())
+) -> Result<usize, EmitError> {
+    let bytes = [*byte.borrow()];
+    output.write(&bytes)?;
+    Ok(bytes.len())
 }
 
 /// Emits a slice of bytes to the output.
@@ -58,7 +58,7 @@ pub fn emit_bytes<O: Write + ?Sized>(
     value: &[u8],
     output: &mut O,
     include_length: bool,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     let prefix = if include_length {
         emit_usize(value.len(), output)?
     } else {
@@ -76,7 +76,7 @@ pub fn emit_bytes<O: Write + ?Sized>(
 pub fn emit_u32<T: Borrow<u32>, O: Write + ?Sized>(
     value: T,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     emit_u64(*value.borrow() as u64, output)
 }
 
@@ -86,7 +86,7 @@ pub fn emit_u32<T: Borrow<u32>, O: Write + ?Sized>(
 pub fn emit_usize<T: Borrow<usize>, O: Write + ?Sized>(
     size: T,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     emit_u64(*size.borrow() as u64, output)
 }
 
@@ -96,8 +96,8 @@ pub fn emit_usize<T: Borrow<usize>, O: Write + ?Sized>(
 pub fn emit_u64<T: Borrow<u64>, O: Write + ?Sized>(
     value: T,
     output: &mut O,
-) -> Result<usize, CompilerError> {
-    Ok(leb128::write::unsigned(output, *value.borrow())?)
+) -> Result<usize, EmitError> {
+    Ok(encode_unsigned(*value.borrow(), output)?)
 }
 
 /// Emits a signed 32-bit integer to the output.
@@ -106,7 +106,7 @@ pub fn emit_u64<T: Borrow<u64>, O: Write + ?Sized>(
 pub fn emit_i32<T: Borrow<i32>, O: Write + ?Sized>(
     value: T,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     emit_i64(*value.borrow() as i64, output)
 }
 
@@ -116,8 +116,8 @@ pub fn emit_i32<T: Borrow<i32>, O: Write + ?Sized>(
 pub fn emit_i64<T: Borrow<i64>, O: Write + ?Sized>(
     value: T,
     output: &mut O,
-) -> Result<usize, CompilerError> {
-    Ok(leb128::write::signed(output, *value.borrow())?)
+) -> Result<usize, EmitError> {
+    Ok(encode_signed(*value.borrow(), output)?)
 }
 
 /// Emit each item to the output using the given emit function.
@@ -128,10 +128,10 @@ pub fn emit_vector<'items, I, E, O>(
     items: &'items [I],
     output: &mut O,
     emit: E,
-) -> Result<usize, CompilerError>
+) -> Result<usize, EmitError>
 where
     O: Write + ?Sized,
-    E: Fn(&'items I, &mut O) -> Result<usize, CompilerError>,
+    E: Fn(&'items I, &mut O) -> Result<usize, EmitError>,
 {
     let mut bytes = 0;
 
@@ -146,10 +146,10 @@ pub fn emit_repeated<'items, I, E, O>(
     items: &'items [I],
     output: &mut O,
     emit: E,
-) -> Result<usize, CompilerError>
+) -> Result<usize, EmitError>
 where
     O: Write + ?Sized,
-    E: Fn(&'items I, &mut O) -> Result<usize, CompilerError>,
+    E: Fn(&'items I, &mut O) -> Result<usize, EmitError>,
 {
     let mut bytes = 0;
 

@@ -1,36 +1,24 @@
 //! Emit WebAssembly binary format.
 
+mod errors;
 mod instruction;
 mod module;
 mod sections;
 mod types;
 mod values;
 
-use crate::compiler::errors::CompilerError;
-use crate::syntax::web_assembly::Module;
-use futures::{AsyncWrite, AsyncWriteExt};
-pub use sections::emit_module;
+use crate::model::Module;
 use std::fmt::Debug;
 use std::io::Write;
 pub use types::*;
 pub use values::*;
 
-/// The initial capacity of the buffer used to emit a module to an async write.
-const INITIAL_BUFFER_CAPACITY: usize = 4096;
-
-/// Emits a binary representation of a WebAssembly Abstract Syntax Tree (AST) to an `AsyncWrite` output.
-#[tracing::instrument]
-pub async fn emit_binary<O: AsyncWrite + Debug + Unpin>(
+/// Emits a binary representation of a WebAssembly Abstract Syntax Tree (AST) to a `Write` output.
+pub fn emit_binary<O: Write + Debug + Unpin>(
     module: &Module,
-    output: &mut O,
-) -> Result<usize, CompilerError> {
-    let mut buffer = Vec::with_capacity(INITIAL_BUFFER_CAPACITY);
-
-    let bytes = emit_module(module, &mut buffer)?;
-
-    output.write_all(&buffer[..]).await?;
-
-    Ok(bytes)
+    output: mut O,
+) -> Result<usize, errors::EmitError> {
+    emit_module(module, output)
 }
 
 /// Counts the number of bytes written, but does else nothing with the bytes.
@@ -78,8 +66,7 @@ impl Write for CountingWrite {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::about;
-    use crate::syntax::web_assembly::{
+    use crate::model::{
         self, ControlInstruction, Data, DataMode, Element, ElementInitializer, ElementMode, Export,
         ExportDescription, Expression, Function, FunctionType, Global, GlobalType, Import,
         ImportDescription, Instruction, Limit, Memory, MemoryType, Name, NumberType,
@@ -87,7 +74,7 @@ mod tests {
     };
     use wasmtime::{Engine, Extern, Func, Instance, Module, Store};
 
-    async fn validate(target: &web_assembly::Module) -> Result<(), CompilerError> {
+    async fn validate(target: &web_assembly::Module) -> Result<(), EmitError> {
         let mut bytes = Vec::new();
 
         emit_binary(&target, &mut bytes).await?;

@@ -1,11 +1,11 @@
-use crate::compiler::emitter::instruction::emit_expression;
-use crate::compiler::emitter::{
+use crate::emitter::errors::EmitError;
+use crate::emitter::instruction::emit_expression;
+use crate::emitter::{
     emit_byte, emit_bytes, emit_global_type, emit_i32, emit_memory_type, emit_name,
     emit_reference_type, emit_table_type, emit_u32, emit_usize, emit_value_type, emit_vector,
     CountingWrite,
 };
-use crate::compiler::errors::CompilerError;
-use crate::syntax::web_assembly::{
+use crate::model::{
     Data, DataMode, Element, ElementInitializer, ElementMode, Export, ExportDescription, Function,
     Global, Import, ImportDescription, Memory, Name, ReferenceType, Start, Table,
 };
@@ -17,7 +17,7 @@ use std::io::Write;
 pub fn emit_function<O: Write + ?Sized>(
     function: &Function,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     let mut counter = CountingWrite::new();
     let mut bytes = 0;
 
@@ -33,7 +33,7 @@ pub fn emit_function<O: Write + ?Sized>(
 fn emit_function_code<O: Write + ?Sized>(
     function: &Function,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     emit_usize(function.locals().len(), output)?;
 
     for local in function.locals().kinds() {
@@ -50,7 +50,7 @@ fn emit_function_code<O: Write + ?Sized>(
 pub fn emit_import<O: Write + ?Sized>(
     import: &Import,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     let mut bytes = 0;
 
     bytes += emit_name(import.module(), output)?;
@@ -66,7 +66,7 @@ pub fn emit_import<O: Write + ?Sized>(
 pub fn emit_import_description<O: Write + ?Sized>(
     description: &ImportDescription,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     let mut bytes = 0;
 
     match description {
@@ -97,7 +97,7 @@ pub fn emit_import_description<O: Write + ?Sized>(
 pub fn emit_table<O: Write + ?Sized>(
     table: &Table,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     emit_table_type(table.kind(), output)
 }
 
@@ -107,7 +107,7 @@ pub fn emit_table<O: Write + ?Sized>(
 pub fn emit_memory<O: Write + ?Sized>(
     memory: &Memory,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     emit_memory_type(memory.kind(), output)
 }
 
@@ -117,7 +117,7 @@ pub fn emit_memory<O: Write + ?Sized>(
 pub fn emit_global<O: Write + ?Sized>(
     global: &Global,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     let mut bytes = 0;
 
     bytes += emit_global_type(global.kind(), output)?;
@@ -132,7 +132,7 @@ pub fn emit_global<O: Write + ?Sized>(
 pub fn emit_export<O: Write + ?Sized>(
     export: &Export,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     let mut bytes = 0;
 
     bytes += emit_name(export.name(), output)?;
@@ -147,7 +147,7 @@ pub fn emit_export<O: Write + ?Sized>(
 pub fn emit_export_description<O: Write + ?Sized>(
     description: &ExportDescription,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     let (value, index) = match description {
         ExportDescription::Function(index) => (0x00, index),
         ExportDescription::Table(index) => (0x01, index),
@@ -168,7 +168,7 @@ pub fn emit_export_description<O: Write + ?Sized>(
 pub fn emit_start<O: Write + ?Sized>(
     start: &Start,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     emit_usize(start.function(), output)
 }
 
@@ -178,7 +178,7 @@ pub fn emit_start<O: Write + ?Sized>(
 pub fn emit_element<O: Write + ?Sized>(
     element: &Element,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     let mut bytes = 0;
 
     match (element.initializers(), element.mode(), element.kind()) {
@@ -238,7 +238,7 @@ pub fn emit_element<O: Write + ?Sized>(
             bytes += emit_reference_type(kind, output)?;
             bytes += emit_vector(expressions, output, emit_expression)?;
         }
-        _ => return Err(CompilerError::InvalidSyntax),
+        _ => return Err(EmitError::InvalidSyntax),
     };
 
     Ok(bytes)
@@ -247,7 +247,7 @@ pub fn emit_element<O: Write + ?Sized>(
 /// Emit a data to the output.
 ///
 /// See https://webassembly.github.io/spec/core/binary/modules.html#data-section
-pub fn emit_data<O: Write + ?Sized>(data: &Data, output: &mut O) -> Result<usize, CompilerError> {
+pub fn emit_data<O: Write + ?Sized>(data: &Data, output: &mut O) -> Result<usize, EmitError> {
     let mut bytes = 0;
 
     match data.mode() {
@@ -277,7 +277,7 @@ pub fn emit_custom_content<O: Write + ?Sized>(
     name: &Name,
     content: &[u8],
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     let mut bytes = 0;
 
     bytes += emit_name(name, output)?;

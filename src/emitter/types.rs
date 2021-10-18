@@ -1,6 +1,6 @@
-use crate::compiler::emitter::{emit_byte, emit_usize, emit_vector};
-use crate::compiler::errors::CompilerError;
-use crate::syntax::web_assembly::{
+use crate::emitter::errors::EmitError;
+use crate::emitter::{emit_byte, emit_usize, emit_vector};
+use crate::model::{
     FunctionType, GlobalType, Limit, MemoryType, NumberType, ReferenceType, ResultType, TableType,
     ValueType,
 };
@@ -9,7 +9,7 @@ use std::io::Write;
 pub fn emit_number_type<O: Write + ?Sized>(
     kind: &NumberType,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     let value: u8 = match kind {
         NumberType::I32 => 0x7F,
         NumberType::I64 => 0x7E,
@@ -23,7 +23,7 @@ pub fn emit_number_type<O: Write + ?Sized>(
 pub fn emit_reference_type<O: Write + ?Sized>(
     kind: &ReferenceType,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     let value: u8 = match kind {
         ReferenceType::Function => 0x70,
         ReferenceType::External => 0x6F,
@@ -35,7 +35,7 @@ pub fn emit_reference_type<O: Write + ?Sized>(
 pub fn emit_value_type<O: Write + ?Sized>(
     kind: &ValueType,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     match kind {
         ValueType::Number(number_type) => emit_number_type(number_type, output),
         ValueType::Reference(reference_type) => emit_reference_type(reference_type, output),
@@ -45,14 +45,14 @@ pub fn emit_value_type<O: Write + ?Sized>(
 pub fn emit_result_type<O: Write + ?Sized>(
     kind: &ResultType,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     emit_vector(kind.kinds(), output, emit_value_type)
 }
 
 pub fn emit_function_type<O: Write + ?Sized>(
     kind: &FunctionType,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     let mut bytes = 0;
 
     bytes += emit_byte(0x60u8, output)?;
@@ -65,7 +65,7 @@ pub fn emit_function_type<O: Write + ?Sized>(
 pub fn emit_limit<O: Write + ?Sized>(
     limits: &Limit,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     let mut bytes = 0;
 
     match limits.max() {
@@ -86,14 +86,14 @@ pub fn emit_limit<O: Write + ?Sized>(
 pub fn emit_memory_type<O: Write + ?Sized>(
     kind: &MemoryType,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     emit_limit(kind.limits(), output)
 }
 
 pub fn emit_table_type<O: Write + ?Sized>(
     kind: &TableType,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     let mut bytes = 0;
 
     bytes += emit_reference_type(kind.kind(), output)?;
@@ -105,7 +105,7 @@ pub fn emit_table_type<O: Write + ?Sized>(
 pub fn emit_global_type<O: Write + ?Sized>(
     kind: &GlobalType,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     let mut bytes = 0;
 
     bytes += emit_value_type(kind.kind(), output)?;

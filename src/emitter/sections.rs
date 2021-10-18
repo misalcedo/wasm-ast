@@ -1,13 +1,12 @@
-use crate::about;
-use crate::compiler::emitter::module::{
+use crate::emitter::errors::EmitError;
+use crate::emitter::module::{
     emit_custom_content, emit_data, emit_element, emit_export, emit_function, emit_global,
     emit_import, emit_memory, emit_start, emit_table,
 };
-use crate::compiler::emitter::{
+use crate::emitter::{
     emit_byte, emit_bytes, emit_function_type, emit_usize, emit_vector, CountingWrite,
 };
-use crate::compiler::CompilerError;
-use crate::syntax::web_assembly::{Function, Module, Name, TypeIndex};
+use crate::model::{Function, Module, TypeIndex};
 use std::io::Write;
 
 /// A magic constant used to quickly identify WebAssembly binary file contents.
@@ -19,12 +18,11 @@ const VERSION: [u8; 4] = [0x01u8, 0x00u8, 0x00u8, 0x00u8];
 /// Emit a module to the output.
 ///
 /// See https://webassembly.github.io/spec/core/binary/modules.html
-pub fn emit_module<O: Write>(module: &Module, output: &mut O) -> Result<usize, CompilerError> {
+pub fn emit_module<O: Write>(module: &Module, output: &mut O) -> Result<usize, EmitError> {
     let mut bytes = 0;
 
     bytes += emit_bytes(&PREAMBLE, output, false)?;
     bytes += emit_bytes(&VERSION, output, false)?;
-    bytes += emit_version_custom_section(output)?;
     bytes += emit_type_section(module, output)?;
     bytes += emit_import_section(module, output)?;
     bytes += emit_function_section(module, output)?;
@@ -47,7 +45,7 @@ pub fn emit_module<O: Write>(module: &Module, output: &mut O) -> Result<usize, C
 pub fn emit_type_section<O: Write>(
     module: &Module,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     if module.types().is_empty() {
         Ok(0)
     } else {
@@ -63,7 +61,7 @@ pub fn emit_type_section<O: Write>(
 pub fn emit_import_section<O: Write>(
     module: &Module,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     if module.imports().is_empty() {
         Ok(0)
     } else {
@@ -79,7 +77,7 @@ pub fn emit_import_section<O: Write>(
 pub fn emit_function_section<O: Write>(
     module: &Module,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     if module.functions().is_empty() {
         Ok(0)
     } else {
@@ -97,7 +95,7 @@ pub fn emit_function_section<O: Write>(
 pub fn emit_table_section<O: Write>(
     module: &Module,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     if module.tables().is_empty() {
         Ok(0)
     } else {
@@ -113,7 +111,7 @@ pub fn emit_table_section<O: Write>(
 pub fn emit_memory_section<O: Write>(
     module: &Module,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     if module.memories().is_empty() {
         Ok(0)
     } else {
@@ -129,7 +127,7 @@ pub fn emit_memory_section<O: Write>(
 pub fn emit_global_section<O: Write>(
     module: &Module,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     if module.globals().is_empty() {
         Ok(0)
     } else {
@@ -145,7 +143,7 @@ pub fn emit_global_section<O: Write>(
 pub fn emit_export_section<O: Write>(
     module: &Module,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     if module.exports().is_empty() {
         Ok(0)
     } else {
@@ -160,7 +158,7 @@ pub fn emit_export_section<O: Write>(
 pub fn emit_start_section<O: Write>(
     module: &Module,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     match module.start() {
         Some(start) => emit_section(ModuleSection::Start, output, |o| emit_start(start, o)),
         None => Ok(0),
@@ -172,7 +170,7 @@ pub fn emit_start_section<O: Write>(
 pub fn emit_element_section<O: Write>(
     module: &Module,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     if module.elements().is_empty() {
         Ok(0)
     } else {
@@ -188,7 +186,7 @@ pub fn emit_element_section<O: Write>(
 pub fn emit_data_count_section<O: Write>(
     module: &Module,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     if module.data().is_empty() {
         Ok(0)
     } else {
@@ -204,7 +202,7 @@ pub fn emit_data_count_section<O: Write>(
 pub fn emit_code_section<O: Write>(
     module: &Module,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     if module.functions().is_empty() {
         Ok(0)
     } else {
@@ -220,7 +218,7 @@ pub fn emit_code_section<O: Write>(
 pub fn emit_data_section<O: Write>(
     module: &Module,
     output: &mut O,
-) -> Result<usize, CompilerError> {
+) -> Result<usize, EmitError> {
     if module.data().is_empty() {
         Ok(0)
     } else {
@@ -228,14 +226,6 @@ pub fn emit_data_section<O: Write>(
             emit_vector(module.data(), o, emit_data)
         })
     }
-}
-
-/// Emit a custom section with the version of the language the module was compiled.
-pub fn emit_version_custom_section<O: Write>(output: &mut O) -> Result<usize, CompilerError> {
-    emit_section(ModuleSection::Custom, output, |o| {
-        let version_section = Name::new("version".to_string());
-        emit_custom_content(&version_section, about::VERSION.as_bytes(), o)
-    })
 }
 
 /// Emits a module section to the given output.
@@ -247,10 +237,10 @@ pub fn emit_section<E, O>(
     section: ModuleSection,
     output: &mut O,
     emit: E,
-) -> Result<usize, CompilerError>
+) -> Result<usize, EmitError>
 where
     O: Write,
-    E: Fn(&mut dyn Write) -> Result<usize, CompilerError>,
+    E: Fn(&mut dyn Write) -> Result<usize, EmitError>,
 {
     let mut bytes = 0;
     let mut counter = CountingWrite::new();

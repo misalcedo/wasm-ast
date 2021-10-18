@@ -1,0 +1,1 @@
+//! Emit WebAssembly binary format.

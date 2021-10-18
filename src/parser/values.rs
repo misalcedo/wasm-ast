@@ -1,22 +1,10 @@
+use crate::leb128::{parse_signed, parse_unsigned, LEB128Error};
 use crate::Name;
-use nom::bytes::complete::{tag, take, take_while_m_n};
+use nom::bytes::complete::{tag, take};
 use nom::combinator::{map, map_res};
 use nom::multi::fold_many_m_n;
 use nom::{IResult, Parser};
 use std::convert::TryFrom;
-use std::mem::size_of;
-
-/// The radix (i.e. base) for LEB128 encoding.
-const RADIX: u8 = 128;
-
-/// Maximum size of a LEB128-encoded integer type
-///
-/// See <https://en.wikipedia.org/wiki/LEB128>
-const fn max_leb128_size<T>() -> usize {
-    let bits = size_of::<T>() * 8;
-
-    (bits / 7) + (bits % 7 != 0) as usize
-}
 
 /// Parses a single byte and verified the parsed byte matches the given byte.
 pub fn match_byte<'input>(byte: u8) -> impl FnMut(&'input [u8]) -> IResult<&'input [u8], u8> {
@@ -27,55 +15,42 @@ pub fn match_byte<'input>(byte: u8) -> impl FnMut(&'input [u8]) -> IResult<&'inp
 ///
 /// See <https://webassembly.github.io/spec/core/binary/values.html#integers>
 pub fn parse_u32(input: &[u8]) -> IResult<&[u8], u32> {
-    let (remaining, input) =
-        take_while_m_n(0, max_leb128_size::<u32>() - 1, |x| x & RADIX != 0)(input)?;
-    let (remaining, last) = take_while_m_n(1, 1, |x| x & RADIX == 0)(remaining)?;
-    let mut result = 0;
-
-    for (index, byte) in input.iter().chain(last.iter()).enumerate() {
-        let part = (byte & !RADIX) as u32;
-
-        result |= part << (index * 7);
-    }
-
-    Ok((remaining, result))
+    nomify(input, parse_unsigned::<u32>(input))
 }
 
 /// Parses a signed 33-bit integer using LEB128 (Little-Endian Base 128) encoding.
 ///
 /// See <https://webassembly.github.io/spec/core/binary/values.html#integers>
 pub fn parse_s33(input: &[u8]) -> IResult<&[u8], u32> {
-    let (remaining, input) = take_while_m_n(0, 4, |x| x & RADIX != 0)(input)?;
-    let (remaining, last) = take_while_m_n(1, 1, |x| x & RADIX == 0)(remaining)?;
-    let mut result = 0;
-
-    for (index, byte) in input.iter().chain(last.iter()).enumerate() {
-        let part = (byte & !RADIX) as i64;
-
-        result |= part << (index * 7);
-    }
-
-    if let Some(byte) = last.iter().next() {
-        if byte & 0x40 == 0x40 {
-            result |= !0 << ((input.len() + last.len()) * 7);
-        }
-    }
-
-    map_res(move |i| Ok((i, result)), u32::try_from)(remaining)
+    map_res(|i| nomify(i, parse_signed::<i64>(i)), u32::try_from)(input)
 }
 
 /// Parses a signed 32-bit integer using LEB128 (Little-Endian Base 128) encoding.
 ///
 /// See <https://webassembly.github.io/spec/core/binary/values.html#integers>
 pub fn parse_s32(input: &[u8]) -> IResult<&[u8], i32> {
-    Ok((input, 0))
+    nomify(input, parse_signed::<i32>(input))
 }
 
 /// Parses a signed 32-bit integer using LEB128 (Little-Endian Base 128) encoding.
 ///
 /// See <https://webassembly.github.io/spec/core/binary/values.html#integers>
 pub fn parse_s64(input: &[u8]) -> IResult<&[u8], i64> {
-    Ok((input, 0))
+    nomify(input, parse_signed::<i64>(input))
+}
+
+/// Transforms an LEB-128 encoding error into a nom parser error.
+fn nomify<'input, T>(
+    input: &'input [u8],
+    result: Result<(&'input [u8], T), LEB128Error>,
+) -> IResult<&'input [u8], T> {
+    match result {
+        Ok(value) => Ok(value),
+        Err(_) => Err(nom::Err::Failure(nom::error::Error::new(
+            input,
+            nom::error::ErrorKind::MapRes,
+        ))),
+    }
 }
 
 /// Parses a WebAssembly name value.

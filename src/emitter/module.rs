@@ -72,7 +72,7 @@ pub fn emit_import_description<O: Write + ?Sized>(
     match description {
         ImportDescription::Function(index) => {
             bytes += emit_byte(0x00u8, output)?;
-            bytes += emit_usize(index, output)?;
+            bytes += emit_u32(index, output)?;
         }
         ImportDescription::Table(table_type) => {
             bytes += emit_byte(0x01u8, output)?;
@@ -156,8 +156,8 @@ pub fn emit_export_description<O: Write + ?Sized>(
     };
     let mut bytes = 0;
 
-    bytes += emit_i32(value, output)?;
-    bytes += emit_usize(index, output)?;
+    bytes += emit_byte(value, output)?;
+    bytes += emit_u32(index, output)?;
 
     Ok(bytes)
 }
@@ -169,7 +169,7 @@ pub fn emit_start<O: Write + ?Sized>(
     start: &Start,
     output: &mut O,
 ) -> Result<usize, EmitError> {
-    emit_usize(start.function(), output)
+    emit_u32(start.function(), output)
 }
 
 /// Emit an element to the output.
@@ -202,7 +202,7 @@ pub fn emit_element<O: Write + ?Sized>(
         }
         (ElementInitializer::FunctionIndex(indices), ElementMode::Active(table, offset), kind) => {
             bytes += emit_byte(0x02u8, output)?;
-            bytes += emit_usize(table, output)?;
+            bytes += emit_u32(table, output)?;
             bytes += emit_expression(offset, output)?;
             bytes += emit_reference_type(kind, output)?;
             bytes += emit_vector(indices, output, emit_usize)?;
@@ -228,7 +228,7 @@ pub fn emit_element<O: Write + ?Sized>(
         }
         (ElementInitializer::Expression(expressions), ElementMode::Active(table, offset), kind) => {
             bytes += emit_byte(0x06u8, output)?;
-            bytes += emit_usize(table, output)?;
+            bytes += emit_u32(table, output)?;
             bytes += emit_expression(offset, output)?;
             bytes += emit_reference_type(kind, output)?;
             bytes += emit_vector(expressions, output, emit_expression)?;
@@ -238,7 +238,6 @@ pub fn emit_element<O: Write + ?Sized>(
             bytes += emit_reference_type(kind, output)?;
             bytes += emit_vector(expressions, output, emit_expression)?;
         }
-        _ => return Err(EmitError::InvalidSyntax),
     };
 
     Ok(bytes)

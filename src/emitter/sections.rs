@@ -75,7 +75,7 @@ pub fn emit_function_section<O: Write>(
     match module.functions() {
         None => Ok(0),
         Some(functions) => {
-            let types: Vec<TypeIndex> = module.functions().iter().map(Function::kind).collect();
+            let types: Vec<TypeIndex> = functions.iter().map(Function::kind).collect();
 
             emit_section(ModuleSection::Function, output, move |o| emit_vector(types.as_slice(), o, emit_u32))
         },

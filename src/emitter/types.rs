@@ -4,27 +4,28 @@ use crate::model::{
     FunctionType, GlobalType, Limit, MemoryType, Mutability, NumberType, ReferenceType, ResultType, TableType,
     ValueType,
 };
+use std::borrow::Borrow;
 use std::io::Write;
 
 pub fn emit_number_type<O: Write + ?Sized>(
     kind: NumberType,
     output: &mut O,
 ) -> Result<usize, EmitError> {
-    emit_value_type(kind.into(), output)
+    emit_value_type(ValueType::from(kind), output)
 }
 
 pub fn emit_reference_type<O: Write + ?Sized>(
     kind: ReferenceType,
     output: &mut O,
 ) -> Result<usize, EmitError> {
-    emit_value_type(kind.into(), output)
+    emit_value_type(ValueType::from(kind), output)
 }
 
-pub fn emit_value_type<O: Write + ?Sized>(
-    kind: ValueType,
+pub fn emit_value_type<T: Borrow<ValueType>, O: Write + ?Sized>(
+    kind: T,
     output: &mut O,
 ) -> Result<usize, EmitError> {
-    let value: u8 = match kind {
+    let value: u8 = match *kind.borrow() {
         ValueType::I32 => 0x7F,
         ValueType::I64 => 0x7E,
         ValueType::F32 => 0x7D,

@@ -260,7 +260,7 @@ pub fn emit_data<O: Write + ?Sized>(data: &Data, output: &mut O) -> Result<usize
         }
         DataMode::Active(memory, offset) => {
             bytes += emit_byte(0x02u8, output)?;
-            bytes += emit_usize(memory, output)?;
+            bytes += emit_u32(memory, output)?;
             bytes += emit_expression(offset, output)?;
         }
     };

@@ -17,5 +17,6 @@ wat = { version = "1", optional = true }
 [features]
 default = []
 emitter = []
+full = ["emitter", "text"]
 parser = ["nom"]
 text = ["parser", "wat"]

@@ -77,7 +77,7 @@ pub fn emit_u32<T: Borrow<u32>, O: Write + ?Sized>(
     value: T,
     output: &mut O,
 ) -> Result<usize, EmitError> {
-    emit_u64(*value.borrow() as u64, output)
+    Ok(encode_unsigned(*value.borrow(), output)?)
 }
 
 /// Emits an unsigned platform-specific (i.e., 32-bit or 64-bit) integer to the output.
@@ -87,7 +87,7 @@ pub fn emit_usize<T: Borrow<usize>, O: Write + ?Sized>(
     size: T,
     output: &mut O,
 ) -> Result<usize, EmitError> {
-    emit_u64(*size.borrow() as u64, output)
+    Ok(encode_unsigned(*value.borrow(), output)?)
 }
 
 /// Emits an unsigned 64-bit integer to the output.
@@ -107,7 +107,7 @@ pub fn emit_i32<T: Borrow<i32>, O: Write + ?Sized>(
     value: T,
     output: &mut O,
 ) -> Result<usize, EmitError> {
-    emit_i64(*value.borrow() as i64, output)
+    Ok(encode_signed(*value.borrow(), output)?)
 }
 
 /// Emits a signed 64-bit integer to the output.

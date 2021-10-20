@@ -219,12 +219,9 @@ pub fn emit_data_section<O: Write>(
     module: &Module,
     output: &mut O,
 ) -> Result<usize, EmitError> {
-    if module.data().is_empty() {
-        Ok(0)
-    } else {
-        emit_section(ModuleSection::Data, output, |o| {
-            emit_vector(module.data(), o, emit_data)
-        })
+    match module.data() {
+        None => Ok(0),
+        Some(data) => emit_section(ModuleSection::Data, output, |o| emit_vector(data, o, emit_data))
     }
 }
 

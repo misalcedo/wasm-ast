@@ -46,12 +46,9 @@ pub fn emit_type_section<O: Write>(
     module: &Module,
     output: &mut O,
 ) -> Result<usize, EmitError> {
-    if module.types().is_empty() {
-        Ok(0)
-    } else {
-        emit_section(ModuleSection::Type, output, |o| {
-            emit_vector(module.types(), o, emit_function_type)
-        })
+    match module.function_types() {
+        None => Ok(0),
+        Some(types) => emit_section(ModuleSection::Type, output, |o| emit_vector(types, o, emit_function_type))
     }
 }
 
@@ -62,12 +59,9 @@ pub fn emit_import_section<O: Write>(
     module: &Module,
     output: &mut O,
 ) -> Result<usize, EmitError> {
-    if module.imports().is_empty() {
-        Ok(0)
-    } else {
-        emit_section(ModuleSection::Import, output, |o| {
-            emit_vector(module.imports(), o, emit_import)
-        })
+    match module.imports() {
+        None => Ok(0),
+        Some(imports) => emit_section(ModuleSection::Import, output, |o| emit_vector(imports, o, emit_import))
     }
 }
 
@@ -78,14 +72,13 @@ pub fn emit_function_section<O: Write>(
     module: &Module,
     output: &mut O,
 ) -> Result<usize, EmitError> {
-    if module.functions().is_empty() {
-        Ok(0)
-    } else {
-        let types: Vec<TypeIndex> = module.functions().iter().map(Function::kind).collect();
+    match module.functions() {
+        None => Ok(0),
+        Some(functions) => {
+            let types: Vec<TypeIndex> = module.functions().iter().map(Function::kind).collect();
 
-        emit_section(ModuleSection::Function, output, move |o| {
-            emit_vector(types.as_slice(), o, emit_usize)
-        })
+            emit_section(ModuleSection::Function, output, move |o| emit_vector(types.as_slice(), o, emit_u32))
+        },
     }
 }
 
@@ -96,12 +89,9 @@ pub fn emit_table_section<O: Write>(
     module: &Module,
     output: &mut O,
 ) -> Result<usize, EmitError> {
-    if module.tables().is_empty() {
-        Ok(0)
-    } else {
-        emit_section(ModuleSection::Table, output, |o| {
-            emit_vector(module.tables(), o, emit_table)
-        })
+    match module.tables() {
+        Some(tables) => emit_section(ModuleSection::Table, output, |o| emit_vector(tables, o, emit_table)),
+        None => Ok(0),
     }
 }
 
@@ -112,12 +102,9 @@ pub fn emit_memory_section<O: Write>(
     module: &Module,
     output: &mut O,
 ) -> Result<usize, EmitError> {
-    if module.memories().is_empty() {
-        Ok(0)
-    } else {
-        emit_section(ModuleSection::Memory, output, |o| {
-            emit_vector(module.memories(), o, emit_memory)
-        })
+    match module.memories() {
+        Some(memories) => emit_section(ModuleSection::Memory, output, |o| emit_vector(memories, o, emit_memory)),
+        None => Ok(0),
     }
 }
 
@@ -128,12 +115,9 @@ pub fn emit_global_section<O: Write>(
     module: &Module,
     output: &mut O,
 ) -> Result<usize, EmitError> {
-    if module.globals().is_empty() {
-        Ok(0)
-    } else {
-        emit_section(ModuleSection::Global, output, |o| {
-            emit_vector(module.globals(), o, emit_global)
-        })
+    match module.globals() {
+        Some(globals) => emit_section(ModuleSection::Global, output, |o| emit_vector(globals, o, emit_global)),
+        None => Ok(0),
     }
 }
 
@@ -144,12 +128,9 @@ pub fn emit_export_section<O: Write>(
     module: &Module,
     output: &mut O,
 ) -> Result<usize, EmitError> {
-    if module.exports().is_empty() {
-        Ok(0)
-    } else {
-        emit_section(ModuleSection::Export, output, |o| {
-            emit_vector(module.exports(), o, emit_export)
-        })
+    match module.exports() {
+        Some(exports) => emit_section(ModuleSection::Export, output, |o| emit_vector(exports, o, emit_export)),
+        None => Ok(0),
     }
 }
 /// Emits the start section to the output.
@@ -171,12 +152,9 @@ pub fn emit_element_section<O: Write>(
     module: &Module,
     output: &mut O,
 ) -> Result<usize, EmitError> {
-    if module.elements().is_empty() {
-        Ok(0)
-    } else {
-        emit_section(ModuleSection::Element, output, |o| {
-            emit_vector(module.elements(), o, emit_element)
-        })
+    match module.elements() {
+        None => Ok(0),
+        Some(elements) => emit_section(ModuleSection::Element, output, |o| emit_vector(elements, o, emit_element))
     }
 }
 
@@ -187,12 +165,9 @@ pub fn emit_data_count_section<O: Write>(
     module: &Module,
     output: &mut O,
 ) -> Result<usize, EmitError> {
-    if module.data().is_empty() {
-        Ok(0)
-    } else {
-        emit_section(ModuleSection::DataCount, output, |o| {
-            emit_usize(module.data().len(), o)
-        })
+    match module.data() {
+        None => Ok(0),
+        Some(data) => emit_section(ModuleSection::DataCount, output, |o| emit_usize(data.len(), o))
     }
 }
 
@@ -203,12 +178,9 @@ pub fn emit_code_section<O: Write>(
     module: &Module,
     output: &mut O,
 ) -> Result<usize, EmitError> {
-    if module.functions().is_empty() {
-        Ok(0)
-    } else {
-        emit_section(ModuleSection::Code, output, |o| {
-            emit_vector(module.functions(), o, emit_function)
-        })
+    match module.functions() {
+        None => Ok(0),
+        Some(functions) => emit_section(ModuleSection::Code, output, |o| emit_vector(functions, o, emit_function))
     }
 }
 

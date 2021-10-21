@@ -324,7 +324,7 @@ mod tests {
         let mut module = web_assembly::Module::new();
 
         let global = Global::new(
-            GlobalType::new(false, ValueType::I64),
+            GlobalType::immutable(ValueType::I64),
             Expression::new(vec![Instruction::Numeric(NumericInstruction::I64Constant(
                 0,
             ))]),
@@ -344,7 +344,7 @@ mod tests {
         module.add_export(export);
 
         let global = Global::new(
-            GlobalType::new(false, ValueType::I64),
+            GlobalType::immutable(ValueType::I64),
             Expression::new(vec![Instruction::Numeric(NumericInstruction::I64Constant(
                 0,
             ))]),

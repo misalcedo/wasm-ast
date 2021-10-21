@@ -4,9 +4,9 @@ use crate::emitter::module::{
     emit_import, emit_memory, emit_start, emit_table,
 };
 use crate::emitter::{
-    emit_byte, emit_bytes, emit_function_type, emit_usize, emit_vector, CountingWrite,
+    emit_byte, emit_bytes, emit_u32, emit_function_type, emit_usize, emit_vector, CountingWrite,
 };
-use crate::model::{Function, Module, TypeIndex};
+use crate::model::{Function, Module, ModuleSection, TypeIndex};
 use std::io::Write;
 
 /// A magic constant used to quickly identify WebAssembly binary file contents.
@@ -23,31 +23,31 @@ pub fn emit_module<O: Write>(module: &Module, output: &mut O) -> Result<usize, E
 
     bytes += emit_bytes(&PREAMBLE, output, false)?;
     bytes += emit_bytes(&VERSION, output, false)?;
-    bytes += emit_custom_section(module, ModuleSection::Custom, output);
+    bytes += emit_custom_section(module, ModuleSection::Custom, output)?;
     bytes += emit_type_section(module, output)?;
-    bytes += emit_custom_section(module, ModuleSection::Type, output);
+    bytes += emit_custom_section(module, ModuleSection::Type, output)?;
     bytes += emit_import_section(module, output)?;
-    bytes += emit_custom_section(module, ModuleSection::Import, output);
+    bytes += emit_custom_section(module, ModuleSection::Import, output)?;
     bytes += emit_function_section(module, output)?;
-    bytes += emit_custom_section(module, ModuleSection::Function, output);
+    bytes += emit_custom_section(module, ModuleSection::Function, output)?;
     bytes += emit_table_section(module, output)?;
-    bytes += emit_custom_section(module, ModuleSection::Table, output);
+    bytes += emit_custom_section(module, ModuleSection::Table, output)?;
     bytes += emit_memory_section(module, output)?;
-    bytes += emit_custom_section(module, ModuleSection::Memory, output);
+    bytes += emit_custom_section(module, ModuleSection::Memory, output)?;
     bytes += emit_global_section(module, output)?;
-    bytes += emit_custom_section(module, ModuleSection::Global, output);
+    bytes += emit_custom_section(module, ModuleSection::Global, output)?;
     bytes += emit_export_section(module, output)?;
-    bytes += emit_custom_section(module, ModuleSection::Export, output);
+    bytes += emit_custom_section(module, ModuleSection::Export, output)?;
     bytes += emit_start_section(module, output)?;
-    bytes += emit_custom_section(module, ModuleSection::Start, output);
+    bytes += emit_custom_section(module, ModuleSection::Start, output)?;
     bytes += emit_element_section(module, output)?;
-    bytes += emit_custom_section(module, ModuleSection::Element, output);
+    bytes += emit_custom_section(module, ModuleSection::Element, output)?;
     bytes += emit_data_count_section(module, output)?;
-    bytes += emit_custom_section(module, ModuleSection::DataCount, output);
+    bytes += emit_custom_section(module, ModuleSection::DataCount, output)?;
     bytes += emit_code_section(module, output)?;
-    bytes += emit_custom_section(module, ModuleSection::Code, output);
+    bytes += emit_custom_section(module, ModuleSection::Code, output)?;
     bytes += emit_data_section(module, output)?;
-    bytes += emit_custom_section(module, ModuleSection::Data, output);
+    bytes += emit_custom_section(module, ModuleSection::Data, output)?;
 
     Ok(bytes)
 }
@@ -60,35 +60,35 @@ pub fn emit_custom_section<O: Write>(
     insertion_point: ModuleSection,
     output: &mut O,
 ) -> Result<usize, EmitError> {
-    match module.custom_sections_at(insertion_point)() {
+    match module.custom_sections_at(insertion_point) {
         None => Ok(0),
-        Some(custom) => emit_section(ModuleSection::Custom, output, |o| emit_vector(custom, o, emit_custom_content))
+        Some(custom) => emit_section(ModuleSection::Custom, output, |o| {
+            emit_vector(custom, o, emit_custom_content)
+        }),
     }
 }
 
 /// Emits the type section to the output.
 ///
 /// See https://webassembly.github.io/spec/core/binary/modules.html#type-section
-pub fn emit_type_section<O: Write>(
-    module: &Module,
-    output: &mut O,
-) -> Result<usize, EmitError> {
+pub fn emit_type_section<O: Write>(module: &Module, output: &mut O) -> Result<usize, EmitError> {
     match module.function_types() {
         None => Ok(0),
-        Some(types) => emit_section(ModuleSection::Type, output, |o| emit_vector(types, o, emit_function_type))
+        Some(types) => emit_section(ModuleSection::Type, output, |o| {
+            emit_vector(types, o, emit_function_type)
+        }),
     }
 }
 
 /// Emits the import section to the output.
 ///
 /// See https://webassembly.github.io/spec/core/binary/modules.html#import-section
-pub fn emit_import_section<O: Write>(
-    module: &Module,
-    output: &mut O,
-) -> Result<usize, EmitError> {
+pub fn emit_import_section<O: Write>(module: &Module, output: &mut O) -> Result<usize, EmitError> {
     match module.imports() {
         None => Ok(0),
-        Some(imports) => emit_section(ModuleSection::Import, output, |o| emit_vector(imports, o, emit_import))
+        Some(imports) => emit_section(ModuleSection::Import, output, |o| {
+            emit_vector(imports, o, emit_import)
+        }),
     }
 }
 
@@ -104,20 +104,21 @@ pub fn emit_function_section<O: Write>(
         Some(functions) => {
             let types: Vec<TypeIndex> = functions.iter().map(Function::kind).collect();
 
-            emit_section(ModuleSection::Function, output, move |o| emit_vector(types.as_slice(), o, emit_u32))
-        },
+            emit_section(ModuleSection::Function, output, move |o| {
+                emit_vector(types.as_slice(), o, emit_u32)
+            })
+        }
     }
 }
 
 /// Emits the table section to the output.
 ///
 /// See https://webassembly.github.io/spec/core/binary/modules.html#table-section
-pub fn emit_table_section<O: Write>(
-    module: &Module,
-    output: &mut O,
-) -> Result<usize, EmitError> {
+pub fn emit_table_section<O: Write>(module: &Module, output: &mut O) -> Result<usize, EmitError> {
     match module.tables() {
-        Some(tables) => emit_section(ModuleSection::Table, output, |o| emit_vector(tables, o, emit_table)),
+        Some(tables) => emit_section(ModuleSection::Table, output, |o| {
+            emit_vector(tables, o, emit_table)
+        }),
         None => Ok(0),
     }
 }
@@ -125,12 +126,11 @@ pub fn emit_table_section<O: Write>(
 /// Emits the memory section to the output.
 ///
 /// See https://webassembly.github.io/spec/core/binary/modules.html#memory-section
-pub fn emit_memory_section<O: Write>(
-    module: &Module,
-    output: &mut O,
-) -> Result<usize, EmitError> {
+pub fn emit_memory_section<O: Write>(module: &Module, output: &mut O) -> Result<usize, EmitError> {
     match module.memories() {
-        Some(memories) => emit_section(ModuleSection::Memory, output, |o| emit_vector(memories, o, emit_memory)),
+        Some(memories) => emit_section(ModuleSection::Memory, output, |o| {
+            emit_vector(memories, o, emit_memory)
+        }),
         None => Ok(0),
     }
 }
@@ -138,12 +138,11 @@ pub fn emit_memory_section<O: Write>(
 /// Emits the global section to the output.
 ///
 /// See https://webassembly.github.io/spec/core/binary/modules.html#global-section
-pub fn emit_global_section<O: Write>(
-    module: &Module,
-    output: &mut O,
-) -> Result<usize, EmitError> {
+pub fn emit_global_section<O: Write>(module: &Module, output: &mut O) -> Result<usize, EmitError> {
     match module.globals() {
-        Some(globals) => emit_section(ModuleSection::Global, output, |o| emit_vector(globals, o, emit_global)),
+        Some(globals) => emit_section(ModuleSection::Global, output, |o| {
+            emit_vector(globals, o, emit_global)
+        }),
         None => Ok(0),
     }
 }
@@ -151,22 +150,18 @@ pub fn emit_global_section<O: Write>(
 /// Emits the export section to the output.
 ///
 /// See https://webassembly.github.io/spec/core/binary/modules.html#export-section
-pub fn emit_export_section<O: Write>(
-    module: &Module,
-    output: &mut O,
-) -> Result<usize, EmitError> {
+pub fn emit_export_section<O: Write>(module: &Module, output: &mut O) -> Result<usize, EmitError> {
     match module.exports() {
-        Some(exports) => emit_section(ModuleSection::Export, output, |o| emit_vector(exports, o, emit_export)),
+        Some(exports) => emit_section(ModuleSection::Export, output, |o| {
+            emit_vector(exports, o, emit_export)
+        }),
         None => Ok(0),
     }
 }
 /// Emits the start section to the output.
 ///
 /// See https://webassembly.github.io/spec/core/binary/modules.html#start-section
-pub fn emit_start_section<O: Write>(
-    module: &Module,
-    output: &mut O,
-) -> Result<usize, EmitError> {
+pub fn emit_start_section<O: Write>(module: &Module, output: &mut O) -> Result<usize, EmitError> {
     match module.start() {
         Some(start) => emit_section(ModuleSection::Start, output, |o| emit_start(start, o)),
         None => Ok(0),
@@ -175,13 +170,12 @@ pub fn emit_start_section<O: Write>(
 /// Emits the elements section to the output.
 ///
 /// See https://webassembly.github.io/spec/core/binary/modules.html#elements-section
-pub fn emit_element_section<O: Write>(
-    module: &Module,
-    output: &mut O,
-) -> Result<usize, EmitError> {
+pub fn emit_element_section<O: Write>(module: &Module, output: &mut O) -> Result<usize, EmitError> {
     match module.elements() {
         None => Ok(0),
-        Some(elements) => emit_section(ModuleSection::Element, output, |o| emit_vector(elements, o, emit_element))
+        Some(elements) => emit_section(ModuleSection::Element, output, |o| {
+            emit_vector(elements, o, emit_element)
+        }),
     }
 }
 
@@ -194,33 +188,33 @@ pub fn emit_data_count_section<O: Write>(
 ) -> Result<usize, EmitError> {
     match module.data() {
         None => Ok(0),
-        Some(data) => emit_section(ModuleSection::DataCount, output, |o| emit_usize(data.len(), o))
+        Some(data) => emit_section(ModuleSection::DataCount, output, |o| {
+            emit_usize(data.len(), o)
+        }),
     }
 }
 
 /// Emits the code section to the output.
 ///
 /// See https://webassembly.github.io/spec/core/binary/modules.html#code-section
-pub fn emit_code_section<O: Write>(
-    module: &Module,
-    output: &mut O,
-) -> Result<usize, EmitError> {
+pub fn emit_code_section<O: Write>(module: &Module, output: &mut O) -> Result<usize, EmitError> {
     match module.functions() {
         None => Ok(0),
-        Some(functions) => emit_section(ModuleSection::Code, output, |o| emit_vector(functions, o, emit_function))
+        Some(functions) => emit_section(ModuleSection::Code, output, |o| {
+            emit_vector(functions, o, emit_function)
+        }),
     }
 }
 
 /// Emits the data section to the output.
 ///
 /// See https://webassembly.github.io/spec/core/binary/modules.html#data-section
-pub fn emit_data_section<O: Write>(
-    module: &Module,
-    output: &mut O,
-) -> Result<usize, EmitError> {
+pub fn emit_data_section<O: Write>(module: &Module, output: &mut O) -> Result<usize, EmitError> {
     match module.data() {
         None => Ok(0),
-        Some(data) => emit_section(ModuleSection::Data, output, |o| emit_vector(data, o, emit_data))
+        Some(data) => emit_section(ModuleSection::Data, output, |o| {
+            emit_vector(data, o, emit_data)
+        }),
     }
 }
 
@@ -248,55 +242,4 @@ where
     bytes += emit(output)?;
 
     Ok(bytes)
-}
-
-#[derive(Copy, Clone)]
-pub enum ModuleSection {
-    /// Custom sections have the id 0.
-    /// They are intended to be used for debugging information or third-party extensions,
-    /// and are ignored by the WebAssembly semantics.
-    /// Their contents consist of a name further identifying the custom section,
-    /// followed by an uninterpreted sequence of bytes for custom use.
-    Custom = 0,
-    /// The type section has the id 1.
-    /// It decodes into a vector of function types that represent the 𝗍𝗒𝗉𝖾𝗌 component of a module.
-    Type,
-    /// The import section has the id 2.
-    /// It decodes into a vector of imports that represent the 𝗂𝗆𝗉𝗈𝗋𝗍𝗌 component of a module.
-    Import,
-    /// The function section has the id 3.
-    /// It decodes into a vector of type indices that represent the 𝗍𝗒𝗉𝖾 fields of the functions
-    /// in the 𝖿𝗎𝗇𝖼𝗌 component of a module. The 𝗅𝗈𝖼𝖺𝗅𝗌 and 𝖻𝗈𝖽𝗒 fields of the respective functions
-    /// are encoded separately in the code section.
-    Function,
-    /// The table section has the id 4.
-    /// It decodes into a vector of tables that represent the 𝗍𝖺𝖻𝗅𝖾𝗌 component of a module.
-    Table,
-    /// The memory section has the id 5.
-    /// It decodes into a vector of memories that represent the 𝗆𝖾𝗆𝗌 component of a module.
-    Memory,
-    /// The global section has the id 6.
-    /// It decodes into a vector of globals that represent the 𝗀𝗅𝗈𝖻𝖺𝗅𝗌 component of a module.
-    Global,
-    /// The export section has the id 7.
-    /// It decodes into a vector of exports that represent the 𝖾𝗑𝗉𝗈𝗋𝗍𝗌 component of a module.
-    Export,
-    /// The start section has the id 8.
-    /// It decodes into an optional start function that represents the 𝗌𝗍𝖺𝗋𝗍 component of a module.
-    Start,
-    /// The element section has the id 9.
-    /// It decodes into a vector of element segments that represent the 𝖾𝗅𝖾𝗆𝗌 component of a module.
-    Element,
-    /// The code section has the id 10.
-    /// It decodes into a vector of code entries that are pairs of value type vectors and expressions.
-    /// They represent the 𝗅𝗈𝖼𝖺𝗅𝗌 and 𝖻𝗈𝖽𝗒 field of the functions in the 𝖿𝗎𝗇𝖼𝗌 component of a module.
-    /// The 𝗍𝗒𝗉𝖾 fields of the respective functions are encoded separately in the function section.
-    Code,
-    /// The data section has the id 11.
-    /// It decodes into a vector of data segments that represent the 𝖽𝖺𝗍𝖺𝗌 component of a module.
-    Data,
-    /// The data count section has the id 12.
-    /// It decodes into an optional u32 that represents the number of data segments in the data section.
-    /// If this count does not match the length of the data segment vector, the module is malformed.
-    DataCount,
 }

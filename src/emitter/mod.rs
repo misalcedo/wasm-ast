@@ -10,13 +10,12 @@ mod values;
 use crate::model::Module;
 use std::fmt::Debug;
 use std::io::Write;
-pub use types::*;
-pub use values::*;
+use sections::emit_module;
 
 /// Emits a binary representation of a WebAssembly Abstract Syntax Tree (AST) to a `Write` output.
-pub fn emit_binary<O: Write + Debug + Unpin>(
+pub fn emit_binary<O: Write>(
     module: &Module,
-    output: mut O,
+    output: &mut O,
 ) -> Result<usize, errors::EmitError> {
     emit_module(module, output)
 }

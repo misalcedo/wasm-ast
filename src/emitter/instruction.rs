@@ -751,67 +751,35 @@ pub fn emit_memory_instruction<O: Write + ?Sized>(
             bytes += emit_byte(0x2Bu8, output)?;
             bytes += emit_memory_argument(memory_argument, output)?;
         }
-        MemoryInstruction::Load8(
-            IntegerType::I32,
-            SignExtension::Signed,
-            memory_argument,
-        ) => {
+        MemoryInstruction::Load8(IntegerType::I32, SignExtension::Signed, memory_argument) => {
             bytes += emit_byte(0x2Cu8, output)?;
             bytes += emit_memory_argument(memory_argument, output)?;
         }
-        MemoryInstruction::Load8(
-            IntegerType::I32,
-            SignExtension::Unsigned,
-            memory_argument,
-        ) => {
+        MemoryInstruction::Load8(IntegerType::I32, SignExtension::Unsigned, memory_argument) => {
             bytes += emit_byte(0x2Du8, output)?;
             bytes += emit_memory_argument(memory_argument, output)?;
         }
-        MemoryInstruction::Load16(
-            IntegerType::I32,
-            SignExtension::Signed,
-            memory_argument,
-        ) => {
+        MemoryInstruction::Load16(IntegerType::I32, SignExtension::Signed, memory_argument) => {
             bytes += emit_byte(0x2Eu8, output)?;
             bytes += emit_memory_argument(memory_argument, output)?;
         }
-        MemoryInstruction::Load16(
-            IntegerType::I32,
-            SignExtension::Unsigned,
-            memory_argument,
-        ) => {
+        MemoryInstruction::Load16(IntegerType::I32, SignExtension::Unsigned, memory_argument) => {
             bytes += emit_byte(0x2Fu8, output)?;
             bytes += emit_memory_argument(memory_argument, output)?;
         }
-        MemoryInstruction::Load8(
-            IntegerType::I64,
-            SignExtension::Signed,
-            memory_argument,
-        ) => {
+        MemoryInstruction::Load8(IntegerType::I64, SignExtension::Signed, memory_argument) => {
             bytes += emit_byte(0x30u8, output)?;
             bytes += emit_memory_argument(memory_argument, output)?;
         }
-        MemoryInstruction::Load8(
-            IntegerType::I64,
-            SignExtension::Unsigned,
-            memory_argument,
-        ) => {
+        MemoryInstruction::Load8(IntegerType::I64, SignExtension::Unsigned, memory_argument) => {
             bytes += emit_byte(0x31u8, output)?;
             bytes += emit_memory_argument(memory_argument, output)?;
         }
-        MemoryInstruction::Load16(
-            IntegerType::I64,
-            SignExtension::Signed,
-            memory_argument,
-        ) => {
+        MemoryInstruction::Load16(IntegerType::I64, SignExtension::Signed, memory_argument) => {
             bytes += emit_byte(0x32u8, output)?;
             bytes += emit_memory_argument(memory_argument, output)?;
         }
-        MemoryInstruction::Load16(
-            IntegerType::I64,
-            SignExtension::Unsigned,
-            memory_argument,
-        ) => {
+        MemoryInstruction::Load16(IntegerType::I64, SignExtension::Unsigned, memory_argument) => {
             bytes += emit_byte(0x33u8, output)?;
             bytes += emit_memory_argument(memory_argument, output)?;
         }

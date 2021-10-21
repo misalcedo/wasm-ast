@@ -1,8 +1,8 @@
 use crate::emitter::errors::EmitError;
-use crate::emitter::{emit_byte, emit_vector};
+use crate::emitter::{emit_byte, emit_u32, emit_vector};
 use crate::model::{
-    FunctionType, GlobalType, Limit, MemoryType, Mutability, NumberType, ReferenceType, ResultType, TableType,
-    ValueType,
+    FunctionType, GlobalType, Limit, MemoryType, Mutability, NumberType, ReferenceType, ResultType,
+    TableType, ValueType,
 };
 use std::borrow::Borrow;
 use std::io::Write;
@@ -57,10 +57,7 @@ pub fn emit_function_type<O: Write + ?Sized>(
     Ok(bytes)
 }
 
-pub fn emit_limit<O: Write + ?Sized>(
-    limits: &Limit,
-    output: &mut O,
-) -> Result<usize, EmitError> {
+pub fn emit_limit<O: Write + ?Sized>(limits: &Limit, output: &mut O) -> Result<usize, EmitError> {
     let mut bytes = 0;
 
     match limits.max() {

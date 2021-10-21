@@ -1,6 +1,6 @@
 use crate::emitter::errors::EmitError;
-use crate::model::Name;
 use crate::leb128::{encode_signed, encode_unsigned};
+use crate::model::Name;
 use std::borrow::Borrow;
 use std::io::Write;
 
@@ -87,7 +87,7 @@ pub fn emit_usize<T: Borrow<usize>, O: Write + ?Sized>(
     size: T,
     output: &mut O,
 ) -> Result<usize, EmitError> {
-    Ok(encode_unsigned(*value.borrow(), output)?)
+    Ok(encode_unsigned(*size.borrow(), output)?)
 }
 
 /// Emits an unsigned 64-bit integer to the output.

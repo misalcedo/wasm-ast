@@ -126,14 +126,14 @@ mod tests {
     fn valid_module() {
         let mut module = web_assembly::Module::new();
         let function_type = FunctionType::new(
-            ResultType::new(vec![ValueType::Number(NumberType::I64)]),
-            ResultType::new(vec![ValueType::Number(NumberType::F64)]),
+            ResultType::new(vec![ValueType::I64]),
+            ResultType::new(vec![ValueType::F64]),
         );
         module.add_type(function_type);
 
         let function = Function::new(
             0,
-            ResultType::new(vec![ValueType::Number(NumberType::I32)]),
+            ResultType::new(vec![ValueType::I32]),
             Expression::new(vec![Instruction::Numeric(NumericInstruction::F64Constant(
                 0.0,
             ))]),
@@ -177,7 +177,7 @@ mod tests {
         module.set_start(Some(start));
 
         let global = Global::new(
-            GlobalType::new(false, ValueType::Number(NumberType::I64)),
+            GlobalType::new(false, ValueType::I64),
             Expression::new(vec![Instruction::Numeric(NumericInstruction::I64Constant(
                 0,
             ))]),
@@ -211,8 +211,8 @@ mod tests {
     fn valid_module_type_only() {
         let mut module = web_assembly::Module::new();
         let function_type = FunctionType::new(
-            ResultType::new(vec![ValueType::Number(NumberType::I64)]),
-            ResultType::new(vec![ValueType::Number(NumberType::F64)]),
+            ResultType::new(vec![ValueType::I64]),
+            ResultType::new(vec![ValueType::F64]),
         );
         module.add_type(function_type);
 
@@ -224,14 +224,14 @@ mod tests {
     fn valid_module_function() {
         let mut module = web_assembly::Module::new();
         let function_type = FunctionType::new(
-            ResultType::new(vec![ValueType::Number(NumberType::I64)]),
-            ResultType::new(vec![ValueType::Number(NumberType::F64)]),
+            ResultType::new(vec![ValueType::I64]),
+            ResultType::new(vec![ValueType::F64]),
         );
         module.add_type(function_type);
 
         let function = Function::new(
             0,
-            ResultType::new(vec![ValueType::Number(NumberType::I32)]),
+            ResultType::new(vec![ValueType::I32]),
             Expression::new(vec![Instruction::Numeric(NumericInstruction::F64Constant(
                 0.0,
             ))]),
@@ -263,14 +263,14 @@ mod tests {
         let mut module = web_assembly::Module::new();
 
         let function_type = FunctionType::new(
-            ResultType::new(vec![ValueType::Number(NumberType::I64)]),
-            ResultType::new(vec![ValueType::Number(NumberType::F64)]),
+            ResultType::new(vec![ValueType::I64]),
+            ResultType::new(vec![ValueType::F64]),
         );
         module.add_type(function_type);
 
         let function = Function::new(
             0,
-            ResultType::new(vec![ValueType::Number(NumberType::I32)]),
+            ResultType::new(vec![ValueType::I32]),
             Expression::new(vec![Instruction::Numeric(NumericInstruction::F64Constant(
                 0.0,
             ))]),
@@ -324,7 +324,7 @@ mod tests {
         let mut module = web_assembly::Module::new();
 
         let global = Global::new(
-            GlobalType::new(false, ValueType::Number(NumberType::I64)),
+            GlobalType::new(false, ValueType::I64),
             Expression::new(vec![Instruction::Numeric(NumericInstruction::I64Constant(
                 0,
             ))]),
@@ -344,7 +344,7 @@ mod tests {
         module.add_export(export);
 
         let global = Global::new(
-            GlobalType::new(false, ValueType::Number(NumberType::I64)),
+            GlobalType::new(false, ValueType::I64),
             Expression::new(vec![Instruction::Numeric(NumericInstruction::I64Constant(
                 0,
             ))]),
@@ -360,7 +360,7 @@ mod tests {
         // function with no corresponding type.
         let function = Function::new(
             0,
-            ResultType::new(vec![ValueType::Number(NumberType::I32)]),
+            ResultType::new(vec![ValueType::I32]),
             Expression::new(vec![Instruction::Control(ControlInstruction::Nop)]),
         );
         module.add_function(function);

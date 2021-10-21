@@ -4,6 +4,7 @@ use crate::model::Name;
 use std::borrow::Borrow;
 use std::io::Write;
 use std::iter::IntoIterator;
+use std::convert::TryFrom;
 
 /// Emit a name to the output.
 ///
@@ -88,7 +89,7 @@ pub fn emit_usize<T: Borrow<usize>, O: Write + ?Sized>(
     size: T,
     output: &mut O,
 ) -> Result<usize, EmitError> {
-    Ok(encode_unsigned(*size.borrow() as u128, output)?)
+    Ok(encode_unsigned(u128::try_from(*size.borrow())?, output)?)
 }
 
 /// Emits an unsigned 64-bit integer to the output.

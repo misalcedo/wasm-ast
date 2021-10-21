@@ -1,14 +1,18 @@
 use crate::emitter::errors::EmitError;
 use crate::emitter::instruction::emit_expression;
-use crate::emitter::{
-    emit_byte, emit_bytes, emit_global_type, emit_memory_type, emit_name,
-    emit_reference_type, emit_table_type, emit_u32, emit_usize, emit_value_type, emit_vector,
-    CountingWrite,
+use crate::emitter::values::{
+    emit_byte, emit_bytes, emit_name, emit_u32, emit_usize, emit_vector,
+};
+use crate::emitter::types::{
+    emit_global_type, emit_memory_type, emit_reference_type,
+    emit_table_type, emit_value_type,
 };
 use crate::model::{
-    Custom, Data, DataMode, Element, ElementMode, Export, ExportDescription, Function, Global, Import,
-    ImportDescription, Memory, ReferenceType, Start, Table,
+    Custom, Data, DataMode, Element, ElementMode, Export, ExportDescription, Expression, Function,
+    Global, Import, ImportDescription, Instruction, Memory, ReferenceInstruction, ReferenceType, Start, Table,
 };
+use crate::emitter::CountingWrite;
+
 use std::io::Write;
 
 /// Emit a function to the output.
@@ -158,13 +162,13 @@ pub fn emit_start<O: Write + ?Sized>(start: &Start, output: &mut O) -> Result<us
 fn is_function_indices(expressions: &[Expression]) -> bool {
     expressions
         .iter()
-        .all(|i| matches!(i, ReferenceInstruction::Function(index)))
+        .all(|expression| matches!(expression.instructions(), [Instruction::Reference(ReferenceInstruction::Function(_))]))
 }
 
 /// Maps a list of intializer expressions to a list of function index constants.
 fn map_function_indices(expressions: &[Expression]) -> &[u32] {
-    expressions.iter().filter_map(|i| {
-        if let ReferenceInstruction::Function(index) = i {
+    expressions.iter().filter_map(|expression| {
+        if let [Instruction::Reference(ReferenceInstruction::Function(index))] = expression.instructions() {
             Some(index)
         } else {
             None
@@ -205,14 +209,10 @@ pub fn emit_element<O: Write + ?Sized>(
             bytes += emit_reference_type(kind, output)?;
             bytes += emit_vector(map_function_indices(expressions), output, emit_usize)?;
         }
-        (expressions, ElementMode::Declarative, kind)
-            if expressions
-                .iter()
-                .all(|i| matches!(i, ReferenceInstruction::Function(index))) =>
-        {
+        (expressions, ElementMode::Declarative, kind) if is_function_indices(expressions) => {
             bytes += emit_byte(0x03u8, output)?;
             bytes += emit_reference_type(kind, output)?;
-            bytes += emit_vector(indices, output, emit_usize)?;
+            bytes += emit_vector(map_function_indices(expressions), output, emit_usize)?;
         }
         (expressions, ElementMode::Active(0, offset), ReferenceType::Function) => {
             bytes += emit_byte(0x04u8, output)?;

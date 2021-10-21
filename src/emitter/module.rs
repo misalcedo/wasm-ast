@@ -1,17 +1,15 @@
 use crate::emitter::errors::EmitError;
 use crate::emitter::instruction::emit_expression;
-use crate::emitter::values::{
-    emit_byte, emit_bytes, emit_name, emit_u32, emit_usize, emit_vector,
-};
 use crate::emitter::types::{
-    emit_global_type, emit_memory_type, emit_reference_type,
-    emit_table_type, emit_value_type,
+    emit_global_type, emit_memory_type, emit_reference_type, emit_table_type, emit_value_type,
 };
+use crate::emitter::values::{emit_byte, emit_bytes, emit_name, emit_u32, emit_usize, emit_vector};
+use crate::emitter::CountingWrite;
 use crate::model::{
     Custom, Data, DataMode, Element, ElementMode, Export, ExportDescription, Expression, Function,
-    Global, Import, ImportDescription, Instruction, Memory, ReferenceInstruction, ReferenceType, Start, Table,
+    Global, Import, ImportDescription, Instruction, Memory, ReferenceInstruction, ReferenceType,
+    Start, Table,
 };
-use crate::emitter::CountingWrite;
 use std::io::Write;
 
 /// Emit a function to the output.
@@ -159,17 +157,22 @@ pub fn emit_start<O: Write + ?Sized>(start: &Start, output: &mut O) -> Result<us
 
 /// Predicate to test if a list of intializer expressions is a list of function index constants.
 fn is_function_indices(expressions: &[Expression]) -> bool {
-    expressions
-        .iter()
-        .all(|expression| matches!(expression.instructions(), [Instruction::Reference(ReferenceInstruction::Function(_))]))
+    expressions.iter().all(|expression| {
+        matches!(
+            expression.instructions(),
+            [Instruction::Reference(ReferenceInstruction::Function(_))]
+        )
+    })
 }
 
 fn extract_index(expression: &Expression) -> Option<u32> {
-        if let [Instruction::Reference(ReferenceInstruction::Function(index))] = expression.instructions() {
-            Some(*index)
-        } else {
-            None
-        }
+    if let [Instruction::Reference(ReferenceInstruction::Function(index))] =
+        expression.instructions()
+    {
+        Some(*index)
+    } else {
+        None
+    }
 }
 
 /// Emit an element to the output.
@@ -187,14 +190,22 @@ pub fn emit_element<O: Write + ?Sized>(
         {
             bytes += emit_byte(0x00u8, output)?;
             bytes += emit_expression(offset, output)?;
-            bytes += emit_vector(expressions.iter().filter_map(extract_index), output, emit_u32)?;
+            bytes += emit_vector(
+                expressions.iter().filter_map(extract_index),
+                output,
+                emit_u32,
+            )?;
         }
         (expressions, ElementMode::Passive, ReferenceType::Function)
             if is_function_indices(expressions) =>
         {
             bytes += emit_byte(0x01u8, output)?;
             bytes += emit_byte(0x00u8, output)?;
-            bytes += emit_vector(expressions.iter().filter_map(extract_index), output, emit_u32)?;
+            bytes += emit_vector(
+                expressions.iter().filter_map(extract_index),
+                output,
+                emit_u32,
+            )?;
         }
         (expressions, ElementMode::Active(table, offset), kind)
             if is_function_indices(expressions) =>
@@ -203,12 +214,20 @@ pub fn emit_element<O: Write + ?Sized>(
             bytes += emit_u32(table, output)?;
             bytes += emit_expression(offset, output)?;
             bytes += emit_reference_type(kind, output)?;
-            bytes += emit_vector(expressions.iter().filter_map(extract_index), output, emit_u32)?;
+            bytes += emit_vector(
+                expressions.iter().filter_map(extract_index),
+                output,
+                emit_u32,
+            )?;
         }
         (expressions, ElementMode::Declarative, kind) if is_function_indices(expressions) => {
             bytes += emit_byte(0x03u8, output)?;
             bytes += emit_reference_type(kind, output)?;
-            bytes += emit_vector(expressions.iter().filter_map(extract_index), output, emit_u32)?;
+            bytes += emit_vector(
+                expressions.iter().filter_map(extract_index),
+                output,
+                emit_u32,
+            )?;
         }
         (expressions, ElementMode::Active(0, offset), ReferenceType::Function) => {
             bytes += emit_byte(0x04u8, output)?;

@@ -387,9 +387,9 @@ pub enum NumericInstruction {
     /// fnn.convert_imm_sx
     Convert(FloatType, IntegerType, SignExtension),
     /// inn.reinterpret_fmm
-    ReinterpretFloat(IntegerType, FloatType),
+    ReinterpretFloat(IntegerType),
     /// fnn.reinterpret.imm
-    ReinterpretInteger(FloatType, IntegerType),
+    ReinterpretInteger(FloatType),
 }
 
 impl From<NumericInstruction> for Instruction {
@@ -991,10 +991,7 @@ impl MemoryArgument {
 
     /// Creates a new memory argument with the default offset and the given alignment.
     pub fn default_offset(align: u32) -> Self {
-        MemoryArgument {
-            offset: 0,
-            align: align,
-        }
+        MemoryArgument { offset: 0, align }
     }
 
     /// The static address offset of the memory instruction.

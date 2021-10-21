@@ -3,10 +3,8 @@ use crate::emitter::module::{
     emit_custom_content, emit_data, emit_element, emit_export, emit_function, emit_global,
     emit_import, emit_memory, emit_start, emit_table,
 };
-use crate::emitter::values::{
-    emit_byte, emit_bytes, emit_u32, emit_usize, emit_vector,
-};
 use crate::emitter::types::emit_function_type;
+use crate::emitter::values::{emit_byte, emit_bytes, emit_u32, emit_usize, emit_vector};
 use crate::emitter::CountingWrite;
 use crate::model::{Function, Module, ModuleSection, TypeIndex};
 use std::io::Write;

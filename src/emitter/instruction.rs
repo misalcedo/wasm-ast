@@ -1,6 +1,8 @@
 use crate::emitter::errors::EmitError;
-use crate::emitter::values::{emit_byte, emit_u32, emit_i32, emit_i64, emit_vector, emit_repeated, emit_f32, emit_f64};
 use crate::emitter::types::{emit_reference_type, emit_value_type};
+use crate::emitter::values::{
+    emit_byte, emit_f32, emit_f64, emit_i32, emit_i64, emit_repeated, emit_u32, emit_vector,
+};
 use crate::model::{
     BlockType, ControlInstruction, Expression, FloatType, Instruction, IntegerType, MemoryArgument,
     MemoryInstruction, NumberType, NumericInstruction, ParametricInstruction, ReferenceInstruction,
@@ -488,16 +490,16 @@ fn emit_numeric_instruction<O: Write + ?Sized>(
         NumericInstruction::Promote => {
             bytes += emit_byte(0xBBu8, output)?;
         }
-        NumericInstruction::ReinterpretFloat(IntegerType::I32, FloatType::F32) => {
+        NumericInstruction::ReinterpretFloat(IntegerType::I32) => {
             bytes += emit_byte(0xBCu8, output)?;
         }
-        NumericInstruction::ReinterpretFloat(IntegerType::I64, FloatType::F64) => {
+        NumericInstruction::ReinterpretFloat(IntegerType::I64) => {
             bytes += emit_byte(0xBDu8, output)?;
         }
-        NumericInstruction::ReinterpretInteger(FloatType::F32, IntegerType::I32) => {
+        NumericInstruction::ReinterpretInteger(FloatType::F32) => {
             bytes += emit_byte(0xBEu8, output)?;
         }
-        NumericInstruction::ReinterpretInteger(FloatType::F64, IntegerType::I64) => {
+        NumericInstruction::ReinterpretInteger(FloatType::F64) => {
             bytes += emit_byte(0xBFu8, output)?;
         }
         NumericInstruction::ExtendSigned8(IntegerType::I32) => {

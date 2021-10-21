@@ -827,16 +827,16 @@ pub fn parse_numeric_instruction(input: &[u8]) -> IResult<&[u8], NumericInstruct
         )),
         alt((
             map(match_byte(0xBC), |_| {
-                NumericInstruction::ReinterpretFloat(IntegerType::I32, FloatType::F32)
+                NumericInstruction::ReinterpretFloat(IntegerType::I32)
             }),
             map(match_byte(0xBD), |_| {
-                NumericInstruction::ReinterpretFloat(IntegerType::I64, FloatType::F64)
+                NumericInstruction::ReinterpretFloat(IntegerType::I64)
             }),
             map(match_byte(0xBE), |_| {
-                NumericInstruction::ReinterpretInteger(FloatType::F32, IntegerType::I32)
+                NumericInstruction::ReinterpretInteger(FloatType::F32)
             }),
             map(match_byte(0xBF), |_| {
-                NumericInstruction::ReinterpretInteger(FloatType::F64, IntegerType::I64)
+                NumericInstruction::ReinterpretInteger(FloatType::F64)
             }),
         )),
         alt((

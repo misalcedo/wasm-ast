@@ -2,9 +2,9 @@ use crate::emitter::errors::EmitError;
 use crate::leb128::{encode_signed, encode_unsigned};
 use crate::model::Name;
 use std::borrow::Borrow;
+use std::convert::TryFrom;
 use std::io::Write;
 use std::iter::IntoIterator;
-use std::convert::TryFrom;
 
 /// Emit a name to the output.
 ///
@@ -14,7 +14,7 @@ pub fn emit_f32<T: Borrow<f32>, O: Write + ?Sized>(
     output: &mut O,
 ) -> Result<usize, EmitError> {
     let bytes = value.borrow().to_le_bytes();
-    output.write_all(&bytes);
+    output.write_all(&bytes)?;
     Ok(bytes.len())
 }
 
@@ -26,7 +26,7 @@ pub fn emit_f64<T: Borrow<f64>, O: Write + ?Sized>(
     output: &mut O,
 ) -> Result<usize, EmitError> {
     let bytes = value.borrow().to_le_bytes();
-    output.write_all(&bytes);
+    output.write_all(&bytes)?;
     Ok(bytes.len())
 }
 
@@ -92,16 +92,6 @@ pub fn emit_usize<T: Borrow<usize>, O: Write + ?Sized>(
     Ok(encode_unsigned(u128::try_from(*size.borrow())?, output)?)
 }
 
-/// Emits an unsigned 64-bit integer to the output.
-///
-/// See https://webassembly.github.io/spec/core/binary/values.html#integers
-pub fn emit_u64<T: Borrow<u64>, O: Write + ?Sized>(
-    value: T,
-    output: &mut O,
-) -> Result<usize, EmitError> {
-    Ok(encode_unsigned(*value.borrow(), output)?)
-}
-
 /// Emits a signed 32-bit integer to the output.
 ///
 /// See https://webassembly.github.io/spec/core/binary/values.html#integers
@@ -126,11 +116,7 @@ pub fn emit_i64<T: Borrow<i64>, O: Write + ?Sized>(
 /// Prefixes the items with the length of the slice.
 ///
 /// See https://webassembly.github.io/spec/core/binary/conventions.html#vectors
-pub fn emit_vector<I, E, O>(
-    items: I,
-    output: &mut O,
-    emit: E,
-) -> Result<usize, EmitError>
+pub fn emit_vector<I, E, O>(items: I, output: &mut O, emit: E) -> Result<usize, EmitError>
 where
     I: IntoIterator,
     <I as IntoIterator>::IntoIter: Clone,
@@ -141,11 +127,7 @@ where
 }
 
 /// Emit each item to the output using the given emit function.
-pub fn emit_repeated<I, E, O>(
-    items: I,
-    output: &mut O,
-    emit: E,
-) -> Result<usize, EmitError>
+pub fn emit_repeated<I, E, O>(items: I, output: &mut O, emit: E) -> Result<usize, EmitError>
 where
     I: IntoIterator,
     <I as IntoIterator>::IntoIter: Clone,
@@ -154,7 +136,6 @@ where
 {
     emit_iterator(items, output, false, emit)
 }
-
 
 /// Emit each item to the output using the given emit function.
 fn emit_iterator<I, E, O>(
@@ -173,9 +154,9 @@ where
     let items = items.into_iter();
 
     if include_length {
-        bytes += emit_usize(items.clone().count(), output)?;    
+        bytes += emit_usize(items.clone().count(), output)?;
     }
-    
+
     for item in items {
         bytes += emit(item, output)?;
     }

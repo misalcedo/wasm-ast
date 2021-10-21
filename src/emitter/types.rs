@@ -1,18 +1,11 @@
 use crate::emitter::errors::EmitError;
 use crate::emitter::values::{emit_byte, emit_u32, emit_vector};
 use crate::model::{
-    FunctionType, GlobalType, Limit, MemoryType, Mutability, NumberType, ReferenceType, ResultType,
-    TableType, ValueType,
+    FunctionType, GlobalType, Limit, MemoryType, Mutability, ReferenceType, ResultType, TableType,
+    ValueType,
 };
 use std::borrow::Borrow;
 use std::io::Write;
-
-pub fn emit_number_type<O: Write + ?Sized>(
-    kind: NumberType,
-    output: &mut O,
-) -> Result<usize, EmitError> {
-    emit_value_type(ValueType::from(kind), output)
-}
 
 pub fn emit_reference_type<O: Write + ?Sized>(
     kind: ReferenceType,

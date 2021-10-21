@@ -355,7 +355,7 @@ pub fn parse_memory_instruction(input: &[u8]) -> IResult<&[u8], MemoryInstructio
 /// See <https://webassembly.github.io/spec/core/binary/instructions.html#memory-instructions>
 pub fn parse_memory_argument(input: &[u8]) -> IResult<&[u8], MemoryArgument> {
     map(tuple((parse_u32, parse_u32)), |(align, offset)| {
-        MemoryArgument::new(Some(align), offset)
+        MemoryArgument::new(align, offset)
     })(input)
 }
 

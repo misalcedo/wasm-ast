@@ -500,19 +500,19 @@ fn emit_numeric_instruction<O: Write + ?Sized>(
         NumericInstruction::ReinterpretInteger(FloatType::F64, IntegerType::I64) => {
             bytes += emit_byte(0xBFu8, output)?;
         }
-        NumericInstruction::ExtendSigned(StorageSize::I32_8) => {
+        NumericInstruction::ExtendSigned8(IntegerType::I32) => {
             bytes += emit_byte(0xC0u8, output)?;
         }
-        NumericInstruction::ExtendSigned(StorageSize::I32_16) => {
+        NumericInstruction::ExtendSigned16(IntegerType::I32) => {
             bytes += emit_byte(0xC1u8, output)?;
         }
-        NumericInstruction::ExtendSigned(StorageSize::I64_8) => {
+        NumericInstruction::ExtendSigned8(IntegerType::I64) => {
             bytes += emit_byte(0xC2u8, output)?;
         }
-        NumericInstruction::ExtendSigned(StorageSize::I64_16) => {
+        NumericInstruction::ExtendSigned16(IntegerType::I64) => {
             bytes += emit_byte(0xC3u8, output)?;
         }
-        NumericInstruction::ExtendSigned(StorageSize::I64_32) => {
+        NumericInstruction::ExtendSigned32 => {
             bytes += emit_byte(0xC4u8, output)?;
         }
         NumericInstruction::ConvertAndTruncateWithSaturation(
@@ -579,7 +579,6 @@ fn emit_numeric_instruction<O: Write + ?Sized>(
             bytes += emit_byte(0xFCu8, output)?;
             bytes += emit_u32(7u32, output)?;
         }
-        _ => return Err(EmitError::InvalidSyntax),
     }
 
     Ok(bytes)
@@ -595,16 +594,16 @@ pub fn emit_reference_instruction<O: Write + ?Sized>(
     let mut bytes = 0;
 
     match instruction {
-        ReferenceInstruction::ReferenceNull(kind) => {
+        ReferenceInstruction::Null(kind) => {
             bytes += emit_byte(0xD0u8, output)?;
-            bytes += emit_reference_type(kind, output)?;
+            bytes += emit_reference_type(*kind, output)?;
         }
-        ReferenceInstruction::ReferenceIsNull => {
+        ReferenceInstruction::IsNull => {
             bytes += emit_byte(0xD1u8, output)?;
         }
-        ReferenceInstruction::ReferenceFunction(index) => {
+        ReferenceInstruction::Function(index) => {
             bytes += emit_byte(0xD2u8, output)?;
-            bytes += emit_usize(index, output)?;
+            bytes += emit_u32(index, output)?;
         }
     }
 
@@ -648,23 +647,23 @@ fn emit_variable_instruction<O: Write + ?Sized>(
     match instruction {
         VariableInstruction::LocalGet(index) => {
             bytes += emit_byte(0x20u8, output)?;
-            bytes += emit_usize(index, output)?;
+            bytes += emit_u32(index, output)?;
         }
         VariableInstruction::LocalSet(index) => {
             bytes += emit_byte(0x21u8, output)?;
-            bytes += emit_usize(index, output)?;
+            bytes += emit_u32(index, output)?;
         }
         VariableInstruction::LocalTee(index) => {
             bytes += emit_byte(0x22u8, output)?;
-            bytes += emit_usize(index, output)?;
+            bytes += emit_u32(index, output)?;
         }
         VariableInstruction::GlobalGet(index) => {
             bytes += emit_byte(0x23u8, output)?;
-            bytes += emit_usize(index, output)?;
+            bytes += emit_u32(index, output)?;
         }
         VariableInstruction::GlobalSet(index) => {
             bytes += emit_byte(0x24u8, output)?;
-            bytes += emit_usize(index, output)?;
+            bytes += emit_u32(index, output)?;
         }
     }
 
@@ -681,45 +680,45 @@ fn emit_table_instruction<O: Write + ?Sized>(
     let mut bytes = 0;
 
     match instruction {
-        TableInstruction::TableGet(index) => {
+        TableInstruction::Get(index) => {
             bytes += emit_byte(0x25u8, output)?;
-            bytes += emit_usize(index, output)?;
+            bytes += emit_u32(index, output)?;
         }
-        TableInstruction::TableSet(index) => {
+        TableInstruction::Set(index) => {
             bytes += emit_byte(0x26u8, output)?;
-            bytes += emit_usize(index, output)?;
+            bytes += emit_u32(index, output)?;
         }
-        TableInstruction::TableInit(element, table) => {
+        TableInstruction::Init(element, table) => {
             bytes += emit_byte(0xFCu8, output)?;
             bytes += emit_u32(12u32, output)?;
-            bytes += emit_usize(element, output)?;
-            bytes += emit_usize(table, output)?;
+            bytes += emit_u32(element, output)?;
+            bytes += emit_u32(table, output)?;
         }
         TableInstruction::ElementDrop(index) => {
             bytes += emit_byte(0xFCu8, output)?;
             bytes += emit_u32(13u32, output)?;
-            bytes += emit_usize(index, output)?;
+            bytes += emit_u32(index, output)?;
         }
-        TableInstruction::TableCopy(table_a, table_b) => {
+        TableInstruction::Copy(table_a, table_b) => {
             bytes += emit_byte(0xFCu8, output)?;
             bytes += emit_u32(14u32, output)?;
-            bytes += emit_usize(table_a, output)?;
-            bytes += emit_usize(table_b, output)?;
+            bytes += emit_u32(table_a, output)?;
+            bytes += emit_u32(table_b, output)?;
         }
-        TableInstruction::TableGrow(index) => {
+        TableInstruction::Grow(index) => {
             bytes += emit_byte(0xFCu8, output)?;
             bytes += emit_u32(15u32, output)?;
-            bytes += emit_usize(index, output)?;
+            bytes += emit_u32(index, output)?;
         }
-        TableInstruction::TableSize(index) => {
+        TableInstruction::Size(index) => {
             bytes += emit_byte(0xFCu8, output)?;
             bytes += emit_u32(16u32, output)?;
-            bytes += emit_usize(index, output)?;
+            bytes += emit_u32(index, output)?;
         }
-        TableInstruction::TableFill(index) => {
+        TableInstruction::Fill(index) => {
             bytes += emit_byte(0xFCu8, output)?;
             bytes += emit_u32(17u32, output)?;
-            bytes += emit_usize(index, output)?;
+            bytes += emit_u32(index, output)?;
         }
     }
 
@@ -752,83 +751,75 @@ pub fn emit_memory_instruction<O: Write + ?Sized>(
             bytes += emit_byte(0x2Bu8, output)?;
             bytes += emit_memory_argument(memory_argument, output)?;
         }
-        MemoryInstruction::LoadPartial(
-            StorageSize::I32_8,
+        MemoryInstruction::Load8(
+            IntegerType::I32,
             SignExtension::Signed,
             memory_argument,
         ) => {
             bytes += emit_byte(0x2Cu8, output)?;
             bytes += emit_memory_argument(memory_argument, output)?;
         }
-        MemoryInstruction::LoadPartial(
-            StorageSize::I32_8,
+        MemoryInstruction::Load8(
+            IntegerType::I32,
             SignExtension::Unsigned,
             memory_argument,
         ) => {
             bytes += emit_byte(0x2Du8, output)?;
             bytes += emit_memory_argument(memory_argument, output)?;
         }
-        MemoryInstruction::LoadPartial(
-            StorageSize::I32_16,
+        MemoryInstruction::Load16(
+            IntegerType::I32,
             SignExtension::Signed,
             memory_argument,
         ) => {
             bytes += emit_byte(0x2Eu8, output)?;
             bytes += emit_memory_argument(memory_argument, output)?;
         }
-        MemoryInstruction::LoadPartial(
-            StorageSize::I32_16,
+        MemoryInstruction::Load16(
+            IntegerType::I32,
             SignExtension::Unsigned,
             memory_argument,
         ) => {
             bytes += emit_byte(0x2Fu8, output)?;
             bytes += emit_memory_argument(memory_argument, output)?;
         }
-        MemoryInstruction::LoadPartial(
-            StorageSize::I64_8,
+        MemoryInstruction::Load8(
+            IntegerType::I64,
             SignExtension::Signed,
             memory_argument,
         ) => {
             bytes += emit_byte(0x30u8, output)?;
             bytes += emit_memory_argument(memory_argument, output)?;
         }
-        MemoryInstruction::LoadPartial(
-            StorageSize::I64_8,
+        MemoryInstruction::Load8(
+            IntegerType::I64,
             SignExtension::Unsigned,
             memory_argument,
         ) => {
             bytes += emit_byte(0x31u8, output)?;
             bytes += emit_memory_argument(memory_argument, output)?;
         }
-        MemoryInstruction::LoadPartial(
-            StorageSize::I64_16,
+        MemoryInstruction::Load16(
+            IntegerType::I64,
             SignExtension::Signed,
             memory_argument,
         ) => {
             bytes += emit_byte(0x32u8, output)?;
             bytes += emit_memory_argument(memory_argument, output)?;
         }
-        MemoryInstruction::LoadPartial(
-            StorageSize::I64_16,
+        MemoryInstruction::Load16(
+            IntegerType::I64,
             SignExtension::Unsigned,
             memory_argument,
         ) => {
             bytes += emit_byte(0x33u8, output)?;
             bytes += emit_memory_argument(memory_argument, output)?;
         }
-        MemoryInstruction::LoadPartial(
-            StorageSize::I64_32,
-            SignExtension::Signed,
-            memory_argument,
-        ) => {
+        MemoryInstruction::Load32(SignExtension::Signed, memory_argument) => {
             bytes += emit_byte(0x34u8, output)?;
             bytes += emit_memory_argument(memory_argument, output)?;
         }
-        MemoryInstruction::LoadPartial(
-            StorageSize::I64_32,
-            SignExtension::Unsigned,
-            memory_argument,
-        ) => {
+        MemoryInstruction::Load32(SignExtension::Unsigned, memory_argument) => {
             bytes += emit_byte(0x35u8, output)?;
             bytes += emit_memory_argument(memory_argument, output)?;
         }
@@ -848,52 +839,52 @@ pub fn emit_memory_instruction<O: Write + ?Sized>(
             bytes += emit_byte(0x39u8, output)?;
             bytes += emit_memory_argument(memory_argument, output)?;
         }
-        MemoryInstruction::StorePartial(StorageSize::I32_8, memory_argument) => {
+        MemoryInstruction::Store8(IntegerType::I32, memory_argument) => {
             bytes += emit_byte(0x3Au8, output)?;
             bytes += emit_memory_argument(memory_argument, output)?;
         }
-        MemoryInstruction::StorePartial(StorageSize::I32_16, memory_argument) => {
+        MemoryInstruction::Store16(IntegerType::I32, memory_argument) => {
             bytes += emit_byte(0x3Bu8, output)?;
             bytes += emit_memory_argument(memory_argument, output)?;
         }
-        MemoryInstruction::StorePartial(StorageSize::I64_8, memory_argument) => {
+        MemoryInstruction::Store8(IntegerType::I64, memory_argument) => {
             bytes += emit_byte(0x3Cu8, output)?;
             bytes += emit_memory_argument(memory_argument, output)?;
         }
-        MemoryInstruction::StorePartial(StorageSize::I64_16, memory_argument) => {
+        MemoryInstruction::Store16(IntegerType::I64, memory_argument) => {
             bytes += emit_byte(0x3Du8, output)?;
             bytes += emit_memory_argument(memory_argument, output)?;
         }
-        MemoryInstruction::StorePartial(StorageSize::I64_32, memory_argument) => {
+        MemoryInstruction::Store32(memory_argument) => {
             bytes += emit_byte(0x3Eu8, output)?;
             bytes += emit_memory_argument(memory_argument, output)?;
         }
-        MemoryInstruction::MemorySize => {
+        MemoryInstruction::Size => {
             bytes += emit_byte(0x3Fu8, output)?;
             bytes += emit_byte(0x00u8, output)?;
         }
-        MemoryInstruction::MemoryGrow => {
+        MemoryInstruction::Grow => {
             bytes += emit_byte(0x40u8, output)?;
             bytes += emit_byte(0x00u8, output)?;
         }
-        MemoryInstruction::MemoryInit(index) => {
+        MemoryInstruction::Init(index) => {
             bytes += emit_byte(0xFCu8, output)?;
             bytes += emit_u32(8u32, output)?;
-            bytes += emit_usize(index, output)?;
+            bytes += emit_u32(index, output)?;
             bytes += emit_byte(0x00u8, output)?;
         }
         MemoryInstruction::DataDrop(index) => {
             bytes += emit_byte(0xFCu8, output)?;
             bytes += emit_u32(9u32, output)?;
-            bytes += emit_usize(index, output)?;
+            bytes += emit_u32(index, output)?;
         }
-        MemoryInstruction::MemoryCopy => {
+        MemoryInstruction::Copy => {
             bytes += emit_byte(0xFCu8, output)?;
             bytes += emit_u32(10u32, output)?;
             bytes += emit_byte(0x00u8, output)?;
             bytes += emit_byte(0x00u8, output)?;
         }
-        MemoryInstruction::MemoryFill => {
+        MemoryInstruction::Fill => {
             bytes += emit_byte(0xFCu8, output)?;
             bytes += emit_u32(11u32, output)?;
             bytes += emit_byte(0x00u8, output)?;
@@ -943,28 +934,28 @@ fn emit_control_instruction<O: Write + ?Sized>(
         }
         ControlInstruction::Branch(index) => {
             bytes += emit_byte(0x0Cu8, output)?;
-            bytes += emit_usize(index, output)?;
+            bytes += emit_u32(index, output)?;
         }
         ControlInstruction::BranchIf(index) => {
             bytes += emit_byte(0x0Du8, output)?;
-            bytes += emit_usize(index, output)?;
+            bytes += emit_u32(index, output)?;
         }
         ControlInstruction::BranchTable(indices, index) => {
             bytes += emit_byte(0x0Eu8, output)?;
-            bytes += emit_vector(indices, output, emit_usize)?;
-            bytes += emit_usize(index, output)?;
+            bytes += emit_vector(indices, output, emit_u32)?;
+            bytes += emit_u32(index, output)?;
         }
         ControlInstruction::Return => {
             bytes += emit_byte(0x0Fu8, output)?;
         }
         ControlInstruction::Call(index) => {
             bytes += emit_byte(0x10u8, output)?;
-            bytes += emit_usize(index, output)?;
+            bytes += emit_u32(index, output)?;
         }
         ControlInstruction::CallIndirect(table, kind) => {
             bytes += emit_byte(0x11u8, output)?;
-            bytes += emit_usize(kind, output)?;
-            bytes += emit_usize(table, output)?;
+            bytes += emit_u32(kind, output)?;
+            bytes += emit_u32(table, output)?;
         }
     }
 
@@ -994,8 +985,8 @@ pub fn emit_memory_argument<O: Write + ?Sized>(
 ) -> Result<usize, EmitError> {
     let mut bytes = 0;
 
-    bytes += emit_usize(argument.align(), output)?;
-    bytes += emit_usize(argument.offset(), output)?;
+    bytes += emit_u32(argument.align(), output)?;
+    bytes += emit_u32(argument.offset(), output)?;
 
     Ok(bytes)
 }

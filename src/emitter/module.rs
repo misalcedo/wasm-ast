@@ -6,7 +6,7 @@ use crate::emitter::{
     CountingWrite,
 };
 use crate::model::{
-    Data, DataMode, Element, ElementInitializer, ElementMode, Export, ExportDescription, Function,
+    Data, DataMode, Element, ElementMode, Export, ExportDescription, Function,
     Global, Import, ImportDescription, Memory, Name, ReferenceType, Start, Table,
 };
 use std::io::Write;
@@ -172,6 +172,23 @@ pub fn emit_start<O: Write + ?Sized>(
     emit_u32(start.function(), output)
 }
 
+
+/// Predicate to test if a list of intializer expressions is a list of function index constants.
+fn is_function_indices(expressions: &[Expression]) => bool {
+    expressions.iter().all(|i| matches!(i, ReferenceInstruction::Function(index)))
+}
+
+/// Maps a list of intializer expressions to a list of function index constants.
+fn map_function_indices(expressions: &[Expression]) => &[u32] {
+    expressions.iter().filter_map(|i| {
+        if let ReferenceInstruction::Function(index) = i {
+            Some(index)
+        } else {
+            None
+        }
+    })
+}
+
 /// Emit an element to the output.
 ///
 /// See https://webassembly.github.io/spec/core/binary/modules.html#element-section
@@ -183,37 +200,37 @@ pub fn emit_element<O: Write + ?Sized>(
 
     match (element.initializers(), element.mode(), element.kind()) {
         (
-            ElementInitializer::FunctionIndex(indices),
+            expressions,
             ElementMode::Active(0, offset),
             ReferenceType::Function,
-        ) => {
+        ) if is_function_indices(expressions) => {
             bytes += emit_byte(0x00u8, output)?;
             bytes += emit_expression(offset, output)?;
             bytes += emit_vector(indices, output, emit_usize)?;
         }
         (
-            ElementInitializer::FunctionIndex(indices),
+            expressions,
             ElementMode::Passive,
             ReferenceType::Function,
-        ) => {
+        ) if expressions.iter().all(|i| matches!(i, ReferenceInstruction::Function(index))) => {
             bytes += emit_byte(0x01u8, output)?;
             bytes += emit_byte(0x00u8, output)?;
             bytes += emit_vector(indices, output, emit_usize)?;
         }
-        (ElementInitializer::FunctionIndex(indices), ElementMode::Active(table, offset), kind) => {
+        (expressions, ElementMode::Active(table, offset), kind) if expressions.iter().all(|i| matches!(i, ReferenceInstruction::Function(index))) => {
             bytes += emit_byte(0x02u8, output)?;
             bytes += emit_u32(table, output)?;
             bytes += emit_expression(offset, output)?;
             bytes += emit_reference_type(kind, output)?;
             bytes += emit_vector(indices, output, emit_usize)?;
         }
-        (ElementInitializer::FunctionIndex(indices), ElementMode::Declarative, kind) => {
+        (expressions, ElementMode::Declarative, kind) if expressions.iter().all(|i| matches!(i, ReferenceInstruction::Function(index))) => {
             bytes += emit_byte(0x03u8, output)?;
             bytes += emit_reference_type(kind, output)?;
             bytes += emit_vector(indices, output, emit_usize)?;
         }
         (
-            ElementInitializer::Expression(expressions),
+            expressions,
             ElementMode::Active(0, offset),
             ReferenceType::Function,
         ) => {
@@ -221,19 +238,19 @@ pub fn emit_element<O: Write + ?Sized>(
             bytes += emit_expression(offset, output)?;
             bytes += emit_vector(expressions, output, emit_expression)?;
         }
-        (ElementInitializer::Expression(expressions), ElementMode::Passive, kind) => {
+        (expressions, ElementMode::Passive, kind) => {
             bytes += emit_byte(0x05u8, output)?;
             bytes += emit_reference_type(kind, output)?;
             bytes += emit_vector(expressions, output, emit_expression)?;
         }
-        (ElementInitializer::Expression(expressions), ElementMode::Active(table, offset), kind) => {
+        (expressions, ElementMode::Active(table, offset), kind) => {
             bytes += emit_byte(0x06u8, output)?;
             bytes += emit_u32(table, output)?;
             bytes += emit_expression(offset, output)?;
             bytes += emit_reference_type(kind, output)?;
             bytes += emit_vector(expressions, output, emit_expression)?;
         }
-        (ElementInitializer::Expression(expressions), ElementMode::Declarative, kind) => {
+        (expressions, ElementMode::Declarative, kind) => {
             bytes += emit_byte(0x07u8, output)?;
             bytes += emit_reference_type(kind, output)?;
             bytes += emit_vector(expressions, output, emit_expression)?;

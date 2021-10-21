@@ -979,37 +979,21 @@ pub enum BlockType {
 /// ```
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct MemoryArgument {
-    align: Option<u32>,
+    align: u32,
     offset: u32,
 }
 
 impl MemoryArgument {
     /// Creates a new memory argument with the given alignment and offset.
-    pub fn new(align: Option<u32>, offset: u32) -> Self {
+    pub fn new(align: u32, offset: u32) -> Self {
         MemoryArgument { align, offset }
-    }
-
-    /// Creates a new memory argument with the default alignment and an offset of 0.
-    pub fn default() -> Self {
-        MemoryArgument {
-            offset: 0,
-            align: None,
-        }
-    }
-
-    /// Creates a new memory argument with the default alignment and the given offset.
-    pub fn default_align(offset: u32) -> Self {
-        MemoryArgument {
-            offset,
-            align: None,
-        }
     }
 
     /// Creates a new memory argument with the default offset and the given alignment.
     pub fn default_offset(align: u32) -> Self {
         MemoryArgument {
             offset: 0,
-            align: Some(align),
+            align: align,
         }
     }
 
@@ -1019,9 +1003,7 @@ impl MemoryArgument {
     }
 
     /// The memory alignment of the instruction expressed as the exponent of a power of 2.
-    /// The default alignment cannot be computed without a number type.
-    /// Instead, returns None when the default alignment is set.
-    pub fn align(&self) -> Option<u32> {
+    pub fn align(&self) -> u32 {
         self.align
     }
 }

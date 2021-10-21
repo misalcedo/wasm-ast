@@ -1,5 +1,5 @@
 use crate::emitter::errors::EmitError;
-use crate::emitter::values::*;
+use crate::emitter::values::{emit_byte, emit_u32, emit_i32, emit_i64, emit_vector, emit_repeated, emit_f32, emit_f64};
 use crate::emitter::types::{emit_reference_type, emit_value_type};
 use crate::model::{
     BlockType, ControlInstruction, Expression, FloatType, Instruction, IntegerType, MemoryArgument,

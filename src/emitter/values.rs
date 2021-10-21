@@ -3,6 +3,7 @@ use crate::leb128::{encode_signed, encode_unsigned};
 use crate::model::Name;
 use std::borrow::Borrow;
 use std::io::Write;
+use std::iter::IntoIterator;
 
 /// Emit a name to the output.
 ///
@@ -124,35 +125,56 @@ pub fn emit_i64<T: Borrow<i64>, O: Write + ?Sized>(
 /// Prefixes the items with the length of the slice.
 ///
 /// See https://webassembly.github.io/spec/core/binary/conventions.html#vectors
-pub fn emit_vector<'items, I, E, O>(
-    items: &'items [I],
+pub fn emit_vector<I, E, O>(
+    items: I,
     output: &mut O,
     emit: E,
 ) -> Result<usize, EmitError>
 where
+    I: IntoIterator,
+    <I as IntoIterator>::IntoIter: Clone,
     O: Write + ?Sized,
-    E: Fn(&'items I, &mut O) -> Result<usize, EmitError>,
+    E: Fn(I::Item, &mut O) -> Result<usize, EmitError>,
 {
-    let mut bytes = 0;
-
-    bytes += emit_usize(items.len(), output)?;
-    bytes += emit_repeated(items, output, emit)?;
-
-    Ok(bytes)
+    emit_iterator(items, output, true, emit)
 }
 
 /// Emit each item to the output using the given emit function.
-pub fn emit_repeated<'items, I, E, O>(
-    items: &'items [I],
+pub fn emit_repeated<I, E, O>(
+    items: I,
     output: &mut O,
     emit: E,
 ) -> Result<usize, EmitError>
 where
+    I: IntoIterator,
+    <I as IntoIterator>::IntoIter: Clone,
     O: Write + ?Sized,
-    E: Fn(&'items I, &mut O) -> Result<usize, EmitError>,
+    E: Fn(I::Item, &mut O) -> Result<usize, EmitError>,
+{
+    emit_iterator(items, output, false, emit)
+}
+
+
+/// Emit each item to the output using the given emit function.
+fn emit_iterator<I, E, O>(
+    items: I,
+    output: &mut O,
+    include_length: bool,
+    emit: E,
+) -> Result<usize, EmitError>
+where
+    I: IntoIterator,
+    <I as IntoIterator>::IntoIter: Clone,
+    O: Write + ?Sized,
+    E: Fn(I::Item, &mut O) -> Result<usize, EmitError>,
 {
     let mut bytes = 0;
+    let items = items.into_iter();
 
+    if include_length {
+        bytes += emit_usize(items.clone().count(), output)?;    
+    }
+    
     for item in items {
         bytes += emit(item, output)?;
     }

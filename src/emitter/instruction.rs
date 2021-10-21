@@ -1,10 +1,10 @@
 use crate::emitter::errors::EmitError;
 use crate::emitter::values::*;
-use crate::emitter::{emit_reference_type, emit_value_type};
+use crate::emitter::types::{emit_reference_type, emit_value_type};
 use crate::model::{
     BlockType, ControlInstruction, Expression, FloatType, Instruction, IntegerType, MemoryArgument,
     MemoryInstruction, NumberType, NumericInstruction, ParametricInstruction, ReferenceInstruction,
-    SignExtension, StorageSize, TableInstruction, VariableInstruction,
+    SignExtension, TableInstruction, VariableInstruction,
 };
 use std::io::Write;
 

@@ -87,7 +87,7 @@ pub fn emit_usize<T: Borrow<usize>, O: Write + ?Sized>(
     size: T,
     output: &mut O,
 ) -> Result<usize, EmitError> {
-    Ok(encode_unsigned(*size.borrow(), output)?)
+    Ok(encode_unsigned(*size.borrow() as u128, output)?)
 }
 
 /// Emits an unsigned 64-bit integer to the output.

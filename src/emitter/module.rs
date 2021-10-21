@@ -191,14 +191,14 @@ pub fn emit_element<O: Write + ?Sized>(
         {
             bytes += emit_byte(0x00u8, output)?;
             bytes += emit_expression(offset, output)?;
-            bytes += emit_vector(map_function_indices(expressions), output, emit_usize)?;
+            bytes += emit_vector(map_function_indices(expressions), output, emit_u32)?;
         }
         (expressions, ElementMode::Passive, ReferenceType::Function)
             if is_function_indices(expressions) =>
         {
             bytes += emit_byte(0x01u8, output)?;
             bytes += emit_byte(0x00u8, output)?;
-            bytes += emit_vector(map_function_indices(expressions), output, emit_usize)?;
+            bytes += emit_vector(map_function_indices(expressions), output, emit_u32)?;
         }
         (expressions, ElementMode::Active(table, offset), kind)
             if is_function_indices(expressions) =>
@@ -207,12 +207,12 @@ pub fn emit_element<O: Write + ?Sized>(
             bytes += emit_u32(table, output)?;
             bytes += emit_expression(offset, output)?;
             bytes += emit_reference_type(kind, output)?;
-            bytes += emit_vector(map_function_indices(expressions), output, emit_usize)?;
+            bytes += emit_vector(map_function_indices(expressions), output, emit_u32)?;
         }
         (expressions, ElementMode::Declarative, kind) if is_function_indices(expressions) => {
             bytes += emit_byte(0x03u8, output)?;
             bytes += emit_reference_type(kind, output)?;
-            bytes += emit_vector(map_function_indices(expressions), output, emit_usize)?;
+            bytes += emit_vector(map_function_indices(expressions), output, emit_u32)?;
         }
         (expressions, ElementMode::Active(0, offset), ReferenceType::Function) => {
             bytes += emit_byte(0x04u8, output)?;
@@ -271,7 +271,7 @@ pub fn emit_data<O: Write + ?Sized>(data: &Data, output: &mut O) -> Result<usize
 ///
 /// See https://webassembly.github.io/spec/core/binary/modules.html#custom-section
 pub fn emit_custom_content<O: Write + ?Sized>(
-    custom: Custom,
+    custom: &Custom,
     output: &mut O,
 ) -> Result<usize, EmitError> {
     let mut bytes = 0;

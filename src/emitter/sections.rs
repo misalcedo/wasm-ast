@@ -197,9 +197,7 @@ pub fn emit_data_count_section<O: Write>(
 ) -> Result<usize, EmitError> {
     match module.data_count() {
         None => Ok(0),
-        Some(count) => emit_section(ModuleSection::DataCount, output, |o| {
-            emit_u32(count, o)
-        }),
+        Some(count) => emit_section(ModuleSection::DataCount, output, |o| emit_u32(count, o)),
     }
 }
 

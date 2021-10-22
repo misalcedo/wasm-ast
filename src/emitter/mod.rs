@@ -63,13 +63,13 @@ impl Write for CountingWrite {
 mod tests {
     use super::*;
     use crate::emitter::errors::EmitError;
-    use crate::parser::parse_binary;
     use crate::model::{
         ControlInstruction, Custom, Data, DataMode, Element, ElementInitializer, ElementMode,
         Export, ExportDescription, Expression, Function, FunctionType, Global, GlobalType, Import,
         ImportDescription, Instruction, Limit, Memory, MemoryType, Module, ModuleSection, Name,
         NumericInstruction, ReferenceType, ResultType, Start, Table, TableType, ValueType,
     };
+    use crate::parser::parse_binary;
     use wasmtime::{Engine, Extern, Func, Instance, Store};
 
     fn validate(target: &Module) -> Result<(), EmitError> {
@@ -79,7 +79,7 @@ mod tests {
 
         let parsed = parse_binary(bytes.as_slice())
             .map_err(|_| EmitError::IO(std::io::Error::from(std::io::ErrorKind::NotFound)))?;
-        
+
         assert_eq!(target, &parsed);
 
         let engine = Engine::default();

@@ -62,13 +62,13 @@ impl Write for CountingWrite {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::emitter::errors::EmitError;
     use crate::model::{
-        ControlInstruction, Custom, Data, DataMode, Element, ElementInitializer, ElementMode, Export,
-        ExportDescription, Expression, Function, FunctionType, Global, GlobalType, Import,
-        ImportDescription, Instruction, Module, Limit, Memory, MemoryType, ModuleSection, Name,
+        ControlInstruction, Custom, Data, DataMode, Element, ElementInitializer, ElementMode,
+        Export, ExportDescription, Expression, Function, FunctionType, Global, GlobalType, Import,
+        ImportDescription, Instruction, Limit, Memory, MemoryType, Module, ModuleSection, Name,
         NumericInstruction, ReferenceType, ResultType, Start, Table, TableType, ValueType,
     };
-    use crate::emitter::errors::EmitError;
     use wasmtime::{Engine, Extern, Func, Instance, Store};
 
     fn validate(target: &Module) -> Result<(), EmitError> {
@@ -77,7 +77,8 @@ mod tests {
         emit_binary(&target, &mut bytes)?;
 
         let engine = Engine::default();
-        let module = wasmtime::Module::new(&engine, &bytes).map_err(|_| EmitError::IO(std::io::Error::from(std::io::ErrorKind::NotFound)))?;
+        let module = wasmtime::Module::new(&engine, &bytes)
+            .map_err(|_| EmitError::IO(std::io::Error::from(std::io::ErrorKind::NotFound)))?;
         let mut store = Store::new(&engine, 0);
         let mut imports: Vec<Extern> = Vec::new();
 
@@ -86,7 +87,8 @@ mod tests {
             imports.push(start.into());
         }
 
-        Instance::new(&mut store, &module, &imports).map_err(|_| EmitError::IO(std::io::Error::from(std::io::ErrorKind::NotFound)))?;
+        Instance::new(&mut store, &module, &imports)
+            .map_err(|_| EmitError::IO(std::io::Error::from(std::io::ErrorKind::NotFound)))?;
 
         Ok(())
     }
@@ -96,7 +98,10 @@ mod tests {
         let mut buffer = Vec::new();
         let mut builder = Module::builder();
 
-        builder.add_custom_section(ModuleSection::Custom, Custom::new("version".into(), Vec::from("0.1.0".as_bytes())));
+        builder.add_custom_section(
+            ModuleSection::Custom,
+            Custom::new("version".into(), Vec::from("0.1.0".as_bytes())),
+        );
 
         let module = builder.build();
         let result = validate(&module);

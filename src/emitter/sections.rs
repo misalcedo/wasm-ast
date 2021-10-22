@@ -4,7 +4,9 @@ use crate::emitter::module::{
     emit_import, emit_memory, emit_start, emit_table,
 };
 use crate::emitter::types::emit_function_type;
-use crate::emitter::values::{emit_byte, emit_bytes, emit_u32, emit_usize, emit_repeated, emit_vector};
+use crate::emitter::values::{
+    emit_byte, emit_bytes, emit_repeated, emit_u32, emit_usize, emit_vector,
+};
 use crate::emitter::CountingWrite;
 use crate::model::{Custom, Function, Module, ModuleSection, TypeIndex};
 use std::io::Write;
@@ -62,18 +64,17 @@ pub fn emit_custom_sections<O: Write>(
 ) -> Result<usize, EmitError> {
     match module.custom_sections_at(insertion_point) {
         None => Ok(0),
-        Some(sections) => emit_repeated(sections, output, emit_custom_section)
+        Some(sections) => emit_repeated(sections, output, emit_custom_section),
     }
 }
 
 /// Emits the custom section to the output.
 ///
 /// See https://webassembly.github.io/spec/core/binary/modules.html#custom-section
-pub fn emit_custom_section<O: Write>(
-    custom: &Custom,
-    output: &mut O,
-) -> Result<usize, EmitError> {
-    emit_section(ModuleSection::Custom, output, |o| emit_custom_content(custom, o))
+pub fn emit_custom_section<O: Write>(custom: &Custom, output: &mut O) -> Result<usize, EmitError> {
+    emit_section(ModuleSection::Custom, output, |o| {
+        emit_custom_content(custom, o)
+    })
 }
 
 /// Emits the type section to the output.

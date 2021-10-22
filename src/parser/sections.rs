@@ -10,7 +10,7 @@ use crate::{
 };
 use nom::bytes::complete::take;
 use nom::combinator::{all_consuming, map, map_parser, opt, rest};
-use nom::multi::fold_many0;
+use nom::multi::fold_many1;
 use nom::sequence::tuple;
 use nom::{IResult, Parser};
 
@@ -18,7 +18,7 @@ use nom::{IResult, Parser};
 ///
 /// See <https://webassembly.github.io/spec/core/binary/modules.html#binary-customsec>
 pub fn parse_custom_section(input: &[u8]) -> IResult<&[u8], Option<Vec<Custom>>> {
-    opt(fold_many0(
+    opt(fold_many1(
         parse_section(ModuleSection::Custom, parse_custom_content),
         Vec::new,
         |mut accumulator, item| {

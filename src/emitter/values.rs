@@ -45,7 +45,7 @@ pub fn emit_byte<T: Borrow<u8>, O: Write + ?Sized>(
     output: &mut O,
 ) -> Result<usize, EmitError> {
     let bytes = [*byte.borrow()];
-    output.write(&bytes)?;
+    output.write_all(&bytes)?;
     Ok(bytes.len())
 }
 

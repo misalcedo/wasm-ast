@@ -63,36 +63,42 @@ impl Write for CountingWrite {
 mod tests {
     use super::*;
     use crate::model::{
-        self, ControlInstruction, Data, DataMode, Element, ElementInitializer, ElementMode, Export,
+        ControlInstruction, Custom, Data, DataMode, Element, ElementInitializer, ElementMode, Export,
         ExportDescription, Expression, Function, FunctionType, Global, GlobalType, Import,
-        ImportDescription, Instruction, Limit, Memory, MemoryType, Name, NumberType,
+        ImportDescription, Instruction, Module, Limit, Memory, MemoryType, ModuleSection, Name,
         NumericInstruction, ReferenceType, ResultType, Start, Table, TableType, ValueType,
     };
-    use wasmtime::{Engine, Extern, Func, Instance, Module, Store};
+    use crate::emitter::errors::EmitError;
+    use wasmtime::{Engine, Extern, Func, Instance, Store};
 
-    fn validate(target: &web_assembly::Module) -> Result<(), EmitError> {
+    fn validate(target: &Module) -> Result<(), EmitError> {
         let mut bytes = Vec::new();
 
         emit_binary(&target, &mut bytes)?;
 
         let engine = Engine::default();
-        let module = Module::new(&engine, &bytes)?;
+        let module = wasmtime::Module::new(&engine, &bytes).map_err(|_| EmitError::IO(std::io::Error::from(std::io::ErrorKind::NotFound)))?;
         let mut store = Store::new(&engine, 0);
         let mut imports: Vec<Extern> = Vec::new();
 
-        if !target.imports().is_empty() {
+        if target.imports().is_some() {
             let start = Func::wrap(&mut store, || {});
             imports.push(start.into());
         }
 
-        Instance::new(&mut store, &module, &imports)?;
+        Instance::new(&mut store, &module, &imports).map_err(|_| EmitError::IO(std::io::Error::from(std::io::ErrorKind::NotFound)))?;
 
         Ok(())
     }
 
+    #[test]
     fn empty_module() {
         let mut buffer = Vec::new();
-        let module = web_assembly::Module::new();
+        let mut builder = Module::builder();
+
+        builder.add_custom_section(ModuleSection::Custom, Custom::new("version".into(), Vec::from("0.1.0".as_bytes())));
+
+        let module = builder.build();
         let result = validate(&module);
 
         assert!(result.is_ok());
@@ -103,7 +109,7 @@ mod tests {
         let prefix = b"\x00\x61\x73\x6D\x01\x00\x00\x00";
         let section = b"\x00";
         let name = "version".as_bytes();
-        let version = about::VERSION.as_bytes();
+        let version = "0.1.0".as_bytes();
         let size = name.len() + version.len() + 1;
 
         bytes.extend(prefix);
@@ -116,20 +122,22 @@ mod tests {
         assert_eq!(&buffer, &bytes);
     }
 
+    #[test]
     fn valid_empty_module() {
-        let module = web_assembly::Module::new();
+        let module = Module::empty();
         let result = validate(&module);
 
         assert!(result.is_ok());
     }
 
+    #[test]
     fn valid_module() {
-        let mut module = web_assembly::Module::new();
+        let mut module = Module::builder();
         let function_type = FunctionType::new(
             ResultType::new(vec![ValueType::I64]),
             ResultType::new(vec![ValueType::F64]),
         );
-        module.add_type(function_type);
+        module.add_function_type(function_type).unwrap();
 
         let function = Function::new(
             0,
@@ -138,34 +146,34 @@ mod tests {
                 0.0,
             ))]),
         );
-        module.add_function(function);
+        module.add_function(function).unwrap();
 
         let start_function_type =
             FunctionType::new(ResultType::new(vec![]), ResultType::new(vec![]));
-        module.add_type(start_function_type);
+        module.add_function_type(start_function_type).unwrap();
 
         let import = Import::new(
             Name::new("test".to_string()),
             Name::new("foobar".to_string()),
             ImportDescription::Function(1),
         );
-        module.add_import(import);
+        module.add_import(import).unwrap();
 
         let element = Element::new(
             ReferenceType::Function,
             ElementMode::Passive,
-            ElementInitializer::FunctionIndex(vec![0]),
+            vec![0].to_initializers(),
         );
-        module.add_element(element);
+        module.add_element(element).unwrap();
 
         let data = Data::new(DataMode::Passive, vec![42]);
-        module.add_data(data);
+        module.add_data(data).unwrap();
 
-        let table = Table::new(TableType::new(Limit::new(1, None), ReferenceType::Function));
-        module.add_table(table);
+        let table = Table::new(TableType::new(ReferenceType::Function, Limit::new(1, None)));
+        module.add_table(table).unwrap();
 
         let memory = Memory::new(MemoryType::new(Limit::new(1, None)));
-        module.add_memory(memory);
+        module.add_memory(memory).unwrap();
 
         let export = Export::new(
             Name::new("foobar".to_string()),
@@ -177,57 +185,60 @@ mod tests {
         module.set_start(Some(start));
 
         let global = Global::new(
-            GlobalType::new(false, ValueType::I64),
+            GlobalType::immutable(ValueType::I64),
             Expression::new(vec![Instruction::Numeric(NumericInstruction::I64Constant(
                 0,
             ))]),
         );
-        module.add_global(global);
+        module.add_global(global).unwrap();
 
-        let result = validate(&module);
+        let result = validate(&module.build());
 
         assert!(result.is_ok());
     }
 
+    #[test]
     fn valid_module_import() {
-        let mut module = web_assembly::Module::new();
+        let mut module = Module::builder();
 
         let start_function_type =
             FunctionType::new(ResultType::new(vec![]), ResultType::new(vec![]));
-        module.add_type(start_function_type);
+        module.add_function_type(start_function_type).unwrap();
 
         let import = Import::new(
             Name::new("test".to_string()),
             Name::new("foobar".to_string()),
             ImportDescription::Function(0),
         );
-        module.add_import(import);
+        module.add_import(import).unwrap();
 
-        let result = validate(&module);
+        let result = validate(&module.build());
 
         assert!(result.is_ok());
     }
 
+    #[test]
     fn valid_module_type_only() {
-        let mut module = web_assembly::Module::new();
+        let mut module = Module::builder();
         let function_type = FunctionType::new(
             ResultType::new(vec![ValueType::I64]),
             ResultType::new(vec![ValueType::F64]),
         );
-        module.add_type(function_type);
+        module.add_function_type(function_type).unwrap();
 
-        let result = validate(&module);
+        let result = validate(&module.build());
 
         assert!(result.is_ok());
     }
 
+    #[test]
     fn valid_module_function() {
-        let mut module = web_assembly::Module::new();
+        let mut module = Module::builder();
         let function_type = FunctionType::new(
             ResultType::new(vec![ValueType::I64]),
             ResultType::new(vec![ValueType::F64]),
         );
-        module.add_type(function_type);
+        module.add_function_type(function_type).unwrap();
 
         let function = Function::new(
             0,
@@ -236,37 +247,39 @@ mod tests {
                 0.0,
             ))]),
         );
-        module.add_function(function);
+        module.add_function(function).unwrap();
 
-        validate(&module).unwrap();
+        validate(&module.build()).unwrap();
     }
 
+    #[test]
     fn valid_module_start() {
-        let mut module = web_assembly::Module::new();
+        let mut module = Module::builder();
         let function_type = FunctionType::new(ResultType::new(vec![]), ResultType::new(vec![]));
-        module.add_type(function_type);
+        module.add_function_type(function_type).unwrap();
 
         let function = Function::new(
             0,
             ResultType::new(vec![]),
             Expression::new(vec![Instruction::Control(ControlInstruction::Nop)]),
         );
-        module.add_function(function);
+        module.add_function(function).unwrap();
 
         let start = Start::new(0);
         module.set_start(Some(start));
 
-        validate(&module).unwrap();
+        validate(&module.build()).unwrap();
     }
 
+    #[test]
     fn valid_module_element() {
-        let mut module = web_assembly::Module::new();
+        let mut module = Module::builder();
 
         let function_type = FunctionType::new(
             ResultType::new(vec![ValueType::I64]),
             ResultType::new(vec![ValueType::F64]),
         );
-        module.add_type(function_type);
+        module.add_function_type(function_type).unwrap();
 
         let function = Function::new(
             0,
@@ -275,53 +288,57 @@ mod tests {
                 0.0,
             ))]),
         );
-        module.add_function(function);
+        module.add_function(function).unwrap();
 
         let element = Element::new(
             ReferenceType::Function,
             ElementMode::Passive,
-            ElementInitializer::FunctionIndex(vec![0]),
+            vec![0].to_initializers(),
         );
-        module.add_element(element);
+        module.add_element(element).unwrap();
 
-        let table = Table::new(TableType::new(Limit::new(0, None), ReferenceType::Function));
-        module.add_table(table);
+        let table = Table::new(TableType::new(ReferenceType::Function, Limit::new(0, None)));
+        module.add_table(table).unwrap();
 
-        validate(&module).unwrap();
+        validate(&module.build()).unwrap();
     }
 
+    #[test]
     fn valid_module_table_only() {
-        let mut module = web_assembly::Module::new();
+        let mut module = Module::builder();
 
-        let table = Table::new(TableType::new(Limit::new(0, None), ReferenceType::Function));
-        module.add_table(table);
+        let table = Table::new(TableType::new(ReferenceType::Function, Limit::new(0, None)));
+        module.add_table(table).unwrap();
 
-        validate(&module).unwrap();
+        validate(&module.build()).unwrap();
     }
 
+    #[test]
     fn valid_module_data() {
-        let mut module = web_assembly::Module::new();
+        let mut module = Module::builder();
 
         let data = Data::new(DataMode::Passive, vec![1]);
-        module.add_data(data);
+        module.add_data(data).unwrap();
 
         let memory = Memory::new(MemoryType::new(Limit::new(0, None)));
-        module.add_memory(memory);
+        module.add_memory(memory).unwrap();
 
-        validate(&module).unwrap();
+        validate(&module.build()).unwrap();
     }
 
+    #[test]
     fn valid_module_memory_only() {
-        let mut module = web_assembly::Module::new();
+        let mut module = Module::builder();
 
         let memory = Memory::new(MemoryType::new(Limit::new(0, None)));
-        module.add_memory(memory);
+        module.add_memory(memory).unwrap();
 
-        validate(&module).unwrap();
+        validate(&module.build()).unwrap();
     }
 
+    #[test]
     fn valid_module_global_only() {
-        let mut module = web_assembly::Module::new();
+        let mut module = Module::builder();
 
         let global = Global::new(
             GlobalType::immutable(ValueType::I64),
@@ -329,13 +346,14 @@ mod tests {
                 0,
             ))]),
         );
-        module.add_global(global);
+        module.add_global(global).unwrap();
 
-        validate(&module).unwrap();
+        validate(&module.build()).unwrap();
     }
 
+    #[test]
     fn valid_module_import_only() {
-        let mut module = web_assembly::Module::new();
+        let mut module = Module::builder();
 
         let export = Export::new(
             Name::new("foobar".to_string()),
@@ -349,13 +367,14 @@ mod tests {
                 0,
             ))]),
         );
-        module.add_global(global);
+        module.add_global(global).unwrap();
 
-        validate(&module).unwrap();
+        validate(&module.build()).unwrap();
     }
 
+    #[test]
     fn invalid_module() {
-        let mut module = web_assembly::Module::new();
+        let mut module = Module::builder();
 
         // function with no corresponding type.
         let function = Function::new(
@@ -363,9 +382,9 @@ mod tests {
             ResultType::new(vec![ValueType::I32]),
             Expression::new(vec![Instruction::Control(ControlInstruction::Nop)]),
         );
-        module.add_function(function);
+        module.add_function(function).unwrap();
 
-        let result = validate(&module);
+        let result = validate(&module.build());
 
         assert!(result.is_err());
     }

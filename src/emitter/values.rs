@@ -6,7 +6,7 @@ use std::convert::TryFrom;
 use std::io::Write;
 use std::iter::IntoIterator;
 
-/// Emit a name to the output.
+/// Emit a 32-bit floating point to the output.
 ///
 /// See https://webassembly.github.io/spec/core/binary/values.html#floating-point
 pub fn emit_f32<T: Borrow<f32>, O: Write + ?Sized>(
@@ -18,7 +18,7 @@ pub fn emit_f32<T: Borrow<f32>, O: Write + ?Sized>(
     Ok(bytes.len())
 }
 
-/// Emit a name to the output.
+/// Emit a 64-bit floating point to the output.
 ///
 /// See https://webassembly.github.io/spec/core/binary/values.html#floating-point
 pub fn emit_f64<T: Borrow<f64>, O: Write + ?Sized>(

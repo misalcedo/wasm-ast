@@ -4,9 +4,9 @@ use crate::emitter::module::{
     emit_import, emit_memory, emit_start, emit_table,
 };
 use crate::emitter::types::emit_function_type;
-use crate::emitter::values::{emit_byte, emit_bytes, emit_u32, emit_usize, emit_vector};
+use crate::emitter::values::{emit_byte, emit_bytes, emit_u32, emit_usize, emit_repeated, emit_vector};
 use crate::emitter::CountingWrite;
-use crate::model::{Function, Module, ModuleSection, TypeIndex};
+use crate::model::{Custom, Function, Module, ModuleSection, TypeIndex};
 use std::io::Write;
 
 /// A magic constant used to quickly identify WebAssembly binary file contents.
@@ -23,31 +23,31 @@ pub fn emit_module<O: Write>(module: &Module, output: &mut O) -> Result<usize, E
 
     bytes += emit_bytes(&PREAMBLE, output, false)?;
     bytes += emit_bytes(&VERSION, output, false)?;
-    bytes += emit_custom_section(module, ModuleSection::Custom, output)?;
+    bytes += emit_custom_sections(module, ModuleSection::Custom, output)?;
     bytes += emit_type_section(module, output)?;
-    bytes += emit_custom_section(module, ModuleSection::Type, output)?;
+    bytes += emit_custom_sections(module, ModuleSection::Type, output)?;
     bytes += emit_import_section(module, output)?;
-    bytes += emit_custom_section(module, ModuleSection::Import, output)?;
+    bytes += emit_custom_sections(module, ModuleSection::Import, output)?;
     bytes += emit_function_section(module, output)?;
-    bytes += emit_custom_section(module, ModuleSection::Function, output)?;
+    bytes += emit_custom_sections(module, ModuleSection::Function, output)?;
     bytes += emit_table_section(module, output)?;
-    bytes += emit_custom_section(module, ModuleSection::Table, output)?;
+    bytes += emit_custom_sections(module, ModuleSection::Table, output)?;
     bytes += emit_memory_section(module, output)?;
-    bytes += emit_custom_section(module, ModuleSection::Memory, output)?;
+    bytes += emit_custom_sections(module, ModuleSection::Memory, output)?;
     bytes += emit_global_section(module, output)?;
-    bytes += emit_custom_section(module, ModuleSection::Global, output)?;
+    bytes += emit_custom_sections(module, ModuleSection::Global, output)?;
     bytes += emit_export_section(module, output)?;
-    bytes += emit_custom_section(module, ModuleSection::Export, output)?;
+    bytes += emit_custom_sections(module, ModuleSection::Export, output)?;
     bytes += emit_start_section(module, output)?;
-    bytes += emit_custom_section(module, ModuleSection::Start, output)?;
+    bytes += emit_custom_sections(module, ModuleSection::Start, output)?;
     bytes += emit_element_section(module, output)?;
-    bytes += emit_custom_section(module, ModuleSection::Element, output)?;
+    bytes += emit_custom_sections(module, ModuleSection::Element, output)?;
     bytes += emit_data_count_section(module, output)?;
-    bytes += emit_custom_section(module, ModuleSection::DataCount, output)?;
+    bytes += emit_custom_sections(module, ModuleSection::DataCount, output)?;
     bytes += emit_code_section(module, output)?;
-    bytes += emit_custom_section(module, ModuleSection::Code, output)?;
+    bytes += emit_custom_sections(module, ModuleSection::Code, output)?;
     bytes += emit_data_section(module, output)?;
-    bytes += emit_custom_section(module, ModuleSection::Data, output)?;
+    bytes += emit_custom_sections(module, ModuleSection::Data, output)?;
 
     Ok(bytes)
 }
@@ -55,17 +55,25 @@ pub fn emit_module<O: Write>(module: &Module, output: &mut O) -> Result<usize, E
 /// Emits the custom section to the output.
 ///
 /// See https://webassembly.github.io/spec/core/binary/modules.html#custom-section
-pub fn emit_custom_section<O: Write>(
+pub fn emit_custom_sections<O: Write>(
     module: &Module,
     insertion_point: ModuleSection,
     output: &mut O,
 ) -> Result<usize, EmitError> {
     match module.custom_sections_at(insertion_point) {
         None => Ok(0),
-        Some(custom) => emit_section(ModuleSection::Custom, output, |o| {
-            emit_vector(custom, o, emit_custom_content)
-        }),
+        Some(sections) => emit_repeated(sections, output, emit_custom_section)
     }
+}
+
+/// Emits the custom section to the output.
+///
+/// See https://webassembly.github.io/spec/core/binary/modules.html#custom-section
+pub fn emit_custom_section<O: Write>(
+    custom: &Custom,
+    output: &mut O,
+) -> Result<usize, EmitError> {
+    emit_section(ModuleSection::Custom, output, |o| emit_custom_content(custom, o))
 }
 
 /// Emits the type section to the output.

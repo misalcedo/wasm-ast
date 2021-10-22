@@ -274,12 +274,12 @@ pub enum Instruction {
 ///     NumericInstruction::Convert(FloatType::F64, IntegerType::I32, SignExtension::Unsigned).into()
 /// );
 /// assert_eq!(
-///     Instruction::Numeric(NumericInstruction::ReinterpretFloat(IntegerType::I32, FloatType::F64)),
-///     NumericInstruction::ReinterpretFloat(IntegerType::I32, FloatType::F64).into()
+///     Instruction::Numeric(NumericInstruction::ReinterpretFloat(IntegerType::I32)),
+///     NumericInstruction::ReinterpretFloat(IntegerType::I32).into()
 /// );
 /// assert_eq!(
-///     Instruction::Numeric(NumericInstruction::ReinterpretInteger(FloatType::F64, IntegerType::I32)),
-///     NumericInstruction::ReinterpretInteger(FloatType::F64, IntegerType::I32).into()
+///     Instruction::Numeric(NumericInstruction::ReinterpretInteger(FloatType::F64)),
+///     NumericInstruction::ReinterpretInteger(FloatType::F64).into()
 /// );
 /// ```
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -685,36 +685,36 @@ impl From<TableInstruction> for Instruction {
 /// use wasm_ast::{MemoryInstruction, Instruction, NumberType, MemoryArgument, IntegerType, SignExtension};
 ///
 /// assert_eq!(
-///     Instruction::Memory(MemoryInstruction::Load(NumberType::I32, MemoryArgument::default())),
-///     MemoryInstruction::Load(NumberType::I32, MemoryArgument::default()).into()
+///     Instruction::Memory(MemoryInstruction::Load(NumberType::I32, MemoryArgument::default_offset(4))),
+///     MemoryInstruction::Load(NumberType::I32, MemoryArgument::default_offset(4)).into()
 /// );
 /// assert_eq!(
-///     Instruction::Memory(MemoryInstruction::Load8(IntegerType::I32, SignExtension::Signed, MemoryArgument::default())),
-///     MemoryInstruction::Load8(IntegerType::I32, SignExtension::Signed, MemoryArgument::default()).into()
+///     Instruction::Memory(MemoryInstruction::Load8(IntegerType::I32, SignExtension::Signed, MemoryArgument::default_offset(1))),
+///     MemoryInstruction::Load8(IntegerType::I32, SignExtension::Signed, MemoryArgument::default_offset(1)).into()
 /// );
 /// assert_eq!(
-///     Instruction::Memory(MemoryInstruction::Load16(IntegerType::I64, SignExtension::Unsigned, MemoryArgument::default())),
-///     MemoryInstruction::Load16(IntegerType::I64, SignExtension::Unsigned, MemoryArgument::default()).into()
+///     Instruction::Memory(MemoryInstruction::Load16(IntegerType::I64, SignExtension::Unsigned, MemoryArgument::default_offset(2))),
+///     MemoryInstruction::Load16(IntegerType::I64, SignExtension::Unsigned, MemoryArgument::default_offset(2)).into()
 /// );
 /// assert_eq!(
-///     Instruction::Memory(MemoryInstruction::Load32(SignExtension::Signed, MemoryArgument::default())),
-///     MemoryInstruction::Load32(SignExtension::Signed, MemoryArgument::default()).into()
+///     Instruction::Memory(MemoryInstruction::Load32(SignExtension::Signed, MemoryArgument::default_offset(4))),
+///     MemoryInstruction::Load32(SignExtension::Signed, MemoryArgument::default_offset(4)).into()
 /// );
 /// assert_eq!(
 ///     Instruction::Memory(MemoryInstruction::Store(NumberType::F64, MemoryArgument::default_offset(8))),
 ///     MemoryInstruction::Store(NumberType::F64, MemoryArgument::new(Some(8), 0)).into()
 /// );
 /// assert_eq!(
-///     Instruction::Memory(MemoryInstruction::Store8(IntegerType::I32, MemoryArgument::default())),
-///     MemoryInstruction::Store8(IntegerType::I32, MemoryArgument::default()).into()
+///     Instruction::Memory(MemoryInstruction::Store8(IntegerType::I32, MemoryArgument::default_offset(1))),
+///     MemoryInstruction::Store8(IntegerType::I32, MemoryArgument::default_offset(1)).into()
 /// );
 /// assert_eq!(
-///     Instruction::Memory(MemoryInstruction::Store16(IntegerType::I64, MemoryArgument::default())),
-///     MemoryInstruction::Store16(IntegerType::I64, MemoryArgument::default()).into()
+///     Instruction::Memory(MemoryInstruction::Store16(IntegerType::I64, MemoryArgument::default_offset(2))),
+///     MemoryInstruction::Store16(IntegerType::I64, MemoryArgument::default_offset(2)).into()
 /// );
 /// assert_eq!(
-///     Instruction::Memory(MemoryInstruction::Store32(MemoryArgument::default())),
-///     MemoryInstruction::Store32(MemoryArgument::default()).into()
+///     Instruction::Memory(MemoryInstruction::Store32(MemoryArgument::default_offset(4))),
+///     MemoryInstruction::Store32(MemoryArgument::default_offset(4)).into()
 /// );
 /// assert_eq!(
 ///     Instruction::Memory(MemoryInstruction::Size),
@@ -972,7 +972,7 @@ pub enum BlockType {
 /// ```rust
 /// use wasm_ast::MemoryArgument;
 ///
-/// let argument = MemoryArgument::default();
+/// let argument = MemoryArgument::default_offset(1);
 ///
 /// assert_eq!(argument.offset(), 0);
 /// assert_eq!(argument.align(), None);

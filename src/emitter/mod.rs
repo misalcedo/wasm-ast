@@ -13,6 +13,20 @@ use std::fmt::Debug;
 use std::io::Write;
 
 /// Emits a binary representation of a WebAssembly Abstract Syntax Tree (AST) to a `Write` output.
+/// 
+/// See <https://webassembly.github.io/spec/core/binary/index.html>
+///
+/// # Examples
+/// ## Empty
+/// ```rust
+/// use wasm_ast::emit_binary;
+/// use wasm_ast::Module;
+///
+/// let mut buffer = Vec::new();
+/// let binary = emit_binary(&Module::empty(), &mut buffer).unwrap();
+///
+/// assert_eq!(buffer, vec![0x00, 0x61, 0x73, 0x6D, 0x01, 0x00, 0x00, 0x00]);
+/// ```
 pub fn emit_binary<O: Write>(module: &Module, output: &mut O) -> Result<usize, errors::EmitError> {
     emit_module(module, output)
 }

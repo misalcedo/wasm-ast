@@ -53,17 +53,17 @@ fn main() {
 
 Additional (i.e., more useful) examples can be found in the repository.
 
-# Stability
+## Stability
 The interface is considered stable. No breaking changes will be introduced until the next major version (e.g. `1.0`).
 
 # Issues
 Please file any issues for areas where this crate does not properly adhere to the WebAssembly standard.
 
-# License
+## License
 
 Licensed under Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or http://apache.org/licenses/LICENSE-2.0)
 
-# Contribution
+## Contribution
 
 Unless you explicitly state otherwise, any contribution intentionally submitted
 for inclusion in the work by you, as defined in the Apache-2.0 license, shall be 

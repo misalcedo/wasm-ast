@@ -702,7 +702,7 @@ impl From<TableInstruction> for Instruction {
 /// );
 /// assert_eq!(
 ///     Instruction::Memory(MemoryInstruction::Store(NumberType::F64, MemoryArgument::default_offset(8))),
-///     MemoryInstruction::Store(NumberType::F64, MemoryArgument::new(Some(8), 0)).into()
+///     MemoryInstruction::Store(NumberType::F64, MemoryArgument::new(8, 0)).into()
 /// );
 /// assert_eq!(
 ///     Instruction::Memory(MemoryInstruction::Store8(IntegerType::I32, MemoryArgument::default_offset(1))),
@@ -942,20 +942,20 @@ pub enum BlockType {
 /// ```rust
 /// use wasm_ast::MemoryArgument;
 ///
-/// let argument = MemoryArgument::new(Some(4), 42);
+/// let argument = MemoryArgument::new(4, 42);
 ///
 /// assert_eq!(argument.offset(), 42);
-/// assert_eq!(argument.align(), Some(4));
+/// assert_eq!(argument.align(), 4);
 /// ```
 ///
 /// ## With Offset Only
 /// ```rust
 /// use wasm_ast::MemoryArgument;
 ///
-/// let argument = MemoryArgument::default_align(42);
+/// let argument = MemoryArgument::new(1, 42);
 ///
 /// assert_eq!(argument.offset(), 42);
-/// assert_eq!(argument.align(), None);
+/// assert_eq!(argument.align(), 1);
 /// ```
 ///
 /// ## With Alignment Only
@@ -965,7 +965,7 @@ pub enum BlockType {
 /// let argument = MemoryArgument::default_offset(4);
 ///
 /// assert_eq!(argument.offset(), 0);
-/// assert_eq!(argument.align(), Some(4));
+/// assert_eq!(argument.align(), 4);
 /// ```
 ///
 /// ## Default
@@ -975,7 +975,7 @@ pub enum BlockType {
 /// let argument = MemoryArgument::default_offset(1);
 ///
 /// assert_eq!(argument.offset(), 0);
-/// assert_eq!(argument.align(), None);
+/// assert_eq!(argument.align(), 1);
 /// ```
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct MemoryArgument {

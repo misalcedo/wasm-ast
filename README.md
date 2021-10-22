@@ -7,14 +7,25 @@
 A Rust-native WebAssembly syntax model useful for generating, parsing, and emitting WebAssembly code.
 
 ## Design
-WASM-AST is designed with minimal validation. The goal is to closely model the WASM syntax specification in order to allow valid and invalid abstract syntax trees.
+WASM-AST is designed with minimal validation. The goal is to closely model the WASM syntax specification in order to allow valid and invalid abstract syntax trees. Lastly, modules cannot be mutated once built.
+
+## Features
+### Parser
+A parser for binary WebAssembly format. Attempts to maintain as much of the binary information as possible.
+
+### Text
+A parser for the text and binary WebAssembly formats. The text format is transformed to binary, then passed to the binary parser. Some information may be lost in the text to binary conversion.
+
+### Emitter
+Emits binary WebAssembly format for a module.
+
 
 ## Usage
 To use `wasm-ast`, first add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-wasm-ast = "0.0.1"
+wasm-ast = "0.0.6"
 ```
 
 Then, add this to your crate:
@@ -23,7 +34,8 @@ Then, add this to your crate:
 use wasm_ast::model::Module;
 
 fn main() {
-    // ...
+    let mut builder = Module::builder();
+    let module = builder.build();
 }
 ```
 
@@ -35,10 +47,17 @@ Create an empty WASM module:
 use wasm_ast::model::Module;
 
 fn main() {
-    let builder = Module.builder();
-    let module = builder.build();
+    let module = Module::empty();
 }
 ```
+
+Additional (i.e., more useful) examples can be found in the repository.
+
+# Stability
+The interface is considered stable. No breaking changes will be introduced until the next major version (e.g. `1.0`).
+
+# Issues
+Please file any issues for areas where this crate does not properly adhere to the WebAssembly standard.
 
 # License
 

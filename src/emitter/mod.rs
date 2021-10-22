@@ -13,7 +13,7 @@ use std::fmt::Debug;
 use std::io::Write;
 
 /// Emits a binary representation of a WebAssembly Abstract Syntax Tree (AST) to a `Write` output.
-/// 
+///
 /// See <https://webassembly.github.io/spec/core/binary/index.html>
 ///
 /// # Examples

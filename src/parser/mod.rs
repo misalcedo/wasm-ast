@@ -207,6 +207,7 @@ pub fn parse_text(text: &str) -> Result<Module, ParseError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::model::Custom;
 
     #[test]
     fn validate_functions_no_code() {
@@ -294,5 +295,34 @@ mod tests {
         );
 
         assert_eq!(result, Some(vec![function]));
+    }
+
+    #[test]
+    fn empty_module() {
+        let mut builder = Module::builder();
+
+        builder.add_custom_section(
+            ModuleSection::Custom,
+            Custom::new("version".into(), Vec::from("0.1.0".as_bytes())),
+        );
+
+        let module = builder.build();
+        let mut bytes: Vec<u8> = Vec::new();
+        let prefix = b"\x00\x61\x73\x6D\x01\x00\x00\x00";
+        let section = b"\x00";
+        let name = "version".as_bytes();
+        let version = "0.1.0".as_bytes();
+        let size = name.len() + version.len() + 1;
+
+        bytes.extend(prefix);
+        bytes.extend(section);
+        bytes.push(size as u8);
+        bytes.push(name.len() as u8);
+        bytes.extend(name);
+        bytes.extend(version);
+
+        let actual = parse_binary(bytes.as_slice()).unwrap();
+
+        assert_eq!(actual, module);
     }
 }

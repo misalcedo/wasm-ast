@@ -195,10 +195,10 @@ pub fn emit_data_count_section<O: Write>(
     module: &Module,
     output: &mut O,
 ) -> Result<usize, EmitError> {
-    match module.data() {
+    match module.data_count() {
         None => Ok(0),
-        Some(data) => emit_section(ModuleSection::DataCount, output, |o| {
-            emit_usize(data.len(), o)
+        Some(count) => emit_section(ModuleSection::DataCount, output, |o| {
+            emit_u32(count, o)
         }),
     }
 }

@@ -63,6 +63,7 @@ impl Write for CountingWrite {
 mod tests {
     use super::*;
     use crate::emitter::errors::EmitError;
+    use crate::parser::parse_binary;
     use crate::model::{
         ControlInstruction, Custom, Data, DataMode, Element, ElementInitializer, ElementMode,
         Export, ExportDescription, Expression, Function, FunctionType, Global, GlobalType, Import,
@@ -75,6 +76,11 @@ mod tests {
         let mut bytes = Vec::new();
 
         emit_binary(&target, &mut bytes)?;
+
+        let parsed = parse_binary(bytes.as_slice())
+            .map_err(|_| EmitError::IO(std::io::Error::from(std::io::ErrorKind::NotFound)))?;
+        
+        assert_eq!(target, &parsed);
 
         let engine = Engine::default();
         let module = wasmtime::Module::new(&engine, &bytes)

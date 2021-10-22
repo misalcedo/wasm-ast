@@ -19,7 +19,7 @@ pub fn emit_binary<O: Write>(module: &Module, output: &mut O) -> Result<usize, e
 
 /// Counts the number of bytes written, but does else nothing with the bytes.
 #[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq)]
-pub struct CountingWrite {
+struct CountingWrite {
     bytes: usize,
 }
 

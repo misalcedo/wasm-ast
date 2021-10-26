@@ -25,7 +25,7 @@ To use `wasm-ast`, first add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-wasm-ast = "0.0.6"
+wasm-ast = "0.1.0"
 ```
 
 Then, add this to your crate:

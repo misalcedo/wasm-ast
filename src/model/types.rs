@@ -78,6 +78,30 @@ pub enum FloatType {
     F64,
 }
 
+/// Vector types classify vectors of numeric values processed by vector instructions
+/// (also known as SIMD instructions, single instruction multiple data).
+/// 
+/// The type  corresponds to a 128 bit vector of packed integer or floating-point data.
+/// The packed data can be interpreted as signed or unsigned integers,
+/// single or double precision floating-point values, or a single 128 bit type.
+/// The interpretation is determined by individual operations.
+/// 
+/// Vector types, like number types are transparent, meaning that their bit patterns can be observed.
+/// Values of vector type can be stored in memories.
+/// 
+/// See <https://webassembly.github.io/spec/core/syntax/types.html#vector-types>
+///
+/// # Examples
+/// ```rust
+/// use wasm_ast::{ValueType, VectorType};
+///
+/// assert_eq!(ValueType::V128, VectorType::V128.into());
+/// ```
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub enum VectorType {
+    V128
+}
+
 /// Reference types classify first-class references to objects in the runtime store.
 /// The type 𝖿𝗎𝗇𝖼𝗋𝖾𝖿 denotes the infinite union of all references to functions,
 /// regardless of their function types.
@@ -102,13 +126,13 @@ pub enum ReferenceType {
 }
 
 /// Value types classify the individual values that WebAssembly code can compute with and the values that a variable accepts.
-/// They are either number types or reference types.
+/// They are either number types, vector types, or reference types.
 ///
 /// See <https://webassembly.github.io/spec/core/syntax/types.html#value-types>
 ///
 /// # Examples
 /// ```rust
-/// use wasm_ast::{ValueType, ReferenceType, IntegerType, FloatType, NumberType};
+/// use wasm_ast::{ValueType, ReferenceType, IntegerType, FloatType, NumberType, VectorType};
 ///
 /// assert_eq!(ValueType::I32, IntegerType::I32.into());
 /// assert_eq!(ValueType::I32, NumberType::I32.into());
@@ -118,6 +142,7 @@ pub enum ReferenceType {
 /// assert_eq!(ValueType::F32, NumberType::F32.into());
 /// assert_eq!(ValueType::F64, FloatType::F64.into());
 /// assert_eq!(ValueType::F64, NumberType::F64.into());
+/// assert_eq!(ValueType::V128, VectorType::V128.into());
 /// assert_eq!(ValueType::FunctionReference, ReferenceType::Function.into());
 /// assert_eq!(ValueType::ExternalReference, ReferenceType::External.into());
 /// ```
@@ -127,6 +152,7 @@ pub enum ValueType {
     I64,
     F32,
     F64,
+    V128,
     FunctionReference,
     ExternalReference,
 }
@@ -150,6 +176,14 @@ impl From<ReferenceType> for ValueType {
         match kind {
             ReferenceType::Function => ValueType::FunctionReference,
             ReferenceType::External => ValueType::ExternalReference,
+        }
+    }
+}
+
+impl From<VectorType> for ValueType {
+    fn from(kind: VectorType) -> Self {
+        match kind {
+            VectorType::V128 => ValueType::V128,
         }
     }
 }

@@ -290,4 +290,19 @@ mod tests {
         assert_eq!(written, 1);
         assert_eq!(output, vec![input]);
     }
+
+    fn roundtrip(input: i64) {
+        let mut output = Vec::new();
+        encode_signed(input, &mut output).unwrap();
+        let (remaining, actual): (&[u8], i64) = parse_signed(&mut output).unwrap();
+
+        assert_eq!(remaining, &[]);
+        assert_eq!(actual, input);
+    }
+
+    #[test]
+    fn roundtrip_signed_leb128_i64() {
+        roundtrip(63);
+        roundtrip(64);
+    }
 }

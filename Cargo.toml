@@ -11,7 +11,7 @@ documentation = "https://docs.rs/wasm-ast"
 
 [dev-dependencies]
 criterion = "0.3"
-wasmtime = "0.36.0"
+wasmtime = "0.38.1"
 
 [dependencies]
 nom = { version = "7", optional = true }

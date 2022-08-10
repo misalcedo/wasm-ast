@@ -1,6 +1,5 @@
 //! A Rust-native WebAssembly syntax model useful for generating, parsing, and emitting WebAssembly code.
 
-pub mod encoder;
 pub mod leb128;
 pub mod model;
 

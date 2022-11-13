@@ -158,14 +158,15 @@ where
         let mut byte = (value as u8).zero_bit_at(GROUP_BITS);
         value >>= GROUP_BITS;
 
-        if value != 0 {
+        let last_byte = value == 0 || value == -1;
+        if !last_byte {
             byte = byte.one_bit_at(GROUP_BITS);
         }
 
         output.write_all(&[byte])?;
         written += 1;
 
-        if value == 0 {
+        if last_byte {
             break;
         }
     }
@@ -264,6 +265,7 @@ mod tests {
 
     #[test]
     fn encode_signed_leb128_large() {
+        // test from https://en.wikipedia.org/wiki/LEB128#Unsigned_LEB128
         let mut output = Vec::new();
         let written = encode_signed(624485i128, &mut output).unwrap();
 
@@ -289,5 +291,26 @@ mod tests {
 
         assert_eq!(written, 1);
         assert_eq!(output, vec![input]);
+    }
+
+    #[test]
+    fn encode_signed_leb128_negative_large() {
+        // test from https://en.wikipedia.org/wiki/LEB128#Signed_LEB128
+        let input = -123456i64;
+        let mut output = Vec::new();
+        let written = encode_signed(input, &mut output).unwrap();
+
+        assert_eq!(written, 3);
+        assert_eq!(output, vec![0xC0, 0xBB, 0x78]);
+    }
+
+    #[test]
+    fn encode_signed_leb128_negative_one() {
+        let input = -1i32;
+        let mut output = Vec::new();
+        let written = encode_signed(input, &mut output).unwrap();
+
+        assert_eq!(written, 1);
+        assert_eq!(output, vec![0x7F]);
     }
 }

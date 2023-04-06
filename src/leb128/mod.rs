@@ -153,21 +153,21 @@ where
 {
     let mut value = input.into();
     let mut written = 0;
+    let mut more = true;
 
-    loop {
+    while more {
         let mut byte = (value as u8).zero_bit_at(GROUP_BITS);
         value >>= GROUP_BITS;
 
-        if value != 0 {
+        let sign_bit = byte.bit_at(SIGN_BIT);
+        if value == 0 && !sign_bit || value == -1 && sign_bit {
+            more = false;
+        } else {
             byte = byte.one_bit_at(GROUP_BITS);
         }
 
         output.write_all(&[byte])?;
         written += 1;
-
-        if value == 0 {
-            break;
-        }
     }
 
     Ok(written)
@@ -176,6 +176,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use quickcheck_macros::quickcheck;
 
     #[test]
     fn parse_unsigned_leb128_large() {
@@ -276,9 +277,8 @@ mod tests {
         let input = 64;
         let mut output = Vec::new();
         let written = encode_signed(input, &mut output).unwrap();
-
-        assert_eq!(written, 1);
-        assert_eq!(output, vec![input]);
+        assert_eq!(written, 2);
+        assert_eq!(output, vec![0xC0, 0]);
     }
 
     #[test]
@@ -289,5 +289,71 @@ mod tests {
 
         assert_eq!(written, 1);
         assert_eq!(output, vec![input]);
+    }
+
+    fn roundtrip_signed<
+        T: Into<i128> + Eq + TryFrom<i128, Error = std::num::TryFromIntError> + Copy,
+    >(
+        input: T,
+    ) -> bool {
+        let mut v = Vec::new();
+
+        let _ = encode_signed(input, &mut v).unwrap();
+        let (remaining, output) = parse_signed::<T>(&v).unwrap();
+
+        remaining.len() == 0 && input == output
+    }
+
+    fn roundtrip_unsigned<
+        T: Into<u128> + Eq + TryFrom<u128, Error = std::num::TryFromIntError> + Copy,
+    >(
+        input: T,
+    ) -> bool {
+        let mut v = Vec::new();
+
+        let _ = encode_unsigned(input, &mut v).unwrap();
+        let (remaining, output) = parse_unsigned::<T>(&v).unwrap();
+
+        remaining.len() == 0 && input == output
+    }
+
+    #[quickcheck]
+    fn i8_roundtrip(input: i8) -> bool {
+        roundtrip_signed(input)
+    }
+
+    #[quickcheck]
+    fn i16_roundtrip(input: i16) -> bool {
+        roundtrip_signed(input)
+    }
+
+    #[quickcheck]
+    fn i32_roundtrip(input: i32) -> bool {
+        roundtrip_signed(input)
+    }
+
+    #[quickcheck]
+    fn i64_roundtrip(input: i64) -> bool {
+        roundtrip_signed(input)
+    }
+
+    #[quickcheck]
+    fn u8_roundtrip(input: u8) -> bool {
+        roundtrip_unsigned(input)
+    }
+
+    #[quickcheck]
+    fn u16_roundtrip(input: u16) -> bool {
+        roundtrip_unsigned(input)
+    }
+
+    #[quickcheck]
+    fn u32_roundtrip(input: u32) -> bool {
+        roundtrip_unsigned(input)
+    }
+
+    #[quickcheck]
+    fn u64_roundtrip(input: u64) -> bool {
+        roundtrip_unsigned(input)
     }
 }

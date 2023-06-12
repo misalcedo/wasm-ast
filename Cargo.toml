@@ -10,7 +10,7 @@ repository = "https://github.com/misalcedo/wasm-ast"
 documentation = "https://docs.rs/wasm-ast"
 
 [dev-dependencies]
-criterion = "0.4"
+criterion = "0.5"
 wasmtime = "1.0.0"
 
 [dependencies]
